@@ -16,7 +16,7 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 
 ## Status and dates
 
-- Sprint 0 runs 19–25 Oct 2026. Only docs exist so far: the layout in README "Repository layout" is the target, not the current state.
+- Sprint 0 runs 19–25 Oct 2026. The pnpm workspace, CI and the four shared packages exist (`packages/contracts`, `scoring`, `audit`, `trade-packs`); `apps/` and `services/` do not yet. The layout in README "Repository layout" is the target, not the current state.
 - Gates: G1 Sprint 0 exit (25 Oct) · G2 feature complete (29 Nov) · G3 demo-ready (6 Dec). The 36-hour Grand Finale is in December 2026.
 - The sprint plan, requirements (FR-xx, NFR-xx) and test plan are in README "Development lifecycle (SDLC)".
 
@@ -50,7 +50,26 @@ SIDH, Aadhaar eKYC, OTP and NQR are mocked behind `MOCK_INTEGRATIONS=true`.
 
 ## Commands
 
-These are planned in README "Getting started": `pnpm dev`, `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm db:migrate`, `pnpm db:seed`. Update this section once they exist.
+Node 22 or 24 and pnpm 10 (`corepack enable` picks the pinned version).
+
+| Command | What it does |
+|---|---|
+| `pnpm install` | Install all workspaces |
+| `pnpm test` | Vitest in every workspace, through Turborepo |
+| `pnpm typecheck` | `tsc` in every workspace |
+| `pnpm lint` | ESLint, then a Prettier check (`pnpm format` fixes formatting) |
+| `pnpm pack:build electrician` | Validate the trade pack and write `packages/trade-packs/dist/` |
+| `pnpm --filter @hunarpramaan/<pkg> test` | One package only |
+
+Run `pnpm lint && pnpm typecheck && pnpm test` before every push; CI runs the same plus gitleaks and `pnpm audit`.
+
+Still planned (README "Getting started"): `pnpm dev`, `pnpm db:migrate`, `pnpm db:seed`, `pnpm e2e:*`, `pnpm eval:*`. Add them here when they exist.
+
+**Code notes**
+
+- Shared packages export TypeScript source (`"exports": "./src/index.ts"`); there is no build step (ADR 001).
+- `@hunarpramaan/audit` hashes events as RFC 8785 canonical JSON. Don't hash `JSON.stringify` output anywhere else.
+- Who may create which event or action is the `AUTHORITY` table in `packages/contracts/src/authority.ts` (ADR 006). Check it there; don't hard-code roles in handlers.
 
 ## How we work
 

@@ -341,15 +341,16 @@ The phone has to reach the API, so set `EXPO_PUBLIC_API_URL` to your laptop's LA
 
 ### Useful scripts
 
-| Command | What it does |
-|---|---|
-| `pnpm dev` | API, queue worker and dashboard in watch mode |
-| `pnpm test` | All unit and integration tests (TypeScript and Python) |
-| `pnpm lint` · `pnpm typecheck` | ESLint/Prettier and TypeScript checks |
-| `pnpm db:migrate` · `pnpm db:seed` | Database schema and demo data |
-| `pnpm pack:build electrician` | Validate and package a trade pack for phones |
-| `pnpm e2e:mobile` · `pnpm e2e:web` | Maestro and Playwright end-to-end flows |
-| `pnpm eval:study` · `pnpm eval:mapping` | Rater-study and mapping-test analysis |
+| Command | What it does | Works now |
+|---|---|---|
+| `pnpm dev` | API, queue worker and dashboard in watch mode | planned |
+| `pnpm test` | All unit and integration tests (TypeScript and Python) | ✅ shared packages |
+| `pnpm lint` · `pnpm typecheck` | ESLint/Prettier and TypeScript checks | ✅ |
+| `pnpm format` | Rewrite files in Prettier style | ✅ |
+| `pnpm db:migrate` · `pnpm db:seed` | Database schema and demo data | planned |
+| `pnpm pack:build electrician` | Validate and package a trade pack for phones | ✅ |
+| `pnpm e2e:mobile` · `pnpm e2e:web` | Maestro and Playwright end-to-end flows | planned |
+| `pnpm eval:study` · `pnpm eval:mapping` | Rater-study and mapping-test analysis | planned |
 
 ## Core logic
 
@@ -389,34 +390,35 @@ The worker passes when the result meets the QP's pass rule, which is copied from
 
 ### Trade pack
 
-Each trade has one versioned pack that carries everything the phone needs offline: about 70 MB including the models. Codes and texts come from the QP files on NQR. The values below are only illustrative.
+Each trade has one versioned pack that carries everything the phone needs offline: about 70 MB including the models. Codes and texts come from the QP files on NQR. The schema is `TradePack` in [`packages/contracts`](packages/contracts/src/trade-pack.ts), and the draft electrician pack is in [`packages/trade-packs/packs/electrician`](packages/trade-packs/packs/electrician). The values below are only illustrative.
 
 ```json
 {
   "schemaVersion": "1.0",
-  "pack": { "id": "csdci-electrician", "version": "2026.11.0", "languages": ["hi", "en"] },
+  "pack": { "id": "csdci-electrician", "version": "2026.11.0", "status": "released", "languages": ["hi", "en"] },
+  "policy": { "routingThreshold": 0.7, "reviewBand": { "low": 0.65, "high": 0.75 } },
   "qualifications": [
     {
       "nqrCode": "QG-03-CO-03951-2025-V2-CSDCI",
-      "title": "Assistant Electrician",
+      "title": { "en": "Assistant Electrician", "hi": "सहायक इलेक्ट्रीशियन" },
       "nsqfLevel": 3,
       "awardingBody": "CSDCI",
       "passRule": { "aggregatePercent": 70 },
       "nos": [
         {
           "code": "<NOS code from the QP file>",
-          "title": "<NOS title>",
+          "title": { "en": "<NOS title>", "hi": "<Hindi title>" },
           "weight": 0.3,
           "criteria": [
             {
-              "id": "PC4",
+              "id": "<NOS code>.PC4",
               "text": { "en": "Measure earth resistance and leakage", "hi": "<Hindi text>" },
               "marks": 10,
               "glossary": ["earthing dena", "earth pit", "megger"],
               "rubric": {
-                "0": "Cannot use the tester or misreads it",
-                "1": "Takes a reading but skips a safety step or cannot say if the value is acceptable",
-                "2": "Takes a correct reading safely and judges it against the limit"
+                "0": { "en": "Cannot use the tester or misreads it", "hi": "<Hindi>" },
+                "1": { "en": "Takes a reading but skips a safety step or cannot say if the value is acceptable", "hi": "<Hindi>" },
+                "2": { "en": "Takes a correct reading safely and judges it against the limit", "hi": "<Hindi>" }
               },
               "evidence": { "type": "video", "minSeconds": 30, "maxSeconds": 60 },
               "aiChecks": ["ppe.gloves", "meter.reading"]
@@ -426,10 +428,21 @@ Each trade has one versioned pack that carries everything the phone needs offlin
       ]
     }
   ],
-  "calibrationClips": ["calib-01", "calib-02", "calib-03"],
+  "calibrationClips": [
+    { "id": "calib-01", "nqrCode": "QG-03-CO-03951-2025-V2-CSDCI", "criterionId": "<NOS code>.PC4", "masterScore": 1, "sha256": "<hash of the clip file>" }
+  ],
   "models": { "asr": "vosk-model-small-hi-0.22", "ppe": "ppe-detector-v1" }
 }
 ```
+
+The schema also checks that:
+
+- NOS weights in each QP sum to 1;
+- criterion ids are unique within a QP (PC numbers restart in each NOS, so ids carry the NOS code);
+- every title, criterion and rubric anchor has Hindi and English text;
+- each calibration clip points at a real criterion.
+
+A `released` pack also needs real NOS codes and at least 3 calibration clips; `pnpm pack:build` refuses it otherwise.
 
 ## Data model
 
