@@ -178,12 +178,21 @@ export const BLOCKING_FLAGS: readonly FlagKind[] = [
   'invalid_event',
 ];
 
+/**
+ * Values for a message, so each app words it in Hindi or English (rule 7):
+ * for example `{ criterionId: 'L3-N1.PC1', metres: 900 }` for a geofence flag.
+ */
+export const MessageParams = z.record(z.string(), z.union([z.string(), z.number()]));
+export type MessageParams = z.infer<typeof MessageParams>;
+
 export const FlagView = z.strictObject({
   id: EntityId,
   kind: FlagKind,
+  params: MessageParams,
   sessionId: EntityId.nullable(),
   evidenceId: EventId.nullable(),
   deviceId: z.string().nullable(),
+  /** The same message in English, for logs and API clients. */
   detail: z.string(),
   createdAt: Timestamp,
   workerName: z.string().nullable(),
@@ -244,6 +253,22 @@ export const NosResult = z.strictObject({
 });
 export type NosResult = z.infer<typeof NosResult>;
 
+export const BlockerCode = z.enum([
+  'no_evidence',
+  'clip_unchecked',
+  'clip_mismatch',
+  'chain_broken',
+  'stored_chain',
+  'invalid_event',
+  'result_mismatch',
+  'missing_data',
+]);
+export type BlockerCode = z.infer<typeof BlockerCode>;
+
+/** Why a recommendation cannot be approved yet, as a code plus values. */
+export const Blocker = z.strictObject({ code: BlockerCode, params: MessageParams });
+export type Blocker = z.infer<typeof Blocker>;
+
 export const RecommendationView = z.strictObject({
   id: EntityId,
   outcome: z.enum(['pass', 'fail']),
@@ -260,7 +285,7 @@ export const RecommendationView = z.strictObject({
     .nullable(),
   certificateId: z.string().nullable(),
   /** Reasons approval is blocked; empty when it can be approved. */
-  blockers: z.array(z.string()),
+  blockers: z.array(Blocker),
 });
 export type RecommendationView = z.infer<typeof RecommendationView>;
 
@@ -286,7 +311,7 @@ export const PendingRecommendation = z.strictObject({
   outcome: z.enum(['pass', 'fail']),
   aggregate: z.number(),
   signedAt: Timestamp,
-  blockers: z.array(z.string()),
+  blockers: z.array(Blocker),
 });
 export type PendingRecommendation = z.infer<typeof PendingRecommendation>;
 
