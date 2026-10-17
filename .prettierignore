@@ -6,3 +6,5 @@ coverage/
 *.md
 # RFC test vectors are compared byte for byte
 **/test-vectors/
+# Wire code reference screens are kept exactly as designed
+docs/design/screens/

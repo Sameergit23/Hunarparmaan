@@ -48,3 +48,6 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Local API data (PGlite database and uploaded clips)
+.data/

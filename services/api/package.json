@@ -1,0 +1,47 @@
+{
+  "name": "@hunarpramaan/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HunarPramaan API: auth, sync, evidence, sign-off and dashboard. The only database writer",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "dev:worker": "tsx watch src/worker/index.ts",
+    "start": "node dist/server.js",
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1152.0",
+    "@aws-sdk/s3-request-presigner": "^3.1152.0",
+    "@hunarpramaan/audit": "workspace:*",
+    "@hunarpramaan/contracts": "workspace:*",
+    "@hunarpramaan/scoring": "workspace:*",
+    "@hunarpramaan/trade-packs": "workspace:*",
+    "bullmq": "^6.3.16",
+    "drizzle-orm": "^0.45.4",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "ioredis": "^6.0.0",
+    "jose": "^6.2.12",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
+    "uuid": "^14.0.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
+    "drizzle-kit": "^0.31.11",
+    "supertest": "^7.3.1",
+    "tsup": "^9.0.0",
+    "tsx": "^4.23.15"
+  }
+}

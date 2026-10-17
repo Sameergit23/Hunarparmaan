@@ -3,6 +3,8 @@ packages:
   - services/*
   - packages/*
 
-# esbuild (used by tsx) works without its postinstall check; don't run third-party install scripts.
+# Don't run third-party install scripts. Both work without them:
+# esbuild (used by tsx) skips a binary check; msgpackr-extract (used by BullMQ) is an optional speed-up.
 ignoredBuiltDependencies:
   - esbuild
+  - msgpackr-extract
