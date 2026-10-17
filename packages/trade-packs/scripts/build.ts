@@ -5,8 +5,9 @@
  *
  * Writes dist/<id>-<version>.json (canonical JSON) and a matching .sha256 file.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { PACK_NAMES, packagePack, validatePack, type PackName } from '../src/index';
+import { readPackJson } from '../src/node';
 
 const name = process.argv[2];
 if (!PACK_NAMES.includes(name as PackName)) {
@@ -14,8 +15,7 @@ if (!PACK_NAMES.includes(name as PackName)) {
   process.exit(2);
 }
 
-const source = new URL(`../packs/${name}/pack.json`, import.meta.url);
-const result = validatePack(JSON.parse(readFileSync(source, 'utf8')));
+const result = validatePack(readPackJson(name as PackName));
 
 if (!result.ok) {
   console.error(`✗ ${name}: the pack is not valid`);
