@@ -28,9 +28,12 @@ export type DeviceEventType = (typeof DEVICE_EVENT_TYPES)[number];
 
 /** Writes that happen only through the API, never offline. */
 export const SERVER_ACTION_TYPES = [
+  'device.registered',
   'ai_result.stored',
+  'flag.reviewed',
   'rescore.recorded',
   'recommendation.approved',
+  'sidh.exported',
 ] as const;
 export type ServerActionType = (typeof SERVER_ACTION_TYPES)[number];
 
@@ -51,10 +54,13 @@ export const AUTHORITY = {
   'evidence.captured': ASSESSORS,
   'score.recorded': ASSESSORS,
   'recommendation.signed': ASSESSORS,
+  'device.registered': ['mobiliser', ...ASSESSORS],
   // The queue worker stores AI results (mapping, flags, re-hash checks), never decisions.
   'ai_result.stored': ['system'],
+  'flag.reviewed': ['agency'],
   'rescore.recorded': ['master_assessor'],
   'recommendation.approved': ['awarding_body'],
+  'sidh.exported': ['awarding_body'],
 } as const satisfies Record<Action, readonly Principal[]>;
 
 /**
@@ -69,6 +75,34 @@ export const HUMAN_DECISIONS = [
   'rescore.recorded',
   'recommendation.approved',
 ] as const satisfies readonly Action[];
+
+/**
+ * Read access by role (README "Roles and permissions"). NCVET sees aggregates
+ * only, never a single worker or session.
+ */
+export const READ_ACCESS = {
+  'trade_packs.read': [
+    'worker',
+    'mobiliser',
+    'assessor',
+    'master_assessor',
+    'agency',
+    'awarding_body',
+    'ncvet',
+  ],
+  'dashboard.read': ['agency', 'awarding_body', 'ncvet'],
+  'sessions.read': ['agency', 'awarding_body'],
+  'flags.read': ['agency'],
+  'recommendations.read': ['agency', 'awarding_body'],
+  'audit.verify': ['agency', 'awarding_body'],
+  'rescoring.read': ['master_assessor'],
+} as const satisfies Record<string, readonly Role[]>;
+export type ReadScope = keyof typeof READ_ACCESS;
+
+export function canRead(role: Role, scope: ReadScope): boolean {
+  const allowed: readonly Role[] = READ_ACCESS[scope];
+  return allowed.includes(role);
+}
 
 export function principalOf(actor: Actor): Principal {
   return actor.kind === 'system' ? 'system' : actor.role;

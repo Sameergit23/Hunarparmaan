@@ -38,3 +38,23 @@ describe('authority (rule 1: AI suggests, people decide)', () => {
     }
   });
 });
+
+describe('server actions', () => {
+  const agency: Actor = {
+    kind: 'user',
+    userId: assessor.kind === 'user' ? assessor.userId : '',
+    role: 'agency',
+  };
+
+  it('lets only the agency review flags', () => {
+    expect(canPerform(agency, 'flag.reviewed')).toBe(true);
+    expect(canPerform(assessor, 'flag.reviewed')).toBe(false);
+    expect(canPerform(queueWorker, 'flag.reviewed')).toBe(false);
+  });
+
+  it('lets field staff, not offices, register a device', () => {
+    expect(canPerform(assessor, 'device.registered')).toBe(true);
+    expect(canPerform(mobiliser, 'device.registered')).toBe(true);
+    expect(canPerform(agency, 'device.registered')).toBe(false);
+  });
+});

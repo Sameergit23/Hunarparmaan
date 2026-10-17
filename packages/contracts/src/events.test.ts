@@ -134,6 +134,7 @@ describe('SyncPushRequest', () => {
   it('rejects events from another device in the same push', () => {
     const result = SyncPushRequest.safeParse({
       protocol: 1,
+      sentAt: '2026-10-19T10:20:00+05:30',
       deviceId: 'device-02',
       events: [scoreEvent(2)],
     });
@@ -143,6 +144,7 @@ describe('SyncPushRequest', () => {
   it('rejects an unknown protocol version', () => {
     const result = SyncPushRequest.safeParse({
       protocol: 2,
+      sentAt: '2026-10-19T10:20:00+05:30',
       deviceId: 'device-01',
       events: [scoreEvent(2)],
     });
@@ -163,7 +165,12 @@ describe('events as hash-chain entries', () => {
     expect(verifyChain(chain)).toMatchObject({ ok: true, count: 2 });
     for (const event of chain) expect(messages(event)).toEqual([]);
     expect(
-      SyncPushRequest.safeParse({ protocol: 1, deviceId: 'device-01', events: chain }).success,
+      SyncPushRequest.safeParse({
+        protocol: 1,
+        sentAt: '2026-10-19T10:20:00+05:30',
+        deviceId: 'device-01',
+        events: chain,
+      }).success,
     ).toBe(true);
   });
 });

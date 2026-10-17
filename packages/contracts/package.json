@@ -1,6 +1,6 @@
 {
   "name": "@hunarpramaan/contracts",
-  "version": "1.0.0-draft.1",
+  "version": "1.0.0-draft.2",
   "private": true,
   "description": "Shared zod schemas: trade pack, sync events and roles. Frozen as v1 at gate G1",
   "type": "module",

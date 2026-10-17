@@ -50,7 +50,8 @@ export const AiFlag = z.strictObject({
 });
 export type AiFlag = z.infer<typeof AiFlag>;
 
-const payloads = {
+/** Payload schema for each phone event type. */
+export const EventPayloads = {
   'consent.given': z.strictObject({
     consentId: EntityId,
     workerId: EntityId,
@@ -196,7 +197,7 @@ const envelope = {
 };
 
 function eventSchema<T extends DeviceEventType>(type: T) {
-  return z.strictObject({ ...envelope, type: z.literal(type), payload: payloads[type] });
+  return z.strictObject({ ...envelope, type: z.literal(type), payload: EventPayloads[type] });
 }
 
 const eventSchemas = DEVICE_EVENT_TYPES.map(eventSchema) as unknown as [
@@ -220,13 +221,16 @@ export const SyncEvent = AnyEvent.superRefine((event, ctx) => {
 export type SyncEventOf<T extends DeviceEventType> = Omit<
   z.infer<typeof AnyEvent>,
   'type' | 'payload'
-> & { type: T; payload: z.infer<(typeof payloads)[T]> };
+> & { type: T; payload: z.infer<(typeof EventPayloads)[T]> };
 export type SyncEvent = { [T in DeviceEventType]: SyncEventOf<T> }[DeviceEventType];
+export type EventPayload<T extends DeviceEventType> = z.infer<(typeof EventPayloads)[T]>;
 
 export const SyncPushRequest = z
   .strictObject({
     protocol: z.literal(SYNC_PROTOCOL_VERSION),
     deviceId: DeviceId,
+    /** The device clock when it sent this push; the server flags a large drift (FR-11). */
+    sentAt: Timestamp,
     events: z.array(SyncEvent).min(1).max(500),
   })
   .superRefine((req, ctx) => {
