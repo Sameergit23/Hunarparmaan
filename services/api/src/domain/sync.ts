@@ -144,7 +144,7 @@ export async function pushEvents(
           kind: 'invalid_event',
           sessionId: sessionIdOf(event),
           deviceId: event.deviceId,
-          detail: `${event.type} at seq ${event.seq}: ${error.message}`,
+          params: { type: event.type, seq: event.seq, reason: error.message },
         });
       }
       acks.set(event.id, { id: event.id, status: 'stored' });
@@ -153,7 +153,11 @@ export async function pushEvents(
       acks.set(event.id, { id: event.id, status: 'rejected', reason: stopReason ?? 'rejected' });
     }
     if (stopReason && !chain.ok) {
-      await raiseFlag(tx, { kind: 'chain_broken', deviceId: device.id, detail: stopReason });
+      await raiseFlag(tx, {
+        kind: 'chain_broken',
+        deviceId: device.id,
+        params: { seq: chain.seq, reason: chain.reason },
+      });
     }
 
     const driftS = Math.abs(new Date(request.sentAt).getTime() - serverTime.getTime()) / 1000;
@@ -161,7 +165,7 @@ export async function pushEvents(
       await raiseFlag(tx, {
         kind: 'clock_drift',
         deviceId: device.id,
-        detail: `device clock is ${Math.round(driftS / 60)} min away from server time`,
+        params: { minutes: Math.round(driftS / 60) },
       });
     }
 

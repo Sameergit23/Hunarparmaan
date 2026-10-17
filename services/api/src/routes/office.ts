@@ -7,6 +7,7 @@ import {
   RescoreRequest,
   RouteOverrideRequest,
   SignRequest,
+  canRead,
   type ApproveResponse,
 } from '@hunarpramaan/contracts';
 import { declarations, flagReviews, flags, mappingResults, routeDecisions } from '../db/schema';
@@ -14,6 +15,7 @@ import { isUniqueViolation } from '../db/errors';
 import type { Deps } from '../domain/context';
 import { qualificationLoader } from '../domain/packs';
 import { InvalidEvent, storeRecommendation, type ProjectionContext } from '../domain/projection';
+import { describeMismatch } from '../domain/messages';
 import { decideRecommendation } from '../domain/recommendations';
 import { recordRescore } from '../domain/rescores';
 import {
@@ -109,7 +111,9 @@ export function officeRoutes(deps: Deps) {
         throw error;
       }
     });
-    if (mismatch) throw conflict('The signed result does not match the scores', [mismatch]);
+    if (mismatch) {
+      throw conflict('The signed result does not match the scores', [describeMismatch(mismatch)]);
+    }
     res.status(201).json({ recommendationId: payload.recommendationId });
   });
 
@@ -170,7 +174,10 @@ export function officeRoutes(deps: Deps) {
   });
 
   router.get('/v1/dashboard/agreement', requireRead('dashboard.read'), async (_req, res) => {
-    res.json(await agreementReport(db));
+    const report = await agreementReport(db);
+    // NCVET sees aggregates only: no per-assessor rows.
+    const perPerson = canRead(currentUser(res).role, 'sessions.read');
+    res.json(perPerson ? report : { ...report, assessors: [] });
   });
 
   // --- Master assessor: blind re-scoring (FR-13) ------------------------------

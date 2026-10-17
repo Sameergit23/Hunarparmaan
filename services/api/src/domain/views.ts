@@ -42,7 +42,7 @@ import {
   workers,
 } from '../db/schema';
 import { notFound } from '../http/errors';
-import { sessionDevices, verifyDeviceChain } from './chain';
+import { sessionDevices, verifyDeviceChain, type DeviceChainResult } from './chain';
 import { qualificationLoader } from './packs';
 import { approvalBlockers } from './recommendations';
 import { recomputeResult, standingScores } from './results';
@@ -193,6 +193,7 @@ async function flagViews(db: Db, where?: ReturnType<typeof eq>): Promise<FlagVie
     sessionId: flag.sessionId,
     evidenceId: flag.evidenceId,
     deviceId: flag.deviceId,
+    params: flag.params,
     detail: flag.detail,
     createdAt: iso(flag.createdAt),
     workerName: session ? (workerNames.get(session.workerId) ?? null) : null,
@@ -258,11 +259,11 @@ export async function sessionDetail(db: Db, sessionId: string): Promise<SessionD
   );
 
   const recRow = (await recommendationsBySession(db, [sessionId])).get(sessionId);
-  const result = await db.transaction(async (tx) => {
-    const computed = await recomputeResult(tx, sessionId, qualification);
-    const blockers = recRow ? await approvalBlockers(tx, recRow.rec, load) : [];
-    return { computed, blockers };
-  });
+  // Reads only: no transaction, so nothing waits on a lock this request holds.
+  const result = {
+    computed: await recomputeResult(db, sessionId, qualification),
+    blockers: recRow ? await approvalBlockers(db, recRow.rec, load) : [],
+  };
   const signerName = recRow
     ? (await namesById(db, users, [recRow.rec.signedBy])).get(recRow.rec.signedBy)
     : undefined;
@@ -313,26 +314,26 @@ export async function pendingRecommendations(db: Db): Promise<PendingRecommendat
     items.map((s) => s.id),
   );
   const load = qualificationLoader(db);
-  return db.transaction(async (tx) => {
-    const out: PendingRecommendation[] = [];
-    for (const item of items) {
-      const row = recs.get(item.id);
-      if (!row) continue;
-      out.push({
-        id: row.rec.id,
-        sessionId: item.id,
-        workerName: item.workerName,
-        assessorName: item.assessorName,
-        qualificationTitle: item.qualificationTitle,
-        nsqfLevel: item.nsqfLevel,
-        outcome: row.rec.outcome,
-        aggregate: row.rec.aggregate,
-        signedAt: iso(row.rec.signedAt),
-        blockers: await approvalBlockers(tx, row.rec, load),
-      });
-    }
-    return out;
-  });
+  // Recommendations from one phone share its chain: verify each chain once.
+  const chains = new Map<string, DeviceChainResult>();
+  const out: PendingRecommendation[] = [];
+  for (const item of items) {
+    const row = recs.get(item.id);
+    if (!row) continue;
+    out.push({
+      id: row.rec.id,
+      sessionId: item.id,
+      workerName: item.workerName,
+      assessorName: item.assessorName,
+      qualificationTitle: item.qualificationTitle,
+      nsqfLevel: item.nsqfLevel,
+      outcome: row.rec.outcome,
+      aggregate: row.rec.aggregate,
+      signedAt: iso(row.rec.signedAt),
+      blockers: await approvalBlockers(db, row.rec, load, chains),
+    });
+  }
+  return out;
 }
 
 export async function dashboardSummary(db: Db): Promise<DashboardSummary> {

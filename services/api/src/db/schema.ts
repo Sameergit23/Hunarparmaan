@@ -26,6 +26,7 @@ import type {
   AiFlag,
   GeoPoint,
   LocalizedText,
+  MessageParams,
   PassRule,
   Role,
   TradePack,
@@ -385,6 +386,9 @@ export const flags = pgTable(
     sessionId: uuid('session_id'),
     evidenceId: uuid('evidence_id'),
     deviceId: text('device_id'),
+    /** Values for the message, so apps can word it in Hindi or English. */
+    params: jsonb('params').$type<MessageParams>().notNull().default({}),
+    /** The message in English. */
     detail: text('detail').notNull(),
     createdAt: createdAt(),
   },

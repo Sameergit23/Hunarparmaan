@@ -1,9 +1,11 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { z } from 'zod';
 
-const bool = z
-  .enum(['true', 'false'])
-  .transform((v) => v === 'true')
-  .default(false);
+/** Development-only fallback, so a fresh clone runs without a .env. Production must set its own. */
+const DEV_JWT_SECRET = 'development-only-signing-key-do-not-use-in-production';
+
+const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
 
 const Env = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -19,9 +21,10 @@ const Env = z.object({
   S3_REGION: z.string().default('us-east-1'),
   /** Used when S3 is not configured: evidence is stored on disk. */
   LOCAL_OBJECT_DIR: z.string().default('./.data/objects'),
-  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters').optional(),
   JWT_TTL_HOURS: z.coerce.number().positive().default(12),
-  MOCK_INTEGRATIONS: bool,
+  /** SIDH, eKYC, OTP and NQR mocks. On by default outside production. */
+  MOCK_INTEGRATIONS: bool.optional(),
   ROUTING_THRESHOLD: z.coerce.number().gt(0).lte(1).default(0.7),
   RESCORE_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
   GEOFENCE_RADIUS_M: z.coerce.number().positive().default(200),
@@ -33,16 +36,39 @@ const Env = z.object({
   PUBLIC_WEB_URL: z.string().url().default('http://localhost:3000'),
 });
 
-export type Config = z.infer<typeof Env>;
+export type Config = Omit<z.infer<typeof Env>, 'JWT_SECRET' | 'MOCK_INTEGRATIONS'> & {
+  JWT_SECRET: string;
+  MOCK_INTEGRATIONS: boolean;
+};
+
+/**
+ * Load the repo's .env (and the package's own, if any) into process.env.
+ * Variables already set win, so CI and production are never overridden.
+ */
+export function loadEnvFiles(): void {
+  for (const file of [path.resolve('.env'), path.resolve('../../.env')]) {
+    if (existsSync(file)) process.loadEnvFile(file);
+  }
+}
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const parsed = Env.safeParse(env);
+  // `KEY=` in a .env file means "not set", not an empty value.
+  const parsed = Env.safeParse(Object.fromEntries(Object.entries(env).filter(([, v]) => v !== '')));
   if (!parsed.success) {
     const problems = parsed.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`);
     throw new Error(`Invalid configuration:\n${problems.join('\n')}`);
   }
-  if (parsed.data.NODE_ENV === 'production' && parsed.data.DATABASE_URL.startsWith('pglite:')) {
+  const { JWT_SECRET, MOCK_INTEGRATIONS, ...rest } = parsed.data;
+  const production = rest.NODE_ENV === 'production';
+  if (production && rest.DATABASE_URL.startsWith('pglite:')) {
     throw new Error('Invalid configuration: production needs a PostgreSQL DATABASE_URL');
   }
-  return parsed.data;
+  if (production && !JWT_SECRET) {
+    throw new Error('Invalid configuration: production needs JWT_SECRET (32+ characters)');
+  }
+  return {
+    ...rest,
+    JWT_SECRET: JWT_SECRET ?? DEV_JWT_SECRET,
+    MOCK_INTEGRATIONS: MOCK_INTEGRATIONS ?? !production,
+  };
 }

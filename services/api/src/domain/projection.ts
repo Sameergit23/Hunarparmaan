@@ -3,7 +3,7 @@
  * raises the integrity flags the README asks for (FR-11).
  */
 import { and, eq, ne } from 'drizzle-orm';
-import type { SyncEvent, SyncEventOf } from '@hunarpramaan/contracts';
+import type { MessageParams, SyncEvent, SyncEventOf } from '@hunarpramaan/contracts';
 import type { Tx } from '../db/client';
 import {
   calibrationScores,
@@ -23,6 +23,7 @@ import { raiseFlag } from './flags';
 import { distanceM } from './geo';
 import type { QualificationLoader } from './packs';
 import { sampleForRescoring } from './rescoring';
+import type { MismatchParams } from './messages';
 import { recomputeResult, resultMismatch } from './results';
 
 /** A projection that cannot apply: the event is kept in the chain and flagged. */
@@ -196,7 +197,7 @@ async function startSession(ctx: ProjectionContext, event: SyncEventOf<'session.
       kind: 'mock_gps',
       sessionId: p.sessionId,
       deviceId: event.deviceId,
-      detail: 'the phone reported a mock location when the session started',
+      params: {},
     });
   }
 }
@@ -222,31 +223,31 @@ async function captureEvidence(ctx: ProjectionContext, event: SyncEventOf<'evide
   });
   ctx.uploads.push({ evidenceId: p.evidenceId, sha256: p.sha256, mimeType: p.mimeType });
 
-  const flagFor = (kind: 'mock_gps' | 'geofence' | 'reused_clip', detail: string) =>
+  const flagFor = (kind: 'mock_gps' | 'geofence' | 'reused_clip', params: MessageParams) =>
     raiseFlag(ctx.tx, {
       kind,
-      detail,
+      params,
       sessionId: p.sessionId,
       evidenceId: p.evidenceId,
       deviceId: event.deviceId,
     });
 
-  if (p.gps.mocked) await flagFor('mock_gps', `mock location while recording ${p.criterionId}`);
+  if (p.gps.mocked) await flagFor('mock_gps', { criterionId: p.criterionId });
   const away = distanceM(session.gps, p.gps);
   if (away > ctx.deps.config.GEOFENCE_RADIUS_M) {
-    await flagFor(
-      'geofence',
-      `clip for ${p.criterionId} recorded ${Math.round(away)} m from where the session started`,
-    );
+    await flagFor('geofence', { criterionId: p.criterionId, metres: Math.round(away) });
   }
   // Exact-hash reuse: the same file submitted as evidence before.
   const [reused] = await ctx.tx
-    .select({ id: evidence.id, sessionId: evidence.sessionId })
+    .select({ criterionId: evidence.criterionId, capturedAt: evidence.capturedAt })
     .from(evidence)
     .where(and(eq(evidence.sha256, p.sha256), ne(evidence.id, p.evidenceId)))
     .limit(1);
   if (reused) {
-    await flagFor('reused_clip', `same file as clip ${reused.id} in session ${reused.sessionId}`);
+    await flagFor('reused_clip', {
+      criterionId: reused.criterionId,
+      date: reused.capturedAt.toISOString().slice(0, 10),
+    });
   }
 }
 
@@ -288,7 +289,7 @@ export async function storeRecommendation(
   ctx: ProjectionContext,
   input: SignInput,
   origin: 'device' | 'web',
-): Promise<string | null> {
+): Promise<MismatchParams | null> {
   const p = input.payload;
   const [session] = await ctx.tx.select().from(sessions).where(eq(sessions.id, input.sessionId));
   if (!session) throw new InvalidEvent(`session ${input.sessionId} is unknown`);
@@ -325,7 +326,7 @@ export async function storeRecommendation(
       kind: 'result_mismatch',
       sessionId: session.id,
       deviceId: session.deviceId,
-      detail: mismatch,
+      params: mismatch,
     });
   }
   await sampleForRescoring(ctx.tx, ctx.deps, session.id);

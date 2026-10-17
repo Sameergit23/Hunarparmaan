@@ -76,6 +76,30 @@ describe('the full flow (E2E-01, server side)', () => {
     );
   });
 
+  it('lists signed recommendations waiting for approval, with their blockers', async () => {
+    const { recommendationId } = await signedSession();
+    const waiting = buildAssessment(h, phone, workerId);
+    await pushOk(h, assessor, phone, waiting.events);
+    const blockedPayload = signPayload(waiting);
+    await pushOk(h, assessor, phone, [phone.event('recommendation.signed', blockedPayload)]);
+
+    // On PGlite this also guards against a read that waits on its own transaction.
+    const res = await h.http.get('/v1/recommendations').set(awardingBody.auth);
+    expect(res.status).toBe(200);
+    const byId = new Map(
+      res.body.map((r: { id: string; blockers: { code: string; params: object }[] }) => [
+        r.id,
+        r.blockers,
+      ]),
+    );
+    expect(byId.get(recommendationId)).toEqual([]);
+    // Blockers are codes plus values, so the web app can word them in Hindi or English.
+    expect(byId.get(blockedPayload.recommendationId)).toContainEqual({
+      code: 'clip_unchecked',
+      params: { criterionId: 'L3-N1.PC1' },
+    });
+  });
+
   it('says a made-up certificate id is not valid', async () => {
     const res = await h.http.get('/v1/certificates/HP-NOTREAL000/verify');
     expect(res.body).toEqual({ valid: false, certificateId: 'HP-NOTREAL000' });
@@ -240,6 +264,9 @@ describe('IT-03: authority', () => {
     expect((await h.http.get('/v1/dashboard/summary').set(ncvet.auth)).status).toBe(200);
     expect((await h.http.get('/v1/sessions').set(ncvet.auth)).status).toBe(403);
     expect((await h.http.get('/v1/flags').set(ncvet.auth)).status).toBe(403);
+    const report = await h.http.get('/v1/dashboard/agreement').set(ncvet.auth);
+    expect(report.status).toBe(200);
+    expect(report.body.assessors).toEqual([]);
   });
 
   it('needs a token for everything under /v1 except the public routes', async () => {

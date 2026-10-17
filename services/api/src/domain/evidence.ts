@@ -45,7 +45,7 @@ async function recordCheck(tx: Tx, deps: Pick<Deps, 'newId'>, clip: Clip, actual
       sessionId: clip.sessionId,
       evidenceId: clip.id,
       deviceId: clip.deviceId,
-      detail: `uploaded file for ${clip.criterionId} does not match the hash taken at capture`,
+      params: { criterionId: clip.criterionId },
     });
   }
   return status;

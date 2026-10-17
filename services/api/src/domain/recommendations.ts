@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { and, desc, eq, inArray, isNull, or } from 'drizzle-orm';
-import { BLOCKING_FLAGS, type ApprovalDecision } from '@hunarpramaan/contracts';
-import type { Tx } from '../db/client';
+import type { ApprovalDecision, Blocker } from '@hunarpramaan/contracts';
+import type { Db, Tx } from '../db/client';
 import {
   approvals,
   certificates,
@@ -12,15 +12,16 @@ import {
   sessions,
 } from '../db/schema';
 import { conflict, notFound } from '../http/errors';
-import { sessionDevices, verifyDeviceChain } from './chain';
+import { sessionDevices, verifyDeviceChain, type DeviceChainResult } from './chain';
 import type { Deps } from './context';
+import { describeBlocker } from './messages';
 import type { QualificationLoader } from './packs';
 import { recomputeResult, resultMismatch } from './results';
 
 type Recommendation = typeof recommendations.$inferSelect;
 
 /** The newest check for each clip. */
-async function latestChecks(tx: Tx, evidenceIds: string[]) {
+async function latestChecks(tx: Db | Tx, evidenceIds: string[]) {
   if (evidenceIds.length === 0) return new Map<string, 'verified' | 'mismatch'>();
   const rows = await tx
     .select()
@@ -35,18 +36,20 @@ async function latestChecks(tx: Tx, evidenceIds: string[]) {
  * broken or missing evidence blocks the recommendation.
  */
 export async function approvalBlockers(
-  tx: Tx,
+  tx: Db | Tx,
   recommendation: Recommendation,
   loadQualification: QualificationLoader,
-): Promise<string[]> {
-  const blockers: string[] = [];
+  /** Chain results already computed in this request, by device. */
+  chains: Map<string, DeviceChainResult> = new Map(),
+): Promise<Blocker[]> {
+  const blockers: Blocker[] = [];
   const [session] = await tx
     .select()
     .from(sessions)
     .where(eq(sessions.id, recommendation.sessionId));
-  if (!session) return ['the session is missing'];
+  if (!session) return [{ code: 'missing_data', params: {} }];
   const qualification = await loadQualification(session.packVersion, session.nqrCode);
-  if (!qualification) return [`pack ${session.packVersion} has no ${session.nqrCode}`];
+  if (!qualification) return [{ code: 'missing_data', params: {} }];
 
   const clips = await tx.select().from(evidence).where(eq(evidence.sessionId, session.id));
   const checks = await latestChecks(
@@ -56,21 +59,25 @@ export async function approvalBlockers(
   const criteriaWithClips = new Set(clips.map((c) => c.criterionId));
   for (const n of qualification.nos) {
     for (const c of n.criteria) {
-      if (!criteriaWithClips.has(c.id)) blockers.push(`no evidence for ${c.id}`);
+      if (!criteriaWithClips.has(c.id))
+        blockers.push({ code: 'no_evidence', params: { criterionId: c.id } });
     }
   }
   for (const clip of clips) {
     const check = checks.get(clip.id);
-    if (check === 'mismatch') blockers.push(`clip for ${clip.criterionId} does not match its hash`);
-    else if (!check) blockers.push(`clip for ${clip.criterionId} is not uploaded and checked yet`);
+    if (check === 'mismatch')
+      blockers.push({ code: 'clip_mismatch', params: { criterionId: clip.criterionId } });
+    else if (!check)
+      blockers.push({ code: 'clip_unchecked', params: { criterionId: clip.criterionId } });
   }
 
+  // Clip hashes and the signed result are checked live, so only these flags add a blocker.
   const blocking = await tx
-    .select({ kind: flags.kind, detail: flags.detail })
+    .select({ kind: flags.kind, params: flags.params })
     .from(flags)
     .where(
       and(
-        inArray(flags.kind, [...BLOCKING_FLAGS]),
+        inArray(flags.kind, ['chain_broken', 'invalid_event']),
         // The session's own flags, plus device-wide ones such as a broken chain.
         or(
           eq(flags.sessionId, session.id),
@@ -79,17 +86,22 @@ export async function approvalBlockers(
       ),
     );
   for (const flag of blocking) {
-    if (flag.kind !== 'result_mismatch')
-      blockers.push(`${flag.kind.replace('_', ' ')}: ${flag.detail}`);
+    blockers.push({
+      code: flag.kind === 'chain_broken' ? 'chain_broken' : 'invalid_event',
+      params: flag.params,
+    });
   }
 
   // The stored chains are re-verified, so an edit in the database blocks approval too.
   for (const deviceId of await sessionDevices(tx, session.id)) {
-    const chain = await verifyDeviceChain(tx, deviceId);
-    if (!chain.ok)
-      blockers.push(
-        `hash chain of ${deviceId} fails at seq ${chain.failedAtSeq} (${chain.reason})`,
-      );
+    const chain = chains.get(deviceId) ?? (await verifyDeviceChain(tx, deviceId));
+    chains.set(deviceId, chain);
+    if (!chain.ok) {
+      blockers.push({
+        code: 'stored_chain',
+        params: { deviceId, seq: chain.failedAtSeq ?? 0, reason: chain.reason ?? '' },
+      });
+    }
   }
 
   // A mismatch is checked live against this recommendation, not from old flags.
@@ -100,7 +112,7 @@ export async function approvalBlockers(
     recommendation.scoreEventIds,
   );
   const mismatch = resultMismatch(recomputed, recommendation);
-  if (mismatch) blockers.push(`result mismatch: ${mismatch}`);
+  if (mismatch) blockers.push({ code: 'result_mismatch', params: mismatch });
 
   return blockers;
 }
@@ -162,7 +174,9 @@ export async function decideRecommendation(
 
   if (input.decision === 'approved') {
     const blockers = await approvalBlockers(tx, recommendation, loadQualification);
-    if (blockers.length > 0) throw conflict('This recommendation cannot be approved yet', blockers);
+    if (blockers.length > 0) {
+      throw conflict('This recommendation cannot be approved yet', blockers.map(describeBlocker));
+    }
   }
 
   const approvalId = deps.newId();

@@ -15,6 +15,13 @@
       "when": 1792273527770,
       "tag": "0001_append_only",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792277197450,
+      "tag": "0002_flag_params",
+      "breakpoints": true
     }
   ]
 }

@@ -19,7 +19,7 @@ import type {
 import { qpResult } from '@hunarpramaan/scoring';
 import { loadPack } from '@hunarpramaan/trade-packs/node';
 import { hashSecret } from '../auth/secrets';
-import { loadConfig } from '../config';
+import { loadConfig, loadEnvFiles } from '../config';
 import { SimulatedPhone, fakeClip } from '../dev/simulated-phone';
 import { clipForAssessor, receiveUpload, rehashEvidence } from '../domain/evidence';
 import { publishPack, qualificationLoader } from '../domain/packs';
@@ -164,6 +164,7 @@ function mulberry32(seed: number) {
 }
 
 export async function seed(): Promise<void> {
+  loadEnvFiles();
   const config = loadConfig();
   const runtime = await createRuntime(config);
   const { deps } = runtime;

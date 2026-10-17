@@ -164,6 +164,7 @@ describe('integrity flags (FR-11)', () => {
     const geofence = (await flagsOf('geofence')).filter((f) => f.sessionId === a.sessionId);
     expect(geofence.length).toBe(a.clips.size);
     expect(geofence[0]!.detail).toMatch(/1112 m from where the session started/);
+    expect(geofence[0]!.params).toEqual({ criterionId: 'L3-N1.PC1', metres: 1112 });
   });
 
   it('flags the exact same clip submitted in two sessions', async () => {

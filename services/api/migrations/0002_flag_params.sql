@@ -1,0 +1,1 @@
+ALTER TABLE "flags" ADD COLUMN "params" jsonb DEFAULT '{}'::jsonb NOT NULL;

@@ -5,7 +5,8 @@
 import { eq } from 'drizzle-orm';
 import type { Qualification, ScoreValue } from '@hunarpramaan/contracts';
 import { EPSILON, qpResult, type QpResult } from '@hunarpramaan/scoring';
-import type { Tx } from '../db/client';
+import type { Db, Tx } from '../db/client';
+import type { MismatchParams } from './messages';
 import { scores } from '../db/schema';
 
 type ScoreRow = typeof scores.$inferSelect;
@@ -40,7 +41,7 @@ export interface Recomputed {
  * or from the standing scores when `scoreEventIds` is not given.
  */
 export async function recomputeResult(
-  tx: Tx,
+  tx: Db | Tx,
   sessionId: string,
   qualification: Qualification,
   scoreEventIds?: readonly string[],
@@ -80,14 +81,15 @@ export async function recomputeResult(
 export function resultMismatch(
   recomputed: Recomputed,
   signed: { outcome: 'pass' | 'fail'; aggregate: number },
-): string | null {
+): MismatchParams | null {
   const { result, problems } = recomputed;
-  if (problems.length > 0) return problems.join('; ');
-  if (result.status === 'incomplete') return `scores missing for ${result.missing.join(', ')}`;
+  if (problems.length > 0) return { reason: 'scores' };
+  if (result.status === 'incomplete')
+    return { reason: 'incomplete', criteria: result.missing.join(', ') };
   if (result.status !== signed.outcome)
-    return `signed ${signed.outcome}, but the scores give ${result.status}`;
+    return { reason: 'outcome', signed: signed.outcome, actual: result.status };
   if (Math.abs(result.value - signed.aggregate) > EPSILON * 1000) {
-    return `signed aggregate ${signed.aggregate}, but the scores give ${result.value}`;
+    return { reason: 'aggregate', signed: signed.aggregate, actual: result.value };
   }
   return null;
 }
