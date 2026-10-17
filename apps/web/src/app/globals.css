@@ -1,0 +1,33 @@
+@import 'tailwindcss';
+@config '../../tailwind.config.ts';
+
+/* Wire code base styles (docs/design/wire-code.md). */
+@layer base {
+  html {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-hind), 'Noto Sans Devanagari', sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--color-ground);
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+  a {
+    color: var(--color-ink);
+  }
+  a:hover {
+    color: var(--color-earthGreen);
+  }
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
