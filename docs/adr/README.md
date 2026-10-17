@@ -12,3 +12,5 @@ An accepted ADR is not edited later; a new ADR supersedes it.
 | [005](005-seaweedfs-object-store.md) | SeaweedFS as the S3 store | Accepted |
 | [006](006-ai-output-is-a-suggestion.md) | AI output is a suggestion; only people decide | Accepted |
 | [007](007-detector-licence.md) | Safety-gear detector licence | Accepted |
+| [008](008-database-schema-and-tooling.md) | Database schema, append-only triggers and test databases | Accepted |
+| [009](009-web-app.md) | Web app: Next.js with server-side API calls and Wire code | Accepted |

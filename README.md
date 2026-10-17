@@ -25,7 +25,7 @@ An offline-first, AI-assisted assessment tool for Recognition of Prior Learning 
 | Languages | Hindi and English, by voice or text |
 
 > [!NOTE]
-> **Status: Sprint 0 starts on 19 Oct 2026.** The design is done and the code starts now. We wrote this README first, so it is the contract we build to. Commands marked *planned* start working as Sprint 0 lands.
+> **Status: Sprint 0 (19–25 Oct 2026).** The API, the web dashboard and the shared packages run, with tests; the mobile app and the AI service come next. We wrote this README first, so it is the contract we build to. Commands marked *planned* start working as the sprints land.
 
 **Contents:** [Why](#why-this-exists) · [What it does](#what-it-does) · [How it works](#how-it-works) · [AI vs assessor](#ai-supports-the-assessor-decides) · [AI workflow](#ai-workflow) · [UI design](#ui-design) · [Architecture](#architecture) · [Stack](#tech-stack) · [Repo layout](#repository-layout) · [Getting started](#getting-started) · [Core logic](#core-logic) · [Data model](#data-model) · [API](#api-overview) · [Offline, integrity, privacy](#offline-integrity-and-privacy) · [**SDLC plan**](#development-lifecycle-sdlc) · [Testing](#testing-and-evaluation) · [Deployment](#deployment-and-release) · [Maintenance](#maintenance) · [Team](#team) · [Contributing](#contributing) · [References](#references)
 
@@ -284,42 +284,52 @@ Hunarparmaan/
 
 ## Getting started
 
-> These commands describe the target setup (*planned*). They work once Sprint 0 is merged.
-
 ### Prerequisites
 
 | Tool | Version | Used for |
 |---|---|---|
 | Node.js | 22 or 24 (LTS) | API, dashboard, mobile tooling |
-| pnpm | 10 | Workspaces |
-| Python + [uv](https://docs.astral.sh/uv/) | 3.12 | AI service |
-| Docker + Compose v2 | Latest stable | PostgreSQL, Redis, S3 store |
-| Android Studio + JDK 17 | Latest stable | Building the Android dev build |
+| pnpm | 10 (`corepack enable`) | Workspaces |
+| Docker + Compose v2 | Latest stable | Optional: PostgreSQL, Redis and the S3 store |
+| Python + [uv](https://docs.astral.sh/uv/) | 3.12 | AI service (*planned*) |
+| Android Studio + JDK 17 | Latest stable | Building the Android dev build (*planned*) |
 | An Android phone | Android 9+, 3 GB RAM | The target device: test on it, not only on the emulator |
 
-### Run it locally
+### Quick start, no Docker
+
+The API falls back to [PGlite](https://pglite.dev), a real PostgreSQL that runs inside Node, so nothing else is needed.
 
 ```bash
-# 1. Clone and configure
 git clone https://github.com/Sameergit23/Hunarparmaan.git
 cd Hunarparmaan
-cp .env.example .env              # add the keys you have; everything else has a local default
+pnpm install
+pnpm db:seed      # trade pack, demo accounts and a demo pilot (8 sessions)
+pnpm dev          # API on :4000, web on :3000
+```
 
-# 2. Start PostgreSQL + pgvector, Redis and the S3 store
+Open `http://localhost:3000` and sign in with a demo account: the code is shown on screen (OTP is mocked) and the PIN is `1234`.
+
+| Demo account | Mobile number | Sees |
+|---|---|---|
+| Assessment agency | `9000000006` | Dashboard, sessions, flags |
+| Awarding body | `9000000007` | Dashboard, approvals, sessions |
+| NCVET | `9000000008` | Dashboard (aggregates only) |
+
+The names, numbers and study figures in the demo are made up; the study rounds are marked as demo numbers.
+
+### Full setup, with Docker
+
+```bash
+cp .env.example .env              # uncomment the Docker block
 docker compose -f infra/docker-compose.yml up -d
-
-# 3. Install, migrate and seed (loads the Assistant Electrician trade pack and demo users)
 pnpm install
 pnpm db:migrate
 pnpm db:seed
+pnpm dev                                         # API and web
+pnpm --filter @hunarpramaan/api dev:worker       # queue worker (needs REDIS_URL)
 
-# 4. Terminal 1: the AI service
+# Planned: the AI service and the Android dev build
 cd services/ai && uv sync && uv run uvicorn app.main:app --reload --port 8000
-
-# 5. Terminal 2: the API, queue worker and dashboard
-pnpm dev
-
-# 6. Terminal 3: build and run the Android dev build on a phone connected by USB
 pnpm --filter @hunarpramaan/mobile android     # runs: npx expo run:android
 ```
 
@@ -327,9 +337,9 @@ The phone has to reach the API, so set `EXPO_PUBLIC_API_URL` to your laptop's LA
 
 | Local service | Address |
 |---|---|
-| API (OpenAPI docs at `/docs`) | `http://localhost:4000` |
+| API | `http://localhost:4000` (OpenAPI docs at `/docs` are *planned*) |
 | Web dashboard | `http://localhost:3000` |
-| AI service (docs at `/docs`) | `http://localhost:8000` |
+| AI service | `http://localhost:8000` (*planned*) |
 | PostgreSQL | `localhost:5432` |
 | Redis | `localhost:6379` |
 | S3 store (SeaweedFS) | `http://localhost:8333` |
@@ -341,12 +351,15 @@ The phone has to reach the API, so set `EXPO_PUBLIC_API_URL` to your laptop's LA
 | `DATABASE_URL` | `postgres://hp:hp@localhost:5432/hunarpramaan` | api |
 | `REDIS_URL` | `redis://localhost:6379` | api |
 | `S3_ENDPOINT` · `S3_BUCKET` · `S3_ACCESS_KEY` · `S3_SECRET_KEY` | `http://localhost:8333` · `evidence` · … | api |
-| `JWT_SECRET` | a long random string | api |
+| `JWT_SECRET` | a long random string; required in production | api |
 | `AI_SERVICE_URL` | `http://localhost:8000` | api worker |
 | `LLM_BASE_URL` · `LLM_API_KEY` · `LLM_MODEL` | any OpenAI-compatible endpoint, preferably hosted in India | ai |
 | `BHASHINI_USER_ID` · `BHASHINI_API_KEY` | from the Bhashini portal | ai |
 | `SARVAM_API_KEY` | backup speech provider | ai |
-| `MOCK_INTEGRATIONS` | `true` (SIDH, eKYC, OTP, NQR) | api |
+| `MOCK_INTEGRATIONS` | `true` (SIDH, eKYC, OTP, NQR); on by default outside production | api |
+| `PUBLIC_API_URL` | `http://localhost:4000` (where phones upload clips without S3) | api |
+| `CLOCK_DRIFT_LIMIT_S` | `300` | api |
+| `API_URL` | `http://localhost:4000` | web |
 | `ROUTING_THRESHOLD` | `0.70` (NCVET rule; sent to phones in the trade pack) | api |
 | `RESCORE_SAMPLE_RATE` | `0.10` | api |
 | `GEOFENCE_RADIUS_M` | `200` | api |
@@ -359,13 +372,14 @@ The phone has to reach the API, so set `EXPO_PUBLIC_API_URL` to your laptop's LA
 
 | Command | What it does | Works now |
 |---|---|---|
-| `pnpm dev` | API, queue worker and dashboard in watch mode | planned |
-| `pnpm test` | All unit and integration tests (TypeScript and Python) | ✅ shared packages |
-| `pnpm lint` · `pnpm typecheck` | ESLint/Prettier and TypeScript checks | ✅ |
+| `pnpm dev` | API and web in watch mode | ✅ |
+| `pnpm test` | Unit and integration tests in every workspace | ✅ TypeScript; Python with the AI service |
+| `pnpm lint` · `pnpm typecheck` · `pnpm build` | ESLint and Prettier, TypeScript, production builds | ✅ |
 | `pnpm format` | Rewrite files in Prettier style | ✅ |
-| `pnpm db:migrate` · `pnpm db:seed` | Database schema and demo data | planned |
+| `pnpm db:migrate` · `pnpm db:seed` | Database schema and demo data | ✅ |
 | `pnpm pack:build electrician` | Validate and package a trade pack for phones | ✅ |
-| `pnpm e2e:mobile` · `pnpm e2e:web` | Maestro and Playwright end-to-end flows | planned |
+| `pnpm e2e:web` | Playwright end-to-end flows (needs `pnpm dev` and a seeded database) | ✅ |
+| `pnpm e2e:mobile` | Maestro end-to-end flows on the phone | planned |
 | `pnpm eval:study` · `pnpm eval:mapping` | Rater-study and mapping-test analysis | planned |
 
 ## Core logic
@@ -462,7 +476,7 @@ A `released` pack also needs real NOS codes and at least 3 calibration clips; `p
 
 ## Data model
 
-Ten tables. Scores, evidence and audit entries are append-only. Each session stores the trade-pack version it used, so results stay valid after a QP is revised.
+The core entities are below. The full schema has 27 tables, adding accounts, devices, flags, re-scoring, approvals and certificates; [`docs/design/data-model.md`](docs/design/data-model.md) describes every one. Scores, evidence and audit entries are append-only, enforced by a database trigger. Each session stores the trade-pack version it used, so results stay valid after a QP is revised.
 
 ```mermaid
 erDiagram
@@ -572,14 +586,20 @@ erDiagram
 | GET | `/v1/trade-packs/:id` | Phones | Downloads a versioned trade pack |
 | POST | `/v1/sync/push` | Phones | Uploads a batch of events (idempotent by event id); returns acks, server time and upload URLs |
 | GET | `/v1/sync/pull?cursor=` | Phones | Returns new packs, assignments, re-score tasks and results |
+| PUT | `/v1/evidence/:id/content` | Phones | Uploads a clip through the API when there is no S3 store; a file that does not match its hash is refused |
 | POST | `/v1/evidence/:id/complete` | Phones | Confirms a clip upload; queues the hash re-check and vision jobs |
 | POST | `/v1/declarations/:id/override` | Mobiliser | Changes the route or QP, with a reason |
-| POST | `/v1/sessions/:id/sign` | Assessor | Signs the recommendation |
+| GET | `/v1/sessions` · `/v1/sessions/:id` | Agency, awarding body | Sessions with evidence checks, scores, flags and the recommendation |
+| POST | `/v1/sessions/:id/sign` | Assessor | Signs the recommendation; refused if the result does not match the scores |
+| GET | `/v1/recommendations` | Agency, awarding body | Signed recommendations waiting for approval, with what blocks them |
 | POST | `/v1/recommendations/:id/approve` | Awarding body | Approves the recommendation and issues the certificate |
 | GET | `/v1/audit/sessions/:id/verify` | Agency | Verifies the hash chain |
-| GET | `/v1/dashboard/agreement` | Agency, NCVET | Returns agreement metrics and outliers |
+| GET | `/v1/flags` · POST `/v1/flags/:id/review` | Agency | Integrity flags and the agency's review notes |
+| GET | `/v1/dashboard/summary` | Agency, awarding body, NCVET | Key numbers |
+| GET | `/v1/dashboard/agreement` | Agency, awarding body, NCVET | Agreement metrics and outlier assessors (NCVET gets no per-assessor rows) |
 | GET · POST | `/v1/rescoring` | Master assessor | Blind re-score queue and submissions |
 | GET | `/v1/certificates/:id/verify` | Public | QR verification page |
+| GET | `/v1/public/study` | Public | Rater-study results for the website |
 | POST | `/v1/exports/sidh` | Awarding body | Mock SIDH export |
 
 The AI service is internal and only the queue worker calls it: `POST /extract`, `/embed`, `/map`, `/vision/ppe`, `/phash` and `/stats/agreement`.

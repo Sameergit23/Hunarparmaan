@@ -16,7 +16,7 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 
 ## Status and dates
 
-- Sprint 0 runs 19–25 Oct 2026. The pnpm workspace, CI and the four shared packages exist (`packages/contracts`, `scoring`, `audit`, `trade-packs`); `apps/` and `services/` do not yet. The layout in README "Repository layout" is the target, not the current state.
+- Sprint 0 runs 19–25 Oct 2026. These exist: the four shared packages (`packages/contracts`, `scoring`, `audit`, `trade-packs`), `services/api` and `apps/web`. Still to come: `apps/mobile`, `services/ai` and `evaluation/`. The layout in README "Repository layout" is the target, not the current state.
 - Gates: G1 Sprint 0 exit (25 Oct) · G2 feature complete (29 Nov) · G3 demo-ready (6 Dec). The 36-hour Grand Finale is in December 2026.
 - The sprint plan, requirements (FR-xx, NFR-xx) and test plan are in README "Development lifecycle (SDLC)".
 
@@ -66,21 +66,29 @@ Node 22 or 24 and pnpm 10 (`corepack enable` picks the pinned version).
 | Command | What it does |
 |---|---|
 | `pnpm install` | Install all workspaces |
+| `pnpm dev` | API (:4000) and web (:3000) in watch mode; with no `DATABASE_URL` the API uses PGlite in `services/api/.data/` |
+| `pnpm db:seed` · `pnpm db:migrate` | Demo pilot through the real sync path (PIN `1234`, OTP shown on screen) · migrations |
 | `pnpm test` | Vitest in every workspace, through Turborepo |
-| `pnpm typecheck` | `tsc` in every workspace |
+| `pnpm typecheck` · `pnpm build` | `tsc` and production builds in every workspace |
 | `pnpm lint` | ESLint, then a Prettier check (`pnpm format` fixes formatting) |
+| `pnpm e2e:web` | Playwright against a running, seeded `pnpm dev` (set `PLAYWRIGHT_CHROMIUM_PATH` to use an installed Chromium) |
 | `pnpm pack:build electrician` | Validate the trade pack and write `packages/trade-packs/dist/` |
-| `pnpm --filter @hunarpramaan/<pkg> test` | One package only |
+| `pnpm --filter @hunarpramaan/<pkg> test` | One workspace only |
+| `pnpm --filter @hunarpramaan/api db:generate` | New migration from `services/api/src/db/schema.ts` |
 
-Run `pnpm lint && pnpm typecheck && pnpm test` before every push; CI runs the same plus gitleaks and `pnpm audit`.
+Run `pnpm lint && pnpm typecheck && pnpm test` before every push. CI runs the same, plus a build, the API tests on PostgreSQL 17, Playwright, gitleaks and `pnpm audit`.
 
-Still planned (README "Getting started"): `pnpm dev`, `pnpm db:migrate`, `pnpm db:seed`, `pnpm e2e:*`, `pnpm eval:*`. Add them here when they exist.
+Still planned: `pnpm e2e:mobile`, `pnpm eval:*`. Add them here when they exist.
 
 **Code notes**
 
 - Shared packages export TypeScript source (`"exports": "./src/index.ts"`); there is no build step (ADR 001).
 - `@hunarpramaan/audit` hashes events as RFC 8785 canonical JSON. Don't hash `JSON.stringify` output anywhere else.
-- Who may create which event or action is the `AUTHORITY` table in `packages/contracts/src/authority.ts` (ADR 006). Check it there; don't hard-code roles in handlers.
+- Who may create which event or action is the `AUTHORITY` table in `packages/contracts/src/authority.ts` (ADR 006), and reads are `READ_ACCESS`. Check them there; don't hard-code roles in handlers.
+- API code layout: `src/routes` (HTTP only) → `src/domain` (rules and queries) → `src/db`. Read models take no transaction (ADR 008).
+- Schema changes: edit `schema.ts`, run `db:generate`, and add the table to `APPEND_ONLY_TABLES` and the trigger migration if it holds events.
+- Flags and approval blockers are codes plus values; word them in `apps/web/src/lib/messages.ts` and both dictionaries, never as English from the API.
+- Web strings live in `apps/web/src/lib/i18n/en.ts` and `hi.ts`; the Hindi file is typed against the English one.
 
 ## How we work
 
