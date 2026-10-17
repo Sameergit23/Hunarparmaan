@@ -1,0 +1,568 @@
+{
+  "schemaVersion": "1.0",
+  "pack": {
+    "id": "csdci-electrician",
+    "version": "2026.10.0",
+    "status": "draft",
+    "languages": ["hi", "en"]
+  },
+  "policy": {
+    "routingThreshold": 0.7,
+    "reviewBand": {
+      "low": 0.65,
+      "high": 0.75
+    }
+  },
+  "qualifications": [
+    {
+      "nqrCode": "QG-03-CO-03951-2025-V2-CSDCI",
+      "title": {
+        "en": "Assistant Electrician",
+        "hi": "सहायक इलेक्ट्रीशियन"
+      },
+      "nsqfLevel": 3,
+      "awardingBody": "CSDCI",
+      "passRule": {
+        "aggregatePercent": 70
+      },
+      "nos": [
+        {
+          "code": "DRAFT-L3-N1",
+          "title": {
+            "en": "Assist in wiring and installation",
+            "hi": "वायरिंग और इंस्टॉलेशन में सहायता करना"
+          },
+          "weight": 0.4,
+          "criteria": [
+            {
+              "id": "L3-N1.PC1",
+              "text": {
+                "en": "Lay PVC conduit and draw wires through it",
+                "hi": "पीवीसी कंड्यूट बिछाना और उसमें तार खींचना"
+              },
+              "marks": 10,
+              "glossary": ["conduit", "pipe me taar", "wiring", "ghar ki wiring", "taar kheechna"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["ppe.gloves"]
+            },
+            {
+              "id": "L3-N1.PC2",
+              "text": {
+                "en": "Connect switches, sockets and lamp holders as per the wiring diagram",
+                "hi": "वायरिंग डायग्राम के अनुसार स्विच, सॉकेट और होल्डर जोड़ना"
+              },
+              "marks": 10,
+              "glossary": ["switch board", "socket", "holder", "board lagana", "fitting"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["step.order"]
+            },
+            {
+              "id": "L3-N1.PC3",
+              "text": {
+                "en": "Install an MCB in a distribution board",
+                "hi": "डिस्ट्रीब्यूशन बोर्ड में एमसीबी लगाना"
+              },
+              "marks": 10,
+              "glossary": ["MCB", "MCB lagana", "DB", "distribution board", "breaker"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["ppe.gloves", "step.order"]
+            }
+          ]
+        },
+        {
+          "code": "DRAFT-L3-N2",
+          "title": {
+            "en": "Carry out earthing and basic testing",
+            "hi": "अर्थिंग और बुनियादी जाँच करना"
+          },
+          "weight": 0.3,
+          "criteria": [
+            {
+              "id": "L3-N2.PC1",
+              "text": {
+                "en": "Prepare an earth pit and connect the earth wire",
+                "hi": "अर्थ पिट तैयार करना और अर्थ तार जोड़ना"
+              },
+              "marks": 10,
+              "glossary": ["earthing", "earthing dena", "earth pit", "earth wire", "arthing"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["ppe.gloves"]
+            },
+            {
+              "id": "L3-N2.PC2",
+              "text": {
+                "en": "Measure earth resistance and judge it against the limit",
+                "hi": "अर्थ प्रतिरोध मापना और सीमा से तुलना करके जाँचना"
+              },
+              "marks": 10,
+              "glossary": ["earth tester", "earth resistance", "megger", "reading lena"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot use the tester or misreads it",
+                  "hi": "टेस्टर नहीं चला पाते या रीडिंग गलत पढ़ते हैं"
+                },
+                "1": {
+                  "en": "Takes a reading but skips a safety step or cannot say if the value is acceptable",
+                  "hi": "रीडिंग लेते हैं, पर कोई सुरक्षा चरण छोड़ देते हैं या नहीं बता पाते कि मान ठीक है या नहीं"
+                },
+                "2": {
+                  "en": "Takes a correct reading safely and judges it against the limit",
+                  "hi": "सुरक्षित तरीके से सही रीडिंग लेते हैं और सीमा से तुलना करके बताते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["ppe.gloves", "meter.reading"]
+            },
+            {
+              "id": "L3-N2.PC3",
+              "text": {
+                "en": "Check continuity and polarity with a multimeter",
+                "hi": "मल्टीमीटर से कंटिन्यूटी और पोलैरिटी जाँचना"
+              },
+              "marks": 5,
+              "glossary": ["multimeter", "tester", "continuity", "phase neutral check"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["meter.reading"]
+            }
+          ]
+        },
+        {
+          "code": "DRAFT-L3-N3",
+          "title": {
+            "en": "Work safely at the construction site",
+            "hi": "निर्माण स्थल पर सुरक्षित काम करना"
+          },
+          "weight": 0.3,
+          "criteria": [
+            {
+              "id": "L3-N3.PC1",
+              "text": {
+                "en": "Wear and check personal protective equipment",
+                "hi": "व्यक्तिगत सुरक्षा उपकरण (पीपीई) पहनना और जाँचना"
+              },
+              "marks": 10,
+              "glossary": ["gloves", "dastane", "helmet", "safety shoes", "safety belt"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "photo"
+              },
+              "aiChecks": ["ppe.gloves", "ppe.helmet"]
+            },
+            {
+              "id": "L3-N3.PC2",
+              "text": {
+                "en": "Isolate the supply and apply lock-out/tag-out before work",
+                "hi": "काम से पहले सप्लाई बंद करना और लॉक-आउट/टैग-आउट लगाना"
+              },
+              "marks": 10,
+              "glossary": ["main band karna", "supply kaatna", "lockout", "tag lagana"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["step.order"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nqrCode": "QG-04-CO-03952-2025-V2-CSDCI",
+      "title": {
+        "en": "Construction Electrician-LV",
+        "hi": "कंस्ट्रक्शन इलेक्ट्रीशियन-एलवी"
+      },
+      "nsqfLevel": 4,
+      "awardingBody": "CSDCI",
+      "passRule": {
+        "aggregatePercent": 70
+      },
+      "nos": [
+        {
+          "code": "DRAFT-L4-N1",
+          "title": {
+            "en": "Install low-voltage wiring systems",
+            "hi": "लो-वोल्टेज वायरिंग सिस्टम लगाना"
+          },
+          "weight": 0.4,
+          "criteria": [
+            {
+              "id": "L4-N1.PC1",
+              "text": {
+                "en": "Lay PVC conduit and draw wires through it",
+                "hi": "पीवीसी कंड्यूट बिछाना और उसमें तार खींचना"
+              },
+              "marks": 10,
+              "glossary": ["conduit", "pipe me taar", "wiring", "ghar ki wiring", "taar kheechna"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["ppe.gloves"]
+            },
+            {
+              "id": "L4-N1.PC2",
+              "text": {
+                "en": "Install and wire a distribution board with MCB and RCCB",
+                "hi": "एमसीबी और आरसीसीबी के साथ डिस्ट्रीब्यूशन बोर्ड लगाना और उसकी वायरिंग करना"
+              },
+              "marks": 10,
+              "glossary": ["RCCB", "ELCB", "DB wiring", "MCB", "distribution board"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["ppe.gloves", "step.order"]
+            },
+            {
+              "id": "L4-N1.PC3",
+              "text": {
+                "en": "Install cable trays and run armoured cable",
+                "hi": "केबल ट्रे लगाना और आर्मर्ड केबल बिछाना"
+              },
+              "marks": 10,
+              "glossary": ["cable tray", "armoured cable", "gland", "cable bichhana"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["ppe.gloves"]
+            }
+          ]
+        },
+        {
+          "code": "DRAFT-L4-N2",
+          "title": {
+            "en": "Test and commission installations",
+            "hi": "इंस्टॉलेशन की जाँच करना और चालू करना"
+          },
+          "weight": 0.35,
+          "criteria": [
+            {
+              "id": "L4-N2.PC1",
+              "text": {
+                "en": "Measure insulation resistance with a megger",
+                "hi": "मेगर से इंसुलेशन प्रतिरोध मापना"
+              },
+              "marks": 10,
+              "glossary": ["megger", "insulation test", "IR test"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["ppe.gloves", "meter.reading"]
+            },
+            {
+              "id": "L4-N2.PC2",
+              "text": {
+                "en": "Measure earth resistance and judge it against the limit",
+                "hi": "अर्थ प्रतिरोध मापना और सीमा से तुलना करके जाँचना"
+              },
+              "marks": 10,
+              "glossary": ["earth tester", "earth resistance", "megger", "reading lena"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot use the tester or misreads it",
+                  "hi": "टेस्टर नहीं चला पाते या रीडिंग गलत पढ़ते हैं"
+                },
+                "1": {
+                  "en": "Takes a reading but skips a safety step or cannot say if the value is acceptable",
+                  "hi": "रीडिंग लेते हैं, पर कोई सुरक्षा चरण छोड़ देते हैं या नहीं बता पाते कि मान ठीक है या नहीं"
+                },
+                "2": {
+                  "en": "Takes a correct reading safely and judges it against the limit",
+                  "hi": "सुरक्षित तरीके से सही रीडिंग लेते हैं और सीमा से तुलना करके बताते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["ppe.gloves", "meter.reading"]
+            },
+            {
+              "id": "L4-N2.PC3",
+              "text": {
+                "en": "Inspect a temporary distribution board at the site",
+                "hi": "साइट पर अस्थायी डिस्ट्रीब्यूशन बोर्ड का निरीक्षण करना"
+              },
+              "marks": 5,
+              "glossary": ["temporary board", "site DB", "temporary connection"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "photo"
+              },
+              "aiChecks": ["ppe.gloves"]
+            }
+          ]
+        },
+        {
+          "code": "DRAFT-L4-N3",
+          "title": {
+            "en": "Work safely and follow site procedures",
+            "hi": "सुरक्षित काम करना और साइट के नियमों का पालन करना"
+          },
+          "weight": 0.25,
+          "criteria": [
+            {
+              "id": "L4-N3.PC1",
+              "text": {
+                "en": "Wear and check personal protective equipment",
+                "hi": "व्यक्तिगत सुरक्षा उपकरण (पीपीई) पहनना और जाँचना"
+              },
+              "marks": 10,
+              "glossary": ["gloves", "dastane", "helmet", "safety shoes", "safety belt"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "photo"
+              },
+              "aiChecks": ["ppe.gloves", "ppe.helmet"]
+            },
+            {
+              "id": "L4-N3.PC2",
+              "text": {
+                "en": "Isolate the supply and apply lock-out/tag-out before work",
+                "hi": "काम से पहले सप्लाई बंद करना और लॉक-आउट/टैग-आउट लगाना"
+              },
+              "marks": 10,
+              "glossary": ["main band karna", "supply kaatna", "lockout", "tag lagana"],
+              "rubric": {
+                "0": {
+                  "en": "Cannot do the task, or does it unsafely",
+                  "hi": "काम नहीं कर पाते, या असुरक्षित तरीके से करते हैं"
+                },
+                "1": {
+                  "en": "Does the task but misses a step or needs help",
+                  "hi": "काम करते हैं, पर कोई चरण छूट जाता है या मदद लेनी पड़ती है"
+                },
+                "2": {
+                  "en": "Does the task correctly and safely, without help",
+                  "hi": "काम सही और सुरक्षित तरीके से, बिना मदद के करते हैं"
+                }
+              },
+              "evidence": {
+                "type": "video",
+                "minSeconds": 30,
+                "maxSeconds": 60
+              },
+              "aiChecks": ["step.order"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "calibrationClips": [],
+  "models": {
+    "asr": "vosk-model-small-hi-0.22"
+  }
+}
