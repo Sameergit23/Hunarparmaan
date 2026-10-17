@@ -51,3 +51,10 @@ Thumbs.db
 
 # Local API data (PGlite database and uploaded clips)
 .data/
+
+# Next.js
+next-env.d.ts
+
+# Playwright
+test-results/
+playwright-report/

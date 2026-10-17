@@ -8,3 +8,6 @@ coverage/
 **/test-vectors/
 # Wire code reference screens are kept exactly as designed
 docs/design/screens/
+.next/
+test-results/
+playwright-report/

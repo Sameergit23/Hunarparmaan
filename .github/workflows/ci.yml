@@ -61,6 +61,43 @@ jobs:
         env:
           TEST_DATABASE_URL: postgres://hp:hp@localhost:5432/hp_test
 
+  e2e-web:
+    name: Web end-to-end (Playwright)
+    runs-on: ubuntu-latest
+    env:
+      # Throwaway values for this job only; the database is in-process PGlite.
+      JWT_SECRET: ci-${{ github.run_id }}-${{ github.run_attempt }}-throwaway-signing-key
+      MOCK_INTEGRATIONS: 'true'
+      API_URL: http://localhost:4000
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Seed the demo pilot
+        run: pnpm db:seed
+      - name: Build the API and the web app
+        run: pnpm build
+      - name: Start both
+        run: |
+          (cd services/api && node dist/server.js > ../../api.log 2>&1 &)
+          (cd apps/web && pnpm start > ../../web.log 2>&1 &)
+          for i in $(seq 1 60); do curl -sf localhost:4000/healthz && curl -sf -o /dev/null localhost:3000 && exit 0; sleep 2; done
+          cat api.log web.log; exit 1
+      - run: pnpm --filter @hunarpramaan/web exec playwright install --with-deps chromium
+      - run: pnpm e2e:web
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-results
+          path: |
+            apps/web/test-results
+            api.log
+            web.log
+
   secrets:
     name: Secret scan
     runs-on: ubuntu-latest
