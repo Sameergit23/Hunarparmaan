@@ -6,10 +6,10 @@
 
 An offline-first, AI-assisted assessment tool for Recognition of Prior Learning (RPL), built for Smart India Hackathon 2026.
 
-[![SIH 2026](https://img.shields.io/badge/Smart%20India%20Hackathon-2026-0070C0)](https://www.sih.gov.in/)
-![Category](https://img.shields.io/badge/category-software-7030A0)
-![Status](https://img.shields.io/badge/status-sprint%200-ED7D31)
-![Pilot trade](https://img.shields.io/badge/pilot-Assistant%20Electrician%20%28NSQF%20L3%29-2F5597)
+[![SIH 2026](https://img.shields.io/badge/Smart%20India%20Hackathon-2026-000000)](https://www.sih.gov.in/)
+![Category](https://img.shields.io/badge/category-software-000000)
+![Status](https://img.shields.io/badge/status-sprint%200-000000)
+![Pilot trade](https://img.shields.io/badge/pilot-Assistant%20Electrician%20%28NSQF%20L3%29-000000)
 
 </div>
 
@@ -27,7 +27,7 @@ An offline-first, AI-assisted assessment tool for Recognition of Prior Learning 
 > [!NOTE]
 > **Status: Sprint 0 starts on 19 Oct 2026.** The design is done and the code starts now. We wrote this README first, so it is the contract we build to. Commands marked *planned* start working as Sprint 0 lands.
 
-**Contents:** [Why](#why-this-exists) · [What it does](#what-it-does) · [How it works](#how-it-works) · [AI vs assessor](#ai-supports-the-assessor-decides) · [AI workflow](#ai-workflow) · [Architecture](#architecture) · [Stack](#tech-stack) · [Repo layout](#repository-layout) · [Getting started](#getting-started) · [Core logic](#core-logic) · [Data model](#data-model) · [API](#api-overview) · [Offline, integrity, privacy](#offline-integrity-and-privacy) · [**SDLC plan**](#development-lifecycle-sdlc) · [Testing](#testing-and-evaluation) · [Deployment](#deployment-and-release) · [Maintenance](#maintenance) · [Team](#team) · [Contributing](#contributing) · [References](#references)
+**Contents:** [Why](#why-this-exists) · [What it does](#what-it-does) · [How it works](#how-it-works) · [AI vs assessor](#ai-supports-the-assessor-decides) · [AI workflow](#ai-workflow) · [UI design](#ui-design) · [Architecture](#architecture) · [Stack](#tech-stack) · [Repo layout](#repository-layout) · [Getting started](#getting-started) · [Core logic](#core-logic) · [Data model](#data-model) · [API](#api-overview) · [Offline, integrity, privacy](#offline-integrity-and-privacy) · [**SDLC plan**](#development-lifecycle-sdlc) · [Testing](#testing-and-evaluation) · [Deployment](#deployment-and-release) · [Maintenance](#maintenance) · [Team](#team) · [Contributing](#contributing) · [References](#references)
 
 ---
 
@@ -57,6 +57,7 @@ Everything on the phone works with no network and syncs later.
 ## How it works
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#FAFAF7", "primaryBorderColor": "#8E918A", "primaryTextColor": "#000000", "clusterBkg": "#E4E5E0", "clusterBorder": "#8E918A", "titleColor": "#000000", "lineColor": "#8E918A"}}}%%
 flowchart TB
     subgraph A["Before the test · worker and mobiliser"]
         direction LR
@@ -71,13 +72,13 @@ flowchart TB
         s8["8 · Sync + checks<br/>hash chain, flags"] --> s9["9 · Blind re-score<br/>random 10%"] --> s10["10 · SSC approves<br/>QR certificate"]
     end
     A --> B --> C
-    classDef ai fill:#FBE5D6,stroke:#ED7D31,color:#262626
-    classDef human fill:#DEEBF7,stroke:#2F5597,color:#262626
+    classDef ai fill:#F2B600,stroke:#000000,stroke-width:2px,color:#000000
+    classDef human fill:#000000,stroke:#000000,color:#FAFAF7
     class s2,s3,s8 ai
-    class s7,s10 human
+    class s6,s7,s10 human
 ```
 
-Orange steps are AI or automated. Blue steps are decisions a person makes. AI never signs or approves.
+Yellow steps are AI or automated. Black steps are decisions a person makes. AI never scores, signs or approves.
 
 ## AI supports, the assessor decides
 
@@ -97,6 +98,7 @@ The PS asks where the tool supports assessor judgement and where it would replac
 The AI does four jobs in a row. After each job, a person checks the result before the next one starts.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#FAFAF7", "primaryBorderColor": "#8E918A", "primaryTextColor": "#000000", "clusterBkg": "#E4E5E0", "clusterBorder": "#8E918A", "titleColor": "#000000", "lineColor": "#8E918A"}}}%%
 flowchart TB
     subgraph r1["Step 1"]
         direction LR
@@ -115,13 +117,13 @@ flowchart TB
         a4["Consistency checks<br/>hash chain, kappa, outliers"] --> h4["Agency reviews<br/>flags, blind re-scores"]
     end
     r1 --> r2 --> r3 --> r4
-    classDef ai fill:#EEEDFE,stroke:#534AB7,color:#26215C
-    classDef human fill:#E1F5EE,stroke:#0F6E56,color:#04342C
+    classDef ai fill:#F2B600,stroke:#000000,stroke-width:2px,color:#000000
+    classDef human fill:#000000,stroke:#000000,color:#FAFAF7
     class a1,a2,a3,a4 ai
     class h1,h2,h3,h4 human
 ```
 
-Purple boxes are AI steps, which only suggest. Teal boxes are the people who check and decide.
+Yellow boxes are AI steps, which only suggest. Black boxes are the people who check and decide.
 
 | AI job | On the phone, offline | On the server or online |
 |---|---|---|
@@ -139,6 +141,20 @@ Purple boxes are AI steps, which only suggest. Teal boxes are the people who che
 - **Only transcripts go to outside AI services.** Names, phone numbers and eKYC references never leave our servers.
 
 **How it improves.** Every human correction is logged: transcript edits, QP overrides, and flags the assessor disagreed with. The AI/ML lead uses the log to grow the glossary, re-tune the match threshold and retrain the safety-gear detector. Three numbers show whether it is working: the transcript-correction rate, the mapping-override rate and the share of false flags.
+
+## UI design
+
+The screens use **Wire code**: the wiring colours Indian electricians already know, each with one job on screen. The rules are in [`docs/design/wire-code.md`](docs/design/wire-code.md), the values in [`tokens.json`](docs/design/tokens.json), and HTML references for five screens in [`docs/design/screens/`](docs/design/screens/).
+
+| Colour | Hex | Means |
+|---|---|---|
+| Yellow, a phase colour | `#F2B600` | An AI hint, which only suggests |
+| Black, the neutral colour | `#000000` | A person's action or decision: buttons, selections, scores, signatures |
+| Green, the earth colour | `#2E7D32` | Done, verified, passed or synced |
+| Red, a phase colour | `#C8102E` | Errors and the recording dot |
+| Blue, a phase colour | `#1F4E9C` | The brand stripe, and nothing else |
+
+The split between yellow and black puts [our decision table](#ai-supports-the-assessor-decides) on every screen: the AI's hint sits beside the person's choice and never takes its place. Headings use Rajdhani and text uses Hind; both cover Devanagari. Worker screens are Hindi first, with audio, picture choices and 54px buttons, so they work without reading (NFR-06).
 
 ## Architecture
 
@@ -258,7 +274,7 @@ Hunarparmaan/
 ├── docs/
 │   ├── problem-statement.md  # the official SIH PS text
 │   ├── requirements/      # SRS, user stories, traceability matrix
-│   ├── design/            # architecture, data model, sync protocol, threat model, wireframes
+│   ├── design/            # UI design (Wire code), architecture, data model, sync protocol, threat model
 │   ├── adr/               # architecture decision records
 │   └── sdlc/              # sprint reviews, retros, test reports, release notes
 └── .github/
