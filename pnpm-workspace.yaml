@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - services/*
+  - packages/*
+
+# esbuild (used by tsx) works without its postinstall check; don't run third-party install scripts.
+ignoredBuiltDependencies:
+  - esbuild

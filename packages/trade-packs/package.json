@@ -1,0 +1,23 @@
+{
+  "name": "@hunarpramaan/trade-packs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Trade packs: QP data per trade (NOS, criteria, marks, rubrics, glossary), validated and packaged for phones",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json",
+    "pack:build": "tsx scripts/build.ts"
+  },
+  "dependencies": {
+    "@hunarpramaan/audit": "workspace:*",
+    "@hunarpramaan/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@hunarpramaan/scoring": "workspace:*",
+    "tsx": "^4.23.15"
+  }
+}

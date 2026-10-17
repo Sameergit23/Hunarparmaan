@@ -1,0 +1,8 @@
+pnpm-lock.yaml
+dist/
+coverage/
+.turbo/
+# Docs are hand-formatted (tables, mermaid)
+*.md
+# RFC test vectors are compared byte for byte
+**/test-vectors/
