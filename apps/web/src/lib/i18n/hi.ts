@@ -25,6 +25,10 @@ export const hi: Messages = {
     agency: 'असेसमेंट एजेंसी',
     awarding_body: 'अवॉर्डिंग बॉडी',
     ncvet: 'NCVET',
+    platform_admin: 'प्लेटफ़ॉर्म एडमिन',
+    tp_admin: 'ट्रेनिंग पार्टनर एडमिन',
+    agency_admin: 'एजेंसी एडमिन',
+    ab_admin: 'अवॉर्डिंग बॉडी एडमिन',
   },
   nav: {
     label: 'मुख्य',

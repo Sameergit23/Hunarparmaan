@@ -1,13 +1,13 @@
 # Access control and the admin panel
 
-How HunarPramaan decides who may see and do what. The decisions are in [ADR 006](../adr/006-ai-output-is-a-suggestion.md) (AI only suggests), [ADR 010](../adr/010-organisations-admin-roles-access-control.md) (organisations and admin roles) and [ADR 011](../adr/011-personal-data-outside-the-hash-chain.md) (personal data). The code is the source of truth: `AUTHORITY` and `READ_ACCESS` in [`packages/contracts/src/authority.ts`](../../packages/contracts/src/authority.ts).
+How HunarPramaan decides who may see and do what. The decisions are in [ADR 006](../adr/006-ai-output-is-a-suggestion.md) (AI only suggests), [ADR 010](../adr/010-organisations-admin-roles-access-control.md) (organisations and admin roles) and [ADR 011](../adr/011-personal-data-outside-the-hash-chain.md) (personal data). The code is the source of truth: `AUTHORITY`, `READ_ACCESS`, `ROLES_BY_ORG_KIND`, `GRANTABLE_ROLES` and `SCOPE_BY_ROLE` in [`packages/contracts/src/authority.ts`](../../packages/contracts/src/authority.ts), the roles and organisation kinds in [`roles.ts`](../../packages/contracts/src/roles.ts), and the admin error codes in [`api.ts`](../../packages/contracts/src/api.ts).
 
 > [!NOTE]
-> **Built today:** the seven roles below, with every write checked against `AUTHORITY` and every read against `READ_ACCESS`. **Planned (ADR 010):** organisations, the four admin roles, scoping by organisation, and the admin panel. Rows marked *planned* do not exist yet.
+> **Built today:** the seven working roles, with every write checked against `AUTHORITY` and every read against `READ_ACCESS`. **In contracts only** (1.0.0-draft.5, before the v1 freeze at G1): the four admin roles, the five organisation kinds, admin actions, grant rules, scope levels, the organisation id in the session user and the token, and admin error codes. The API and web don't use them yet, and every account belongs to one pilot organisation until Sprint 1. **Planned (ADR 010):** organisations in the database, admin accounts, scoping by organisation, and the admin panel. Rows marked *contracts* exist only as contract tables; rows marked *planned* don't exist yet.
 
 ## The one rule
 
-**Admins manage people, organisations and phones. They never score, sign, approve, review a flag or edit a record.** And nobody who decides can administer. Tests prove both: IT-03 today, IT-04 when the admin roles land.
+**Admins manage people, organisations and phones. They never score, sign, approve, review a flag or edit a record.** And nobody who decides can administer. Tests prove both: IT-03 and the unit half of IT-04 (`authority.test.ts`) today, and the API half of IT-04 when admin accounts exist in Sprint 1.
 
 ## Organisations and roles
 
@@ -15,27 +15,32 @@ Every account belongs to one organisation and has one role, for good. A move mea
 
 | Organisation | Roles it can hold | Uses |
 |---|---|---|
-| Operator (the HunarPramaan team) | `platform_admin` *planned* | Web admin |
-| Training partner (RPL centre) | `tp_admin` *planned*, `mobiliser` | Web admin, phone |
-| Assessment agency | `agency_admin` *planned*, `agency`, `assessor` | Web admin, web, phone |
-| Awarding body (CSDCI) | `ab_admin` *planned*, `awarding_body`, `master_assessor` | Web admin, web, phone |
+| Operator (the HunarPramaan team) | `platform_admin` *contracts* | Web admin |
+| Training partner (RPL centre) | `tp_admin` *contracts*, `mobiliser`, `worker` | Web admin, phone |
+| Assessment agency | `agency_admin` *contracts*, `agency`, `assessor` | Web admin, web, phone |
+| Awarding body (CSDCI) | `ab_admin` *contracts*, `awarding_body`, `master_assessor` | Web admin, web, phone |
 | Regulator | `ncvet` | Web (aggregates only) |
 | Automated components | `system` (not a login) | Mapping suggestions and server checks only |
 
-Workers usually have no login; the mobiliser's phone acts with them.
+This table is `ROLES_BY_ORG_KIND`. Workers usually have no login; the mobiliser's phone acts with them. A worker belongs to the training partner whose mobiliser registered them, and is never invited.
+
+Who may grant which role is `GRANTABLE_ROLES`. Each organisation admin grants their own organisation's roles, including another admin. The platform admin grants only the four admin roles, and `ncvet` because the regulator has no admin of its own. Nobody grants `worker`.
 
 ## What each role sees
 
-| Role | Sees | Never sees |
-|---|---|---|
-| mobiliser | Workers they registered | Sessions, scores, results |
-| assessor | Their own sessions | Other assessors' sessions |
-| master_assessor | Blind re-score tasks for the awarding body's QPs | The original score, or the assessor's name; their own sessions |
-| agency | Their agency's sessions, flags and assessors | Other agencies' data |
-| awarding_body | Sessions and approvals for the QPs it owns | Other awarding bodies' QPs |
-| ncvet | National totals and rates | Any single worker, session or assessor |
-| platform_admin *planned* | Organisations, accounts (phones masked), devices, the admin log | Worker data, transcripts, clips, scores |
-| agency_admin, tp_admin, ab_admin *planned* | Their organisation's accounts, devices and admin log | Case data |
+| Role | Scope (`SCOPE_BY_ROLE`) | Sees | Never sees |
+|---|---|---|---|
+| worker | Own work | Their own record | Anyone else's |
+| mobiliser | Own work | Workers they registered | Sessions, scores, results |
+| assessor | Own work | Their own sessions | Other assessors' sessions |
+| master_assessor | Owned QPs | Blind re-score tasks for the awarding body's QPs | The original score, or the assessor's name; their own sessions |
+| agency | Own organisation | Their agency's sessions, flags and assessors | Other agencies' data |
+| awarding_body | Owned QPs | Sessions and approvals for the QPs it owns | Other awarding bodies' QPs |
+| ncvet | Aggregates | National totals and rates | Any single worker, session or assessor |
+| platform_admin *planned* | Governance | Organisations, accounts (phones masked), devices, the admin log | Worker data, transcripts, clips, scores |
+| agency_admin, tp_admin, ab_admin *planned* | Own organisation | Their organisation's accounts, devices and admin log | Case data |
+
+The scope column is in contracts today. What admins see is *planned*, because no read model takes a scope yet.
 
 Today (Sprint 0) every agency and awarding-body account sees every session; scoping by organisation lands in Sprint 2. A record outside your scope will return "not found".
 
@@ -50,13 +55,15 @@ Today (Sprint 0) every agency and awarding-body account sees every session; scop
 | Review a flag (a note, never a clear) | agency | Built |
 | Approve or return a recommendation; export to SIDH | awarding_body | Built |
 | Suggest a QP match; store server check results | system | Built |
-| Create and suspend organisations; invite each organisation's first admin | platform_admin | *Planned* |
-| Invite, deactivate, reactivate and unlock their own staff | agency_admin, tp_admin, ab_admin | *Planned* |
-| Revoke a lost or retired phone | Each org admin for their own phones; platform_admin anywhere | *Planned* |
-| Upload a trade-pack version | platform_admin | *Planned* |
-| Release a trade-pack version for its QPs (never one they uploaded) | ab_admin | *Planned* |
-| Accredit an assessor for a QP | ab_admin | *Planned* |
-| Manage venues and their geofence | tp_admin | *Planned* |
+| Create and suspend organisations; invite each organisation's first admin | platform_admin | *Contracts* |
+| Invite, deactivate, reactivate, unlock and reset the PIN of their own staff | agency_admin, tp_admin, ab_admin | *Contracts* |
+| Revoke a lost or retired phone | Each org admin for their own phones; platform_admin anywhere | *Contracts* |
+| Upload a trade-pack version | platform_admin | *Contracts* |
+| Release a trade-pack version for its QPs (never one they uploaded) | ab_admin | *Contracts* |
+| Accredit an assessor for a QP | ab_admin | *Contracts* |
+| Manage venues and their geofence | tp_admin | *Contracts* |
+
+*Contracts* means the action is in `ADMIN_ACTION_TYPES` and `AUTHORITY`, but no endpoint performs it yet. The organisation, ownership and two-person checks come with each endpoint.
 
 ## The admin panel
 
@@ -103,7 +110,7 @@ Phones sync days later, so admin actions must not destroy offline work:
 
 | When | What |
 |---|---|
-| Before G1 (25 Oct) | Contracts: admin roles, organisation id, admin actions, grant rules, error codes. Confirm with CSDCI where master assessors belong. |
+| Before G1 (25 Oct) | **Built** in contracts 1.0.0-draft.5: admin roles, organisation kinds, the organisation id in the session user and the token, admin actions, grant rules, scope levels, error codes, and the unit half of IT-04. Still to do: confirm with CSDCI where master assessors belong. |
 | Sprint 1 | Organisations, fixed accounts, the bootstrap command. Personal data outside the hash chain (ADR 011). Seed two agencies, a training partner, CSDCI and NCVET, with two admins each. |
 | Sprint 2 | Scoping on every endpoint (IT-05). Account status checked on every request. SIDH exports recorded. |
 | Sprint 3–4 | People, Devices and Audit log screens. Sign-in limits and lockout. Device revocation with draining. Invites. Trade-pack upload and release. Venues and accreditation, seeded. |

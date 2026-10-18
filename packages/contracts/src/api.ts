@@ -33,6 +33,47 @@ export const ApiError = z.strictObject({
 });
 export type ApiError = z.infer<typeof ApiError>;
 
+/**
+ * `error.code` values for accounts, phones and admin actions (ADR 010). Each
+ * app words them in Hindi and English (rule 7). A record outside the caller's
+ * scope is plain `not_found`, so its existence is not revealed.
+ */
+export const AdminErrorCode = z.enum([
+  /** 401: the account was deactivated. Work recorded offline before then still syncs. */
+  'account_deactivated',
+  /** 401: the token's version is older than the account's, for example after a PIN reset. */
+  'token_revoked',
+  /** 401: too many wrong PINs; the lockout lasts at most an hour. */
+  'account_locked',
+  /** 429: too many codes asked for from one phone number or one IP address. */
+  'rate_limited',
+  /** 403: approvals and admin actions need the PIN again. */
+  'step_up_required',
+  /** 403: the account's organisation is suspended. */
+  'organisation_suspended',
+  /** 403: the phone was reported lost; nothing from it is accepted after that time. */
+  'device_lost',
+  /** 403: the phone was retired or replaced; recorded work still syncs, nothing new starts. */
+  'device_retired',
+  /** 403: nobody acts on their own account. */
+  'self_action',
+  /** 409: the organisation's last active admin cannot be deactivated. */
+  'last_admin',
+  /** 403: GRANTABLE_ROLES does not let this admin grant the role. */
+  'role_not_grantable',
+  /** 409: ROLES_BY_ORG_KIND does not let this kind of organisation hold the role. */
+  'role_not_in_org',
+  /** 409: another active account already uses this phone number. */
+  'phone_in_use',
+  /** 403: only whoever deactivated an account, or a higher authority, may reactivate it. */
+  'not_issuer',
+  /** 403: a trade-pack version needs two people: its uploader cannot release it. */
+  'uploader_cannot_release',
+  /** 400: the invite or PIN-reset code is wrong, used or expired. */
+  'invite_invalid',
+]);
+export type AdminErrorCode = z.infer<typeof AdminErrorCode>;
+
 // --- Auth -------------------------------------------------------------------
 
 export const OtpRequest = z.strictObject({ phone: Phone });
@@ -53,7 +94,13 @@ export const LoginRequest = z.strictObject({
 });
 export type LoginRequest = z.infer<typeof LoginRequest>;
 
-export const SessionUser = z.strictObject({ id: EntityId, name: z.string(), role: Role });
+/** One account, one organisation, one role, for good (ADR 010). */
+export const SessionUser = z.strictObject({
+  id: EntityId,
+  name: z.string(),
+  role: Role,
+  organisationId: EntityId,
+});
 export type SessionUser = z.infer<typeof SessionUser>;
 
 export const LoginResponse = z.strictObject({

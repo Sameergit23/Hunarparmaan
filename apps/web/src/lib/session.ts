@@ -22,7 +22,12 @@ export async function currentUser(): Promise<(SessionUser & { token: string }) |
       unknown
     >;
     if (typeof claims.exp === 'number' && claims.exp * 1000 < Date.now()) return null;
-    const user = SessionUser.safeParse({ id: claims.sub, name: claims.name, role: claims.role });
+    const user = SessionUser.safeParse({
+      id: claims.sub,
+      name: claims.name,
+      role: claims.role,
+      organisationId: claims.org,
+    });
     return user.success ? { ...user.data, token } : null;
   } catch {
     return null;

@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { SignJWT } from 'jose';
+import { PILOT_ORGANISATION_ID } from '../src/domain/organisations';
 import { PIN, startHarness, type Harness, type TestUser } from '../src/test/harness';
 
 let h: Harness;
@@ -22,7 +24,12 @@ describe('OTP + PIN login (FR-05)', () => {
     expect(mockCode).toBe('123456');
     const res = await h.http.post('/v1/auth/login').send({ challengeId, otp: mockCode, pin: PIN });
     expect(res.status).toBe(200);
-    expect(res.body.user).toEqual({ id: assessor.id, name: 'Anil Sharma', role: 'assessor' });
+    expect(res.body.user).toEqual({
+      id: assessor.id,
+      name: 'Anil Sharma',
+      role: 'assessor',
+      organisationId: PILOT_ORGANISATION_ID,
+    });
 
     const pull = await h.http.get('/v1/sync/pull').set('Authorization', `Bearer ${res.body.token}`);
     expect(pull.status).toBe(200);
@@ -68,6 +75,19 @@ describe('OTP + PIN login (FR-05)', () => {
     const { challengeId, mockCode } = await challenge(assessor.phone);
     h.tick(6 * 60_000);
     const res = await h.http.post('/v1/auth/login').send({ challengeId, otp: mockCode, pin: PIN });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects a token without an organisation, such as one issued before ADR 010', async () => {
+    const issuedAt = Math.floor(h.deps.now().getTime() / 1000);
+    const token = await new SignJWT({ role: 'assessor', name: 'Anil Sharma' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject(assessor.id)
+      .setIssuer('hunarpramaan-api')
+      .setIssuedAt(issuedAt)
+      .setExpirationTime(issuedAt + 3_600)
+      .sign(new TextEncoder().encode(h.deps.config.JWT_SECRET));
+    const res = await h.http.get('/v1/sync/pull').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(401);
   });
 

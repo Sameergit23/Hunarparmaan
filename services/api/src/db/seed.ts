@@ -22,6 +22,7 @@ import { hashSecret } from '../auth/secrets';
 import { loadConfig, loadEnvFiles } from '../config';
 import { SimulatedPhone, fakeClip } from '../dev/simulated-phone';
 import { clipForAssessor, receiveUpload, rehashEvidence } from '../domain/evidence';
+import { PILOT_ORGANISATION_ID } from '../domain/organisations';
 import { publishPack, qualificationLoader } from '../domain/packs';
 import { decideRecommendation } from '../domain/recommendations';
 import { recordRescore } from '../domain/rescores';
@@ -189,7 +190,7 @@ async function seed(): Promise<void> {
         pinHash: await hashSecret(DEMO_PIN),
       });
     }
-    accounts.set(u.key, { id, role: u.role, name: u.name });
+    accounts.set(u.key, { id, role: u.role, name: u.name, organisationId: PILOT_ORGANISATION_ID });
   }
   console.log(
     `✓ ${DEMO_USERS.length} demo accounts (PIN ${DEMO_PIN}, OTP 123456 with MOCK_INTEGRATIONS=true)`,

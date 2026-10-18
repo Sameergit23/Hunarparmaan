@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { Role, type SessionUser } from '@hunarpramaan/contracts';
+import { EntityId, Role, type SessionUser } from '@hunarpramaan/contracts';
 
 const ISSUER = 'hunarpramaan-api';
 
@@ -18,7 +18,11 @@ export function createTokenIssuer(
     async issue(user) {
       const issuedAt = now();
       const expiresAt = new Date(issuedAt.getTime() + ttlHours * 3_600_000);
-      const token = await new SignJWT({ role: user.role, name: user.name })
+      const token = await new SignJWT({
+        role: user.role,
+        name: user.name,
+        org: user.organisationId,
+      })
         .setProtectedHeader({ alg: 'HS256' })
         .setSubject(user.id)
         .setIssuer(ISSUER)
@@ -35,8 +39,11 @@ export function createTokenIssuer(
           currentDate: now(),
         });
         const role = Role.safeParse(payload.role);
-        if (!payload.sub || !role.success || typeof payload.name !== 'string') return null;
-        return { id: payload.sub, role: role.data, name: payload.name };
+        const org = EntityId.safeParse(payload.org);
+        if (!payload.sub || !role.success || !org.success || typeof payload.name !== 'string') {
+          return null;
+        }
+        return { id: payload.sub, role: role.data, name: payload.name, organisationId: org.data };
       } catch {
         return null;
       }

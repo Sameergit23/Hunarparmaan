@@ -9,6 +9,7 @@ import { createTokenIssuer } from '../auth/tokens';
 import { loadConfig } from '../config';
 import { devices, users } from '../db/schema';
 import type { Deps } from '../domain/context';
+import { PILOT_ORGANISATION_ID } from '../domain/organisations';
 import { publishPack } from '../domain/packs';
 import { SimulatedPhone } from '../dev/simulated-phone';
 import { InlineQueue } from '../queue/queue';
@@ -72,7 +73,7 @@ export async function startHarness() {
       await database.db
         .insert(users)
         .values({ id, role, name, phone, pinHash: await hashSecret(PIN) });
-      const sessionUser: SessionUser = { id, role, name };
+      const sessionUser: SessionUser = { id, role, name, organisationId: PILOT_ORGANISATION_ID };
       const { token } = await tokens.issue(sessionUser);
       return {
         ...sessionUser,

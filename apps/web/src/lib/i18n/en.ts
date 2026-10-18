@@ -23,6 +23,10 @@ export const en = {
     agency: 'Assessment agency',
     awarding_body: 'Awarding body',
     ncvet: 'NCVET',
+    platform_admin: 'Platform admin',
+    tp_admin: 'Training partner admin',
+    agency_admin: 'Agency admin',
+    ab_admin: 'Awarding body admin',
   },
   nav: {
     label: 'Main',

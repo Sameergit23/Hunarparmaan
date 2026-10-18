@@ -737,8 +737,8 @@ The AI service (*planned*) is internal and only the queue worker will call it: `
 | Agency | Web | Monitor sessions and assessors; investigate flags; see agreement and outlier assessors | Built |
 | Awarding body (SSC) | Web | Approve recommendations and issue certificates | Built |
 | NCVET | Web | See aggregates only | Built |
-| Platform admin | Web admin | Create and suspend organisations; invite each one's first admin; upload trade packs | Planned: accounts in S1, screens in S3–S4 |
-| Agency, training-partner and awarding-body admins | Web admin | Invite, deactivate and unlock their own staff; revoke lost phones; the awarding-body admin also releases trade packs and accredits assessors | Planned: accounts in S1, screens in S3–S5 |
+| Platform admin | Web admin | Create and suspend organisations; invite each one's first admin; upload trade packs | Role and actions in contracts; accounts in S1, screens in S3–S4 |
+| Agency, training-partner and awarding-body admins | Web admin | Invite, deactivate and unlock their own staff; revoke lost phones; the awarding-body admin also releases trade packs and accredits assessors | Roles and actions in contracts; accounts in S1, screens in S3–S5 |
 
 **Admins never decide.** Admin roles manage people, organisations and phones. They never score, sign, approve, review a flag or edit a record, and nobody who decides can administer ([ADR 010](docs/adr/010-organisations-admin-roles-access-control.md)). Every account belongs to one organisation, and from Sprint 2 each sees only its own organisation's records. Personal data such as names and phone numbers moves out of the hash chain early in Sprint 1, so it can be erased without breaking the chain ([ADR 011](docs/adr/011-personal-data-outside-the-hash-chain.md)).
 
@@ -1037,7 +1037,7 @@ Rotate sleep so that nobody codes exhausted.
   - only an assessor account can sign;
   - only an awarding-body account can approve;
   - no AI job can write a score.
-- **IT-04 Admins never decide** (*planned*, with the admin roles): no admin token can score, sign, approve, review a flag or re-score.
+- **IT-04 Admins never decide:** no admin token can score, sign, approve, review a flag or re-score. The unit half is built (`packages/contracts/src/authority.test.ts`); the API half is *planned* for when admin accounts exist (Sprint 1).
 - **IT-05 Scoping** (*planned*, Sprint 2): an account outside the record's organisation gets "not found".
 
 ### Evaluation: the evidence the PS asks for

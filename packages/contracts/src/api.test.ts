@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AdminErrorCode,
   ApproveRequest,
   BLOCKING_FLAGS,
   FlagKind,
   LoginRequest,
   OtpRequest,
+  SessionUser,
   SignRequest,
 } from './api';
 import { READ_ACCESS, canRead } from './authority';
@@ -40,6 +42,19 @@ describe('API contracts', () => {
 
   it('only blocks approval on known flag kinds', () => {
     for (const kind of BLOCKING_FLAGS) expect(FlagKind.options).toContain(kind);
+  });
+
+  it('puts every signed-in user in an organisation', () => {
+    const user = { id: ids.v4(), name: 'Anil Sharma', role: 'assessor', organisationId: ids.v4() };
+    expect(SessionUser.safeParse(user).success).toBe(true);
+    const { organisationId: _, ...withoutOrg } = user;
+    expect(SessionUser.safeParse(withoutOrg).success).toBe(false);
+  });
+
+  it('keeps admin error codes apart from the generic ones', () => {
+    for (const generic of ['bad_request', 'unauthorized', 'forbidden', 'not_found', 'conflict']) {
+      expect(AdminErrorCode.options).not.toContain(generic);
+    }
   });
 });
 

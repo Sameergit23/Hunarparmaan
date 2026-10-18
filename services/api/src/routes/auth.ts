@@ -5,11 +5,13 @@ import {
   OtpRequest,
   type LoginResponse,
   type OtpResponse,
+  type SessionUser,
 } from '@hunarpramaan/contracts';
 import { hashSecret, verifySecret } from '../auth/secrets';
 import type { TokenIssuer } from '../auth/tokens';
 import { otpChallenges, users } from '../db/schema';
 import type { Deps } from '../domain/context';
+import { PILOT_ORGANISATION_ID } from '../domain/organisations';
 import { HttpError, unauthorized } from '../http/errors';
 import { parse } from '../http/validate';
 
@@ -79,7 +81,12 @@ export function authRoutes(deps: Deps, tokens: TokenIssuer) {
       .update(otpChallenges)
       .set({ usedAt: deps.now() })
       .where(eq(otpChallenges.id, challenge.id));
-    const sessionUser = { id: user.id, name: user.name, role: user.role };
+    const sessionUser: SessionUser = {
+      id: user.id,
+      name: user.name,
+      role: user.role,
+      organisationId: PILOT_ORGANISATION_ID,
+    };
     const { token, expiresAt } = await tokens.issue(sessionUser);
     const body: LoginResponse = { token, expiresAt: expiresAt.toISOString(), user: sessionUser };
     res.json(body);
