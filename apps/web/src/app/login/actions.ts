@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { LoginResponse, OtpResponse, Phone } from '@hunarpramaan/contracts';
-import { ApiRequestError, apiPost } from '@/lib/api';
+import { API_URL, ApiRequestError, apiPost } from '@/lib/api';
 import { getMessages } from '@/lib/i18n';
 import { OFFICE_ROLES, TOKEN_COOKIE } from '@/lib/session';
 
@@ -13,6 +13,11 @@ export interface LoginState {
   challengeId?: string;
   mockCode?: string;
   error?: string;
+}
+
+/** For the developer's terminal: the page only says the server cannot be reached. */
+function logUnreachable(error: unknown) {
+  console.error(`Could not reach the API at ${API_URL}. Is it running? (API_URL sets it)`, error);
 }
 
 async function requestCode(formData: FormData): Promise<LoginState> {
@@ -27,7 +32,8 @@ async function requestCode(formData: FormData): Promise<LoginState> {
       challengeId: otp.challengeId,
       ...(otp.mockCode && { mockCode: otp.mockCode }),
     };
-  } catch {
+  } catch (error) {
+    logUnreachable(error);
     return { step: 'phone', phone, error: m.login.unreachable };
   }
 }
@@ -53,6 +59,7 @@ async function signIn(prev: LoginState, formData: FormData): Promise<LoginState>
     }
     if (error instanceof ApiRequestError && error.status === 400)
       return { ...prev, error: m.login.wrong };
+    logUnreachable(error);
     return { ...prev, error: m.login.unreachable };
   }
   if (!OFFICE_ROLES.has(login.user.role))

@@ -16,13 +16,15 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 
 ## Status and dates
 
-- Sprint 0 runs 19–25 Oct 2026. These exist: the four shared packages (`packages/contracts`, `scoring`, `audit`, `trade-packs`), `services/api` and `apps/web`. Still to come: `apps/mobile`, `services/ai` and `evaluation/`. The layout in README "Repository layout" is the target, not the current state.
+- Sprint 0 runs 19–25 Oct 2026. These exist: the four shared packages (`packages/contracts`, `scoring`, `audit`, `trade-packs`), `services/api` and `apps/web`. Still to come: `apps/mobile`, `services/ai` and `evaluation/`. README "Repository layout" marks which folders are planned.
+- The team develops on their own computers (Windows, macOS and Linux), with GitHub for PRs and CI. Keep every script cross-platform: Node APIs instead of `rm -rf`, `cp` or shell-only syntax in `package.json`, and paths built with `node:path`.
+- The admin panel and organisation scoping are designed but not built: ADR 010, ADR 011 and `docs/design/access-control.md`. Organisations and personal data outside the hash chain come in Sprint 1, scoping (IT-05) in Sprint 2, admin screens in Sprints 3–5.
 - Gates: G1 Sprint 0 exit (25 Oct) · G2 feature complete (29 Nov) · G3 demo-ready (6 Dec). The 36-hour Grand Finale is in December 2026.
 - The sprint plan, requirements (FR-xx, NFR-xx) and test plan are in README "Development lifecycle (SDLC)".
 
 ## Rules that must never break
 
-1. **AI suggests, people decide.** No AI job may write or change a score, sign a recommendation or approve a certificate. Enforce it in the API by role, and keep test IT-03 passing.
+1. **AI suggests, people decide.** No AI job may write or change a score, sign a recommendation or approve a certificate. Enforce it in the API by role, and keep test IT-03 passing. Admin roles (ADR 010) never decide either: they manage people, organisations and phones, and IT-04 will prove it.
 2. **Offline first.** Every worker and assessor step works with no network. Phone writes go to local SQLite (SQLCipher) plus an outbox. No screen may depend on the network without an offline path.
 3. **One database writer.** Only the API and its queue worker write to PostgreSQL. The AI service is stateless: it returns results and never touches the database.
 4. **Append-only.** Scores, evidence and audit entries are events with UUIDv7 ids. Never UPDATE or DELETE them; a correction is a new event.
@@ -61,30 +63,34 @@ Every screen uses Wire code, our design language built on the wiring colours Ind
 
 ## Commands
 
-Node 22 or 24 and pnpm 10 (`corepack enable` picks the pinned version).
+Node 22.18+ or 24.11+ (`.nvmrc` says 24) and pnpm 10 (`corepack enable` picks the pinned version; on Windows without admin rights, `npm install -g pnpm@10.28.0`). Run commands from the repo root. README "Getting started" has the setup per OS and a troubleshooting table.
 
 | Command | What it does |
 |---|---|
 | `pnpm install` | Install all workspaces |
 | `pnpm dev` | API (:4000) and web (:3000) in watch mode; with no `DATABASE_URL` the API uses PGlite in `services/api/.data/` |
 | `pnpm db:seed` · `pnpm db:migrate` | Demo pilot through the real sync path (PIN `1234`, OTP shown on screen) · migrations |
+| `pnpm db:reset` | Delete the local PGlite database and clips; then `pnpm db:seed` again. Stop `pnpm dev` first |
+| `pnpm check` | `pnpm lint`, `pnpm typecheck` and `pnpm test`: run before every push |
 | `pnpm test` | Vitest in every workspace, through Turborepo |
 | `pnpm typecheck` · `pnpm build` | `tsc` and production builds in every workspace |
 | `pnpm lint` | ESLint, then a Prettier check (`pnpm format` fixes formatting) |
-| `pnpm e2e:web` | Playwright against a running, seeded `pnpm dev` (set `PLAYWRIGHT_CHROMIUM_PATH` to use an installed Chromium) |
+| `pnpm e2e:install` · `pnpm e2e:web` | Download Chromium once · Playwright against a running `pnpm dev` on fresh demo data (`pnpm db:reset && pnpm db:seed`, because the tests approve recommendations). `PLAYWRIGHT_CHROMIUM_PATH` uses an installed Chromium instead |
 | `pnpm pack:build electrician` | Validate the trade pack and write `packages/trade-packs/dist/` |
 | `pnpm --filter @hunarpramaan/<pkg> test` | One workspace only |
 | `pnpm --filter @hunarpramaan/api db:generate` | New migration from `services/api/src/db/schema.ts` |
 
-Run `pnpm lint && pnpm typecheck && pnpm test` before every push. CI runs the same, plus a build, the API tests on PostgreSQL 17, Playwright, gitleaks and `pnpm audit`.
+Run `pnpm check` before every push. CI runs the same, plus a build, the API tests on PostgreSQL 17, Playwright, gitleaks and `pnpm audit`. Locally, the API tests run on PostgreSQL with `TEST_DATABASE_URL=postgres://hp:hp@localhost:5432/hp_test` (the Docker setup creates `hp_test`; the tests refuse a database without "test" in its name, because they empty it).
 
 Still planned: `pnpm e2e:mobile`, `pnpm eval:*`. Add them here when they exist.
 
 **Code notes**
 
 - Shared packages export TypeScript source (`"exports": "./src/index.ts"`); there is no build step (ADR 001).
+- Settings: the API reads the root `.env` and `services/api/.env` (`src/config.ts`, validated by zod); the web app reads only `apps/web/.env`. Turborepo strips shell variables it does not know, so add every new API or web setting to `globalPassThroughEnv` in `turbo.json`, and to `.env.example`.
+- PGlite allows one process per data folder: the API holds `services/api/.data/pglite.lock` (`src/db/pglite-lock.ts`), and seed, migrate and reset stop while `pnpm dev` runs.
 - `@hunarpramaan/audit` hashes events as RFC 8785 canonical JSON. Don't hash `JSON.stringify` output anywhere else.
-- Who may create which event or action is the `AUTHORITY` table in `packages/contracts/src/authority.ts` (ADR 006), and reads are `READ_ACCESS`. Check them there; don't hard-code roles in handlers.
+- Who may create which event or action is the `AUTHORITY` table in `packages/contracts/src/authority.ts` (ADR 006), and reads are `READ_ACCESS`. Check them there; don't hard-code roles in handlers. New admin actions follow the same tables (ADR 010 and `docs/design/access-control.md`).
 - API code layout: `src/routes` (HTTP only) → `src/domain` (rules and queries) → `src/db`. Read models take no transaction (ADR 008).
 - Schema changes: edit `schema.ts`, run `db:generate`, and add the table to `APPEND_ONLY_TABLES` and the trigger migration if it holds events.
 - Flags and approval blockers are codes plus values; word them in `apps/web/src/lib/messages.ts` and both dictionaries, never as English from the API.
@@ -92,7 +98,7 @@ Still planned: `pnpm e2e:mobile`, `pnpm eval:*`. Add them here when they exist.
 
 ## How we work
 
-- **Branches:** from `main`, named `feat/<module>-<short-name>`, `fix/<short-name>` or `docs/<short-name>`. Keep PRs small and squash-merge.
+- **Branches:** from an up-to-date `main`, named `feat/<module>-<short-name>`, `fix/<short-name>` or `docs/<short-name>`. Keep PRs small and squash-merge.
 - **Commits:** Conventional Commits, for example `feat(mobile): record clip per criterion`.
 - **Requirements:** link every change to a requirement ID (FR-xx / NFR-xx).
 - **Definition of Done:**

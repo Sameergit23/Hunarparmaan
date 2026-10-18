@@ -10,6 +10,8 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 export default defineConfig({
   testDir: './e2e',
   timeout: 60_000,
+  // pnpm dev compiles each page on its first visit, which can take longer than the 5 s default.
+  expect: { timeout: 15_000 },
   fullyParallel: false,
   // The tests share one seeded database and approve real recommendations.
   workers: 1,

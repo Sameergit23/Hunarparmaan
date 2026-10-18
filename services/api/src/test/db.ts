@@ -10,6 +10,13 @@ import { openDatabase, wrapPglite, type Database } from '../db/client';
 export async function testDatabase(): Promise<Database> {
   const url = process.env.TEST_DATABASE_URL;
   if (url) {
+    // The tests drop every table, so never let them near a database that holds real work.
+    const name = decodeURIComponent(new URL(url).pathname.slice(1));
+    if (!/test/i.test(name)) {
+      throw new Error(
+        `TEST_DATABASE_URL must name a test database (with "test" in its name), because the tests delete everything in it. Got "${name}".`,
+      );
+    }
     const database = await openDatabase(url);
     await database.db.execute(sql`drop schema if exists public cascade`);
     await database.db.execute(sql`drop schema if exists drizzle cascade`);

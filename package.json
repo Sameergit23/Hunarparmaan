@@ -4,12 +4,13 @@
   "description": "Offline-first, AI-assisted RPL assessment tool (SIH 2026)",
   "packageManager": "pnpm@10.28.0",
   "engines": {
-    "node": "^22.12.0 || ^24.0.0"
+    "node": "^22.18.0 || ^24.11.0"
   },
   "type": "module",
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "turbo run typecheck",

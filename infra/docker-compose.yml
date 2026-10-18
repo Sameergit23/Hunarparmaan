@@ -1,9 +1,12 @@
-# Local services for HunarPramaan (README "Run it locally"):
-#   docker compose -f infra/docker-compose.yml up -d
-# Then set in .env:
+# Local services for HunarPramaan (README "Full setup, with Docker"):
+#   docker compose -f infra/docker-compose.yml up -d --wait
+# Then set in .env (the Docker block in .env.example):
 #   DATABASE_URL=postgres://hp:hp@localhost:5432/hunarpramaan
 #   REDIS_URL=redis://localhost:6379
-#   S3_ENDPOINT=http://localhost:8333  S3_ACCESS_KEY=any  S3_SECRET_KEY=any
+#   S3_ENDPOINT=http://localhost:8333  S3_ACCESS_KEY=local  S3_SECRET_KEY=local
+# A port already used on your computer (say, by a local PostgreSQL) can be moved:
+#   HP_POSTGRES_PORT=5433 docker compose -f infra/docker-compose.yml up -d --wait
+# and then use that port in DATABASE_URL. HP_REDIS_PORT and HP_S3_PORT work the same.
 # These are development-only defaults; staging and production set their own.
 name: hunarpramaan
 
@@ -14,8 +17,11 @@ services:
       POSTGRES_USER: hp
       POSTGRES_PASSWORD: hp
       POSTGRES_DB: hunarpramaan
-    ports: ['5432:5432']
-    volumes: ['postgres-data:/var/lib/postgresql/data']
+    ports: ['${HP_POSTGRES_PORT:-5432}:5432']
+    volumes:
+      - 'postgres-data:/var/lib/postgresql/data'
+      # Creates hp_test for the API tests on PostgreSQL.
+      - './postgres-init:/docker-entrypoint-initdb.d:ro'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U hp -d hunarpramaan']
       interval: 5s
@@ -24,7 +30,7 @@ services:
   redis:
     image: redis:8.8.3
     command: ['redis-server', '--appendonly', 'yes']
-    ports: ['6379:6379']
+    ports: ['${HP_REDIS_PORT:-6379}:6379']
     volumes: ['redis-data:/data']
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
@@ -36,7 +42,7 @@ services:
   seaweedfs:
     image: chrislusf/seaweedfs:4.48
     command: ['server', '-dir=/data', '-s3', '-s3.port=8333', '-master.volumeSizeLimitMB=1024']
-    ports: ['8333:8333']
+    ports: ['${HP_S3_PORT:-8333}:8333']
     volumes: ['seaweedfs-data:/data']
 
 volumes:
