@@ -1,23 +1,22 @@
 import type { ReactNode } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { getMessages, type Lang, type Messages } from '@/lib/i18n';
-import { OFFICE_ROLES, requireUser } from '@/lib/session';
+import { OFFICE_ROLES, lastSignIn, requireUser } from '@/lib/session';
 import { Icon } from './icon';
-import { NAV_BY_ROLE, OfficeHeader } from './office-header';
-
-type NavKey = 'dashboard' | 'sessions' | 'approvals' | 'flags';
+import { NAV_BY_ROLE, OfficeHeader, type NavKey } from './office-header';
 
 /**
  * Frame for every signed-in page: header, nav, and a role check. The API
  * checks roles again on every request; this only keeps people off pages
- * that would fail for them.
+ * that would fail for them. Without `active`, the page is for every office
+ * role and no nav item is highlighted, such as "Change PIN".
  */
 export async function OfficeShell({
   active,
   path,
   children,
 }: {
-  active: NavKey;
+  active?: NavKey;
   path: string;
   children: (ctx: {
     m: Messages;
@@ -27,10 +26,19 @@ export async function OfficeShell({
 }) {
   const user = await requireUser();
   const { m, lang } = await getMessages();
-  const allowed = OFFICE_ROLES.has(user.role) && (NAV_BY_ROLE[user.role] ?? []).includes(active);
+  const allowed =
+    OFFICE_ROLES.has(user.role) &&
+    (active === undefined || (NAV_BY_ROLE[user.role] ?? []).includes(active));
   return (
     <>
-      <OfficeHeader m={m} lang={lang} user={user} active={active} path={path} />
+      <OfficeHeader
+        m={m}
+        lang={lang}
+        user={user}
+        active={active}
+        path={path}
+        lastSignIn={await lastSignIn()}
+      />
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-[18px] py-6">
         {allowed ? (
           children({ m, lang, user })

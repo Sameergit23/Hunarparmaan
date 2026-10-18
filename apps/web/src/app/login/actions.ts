@@ -1,11 +1,11 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { LoginResponse, OtpResponse, Phone } from '@hunarpramaan/contracts';
 import { API_URL, ApiRequestError, apiPost } from '@/lib/api';
 import { getMessages } from '@/lib/i18n';
-import { OFFICE_ROLES, TOKEN_COOKIE } from '@/lib/session';
+import { signInErrorText } from '@/lib/messages';
+import { OFFICE_ROLES, isAdminRole, keepSignIn } from '@/lib/session';
 
 export interface LoginState {
   step: 'phone' | 'code';
@@ -21,7 +21,7 @@ function logUnreachable(error: unknown) {
 }
 
 async function requestCode(formData: FormData): Promise<LoginState> {
-  const { m } = await getMessages();
+  const { m, lang } = await getMessages();
   const phone = String(formData.get('phone') ?? '').replace(/[\s-]/g, '');
   if (!Phone.safeParse(phone).success) return { step: 'phone', phone, error: m.login.badPhone };
   try {
@@ -33,13 +33,15 @@ async function requestCode(formData: FormData): Promise<LoginState> {
       ...(otp.mockCode && { mockCode: otp.mockCode }),
     };
   } catch (error) {
+    const worded = error instanceof ApiRequestError ? signInErrorText(error, m, lang) : null;
+    if (worded) return { step: 'phone', phone, error: worded };
     logUnreachable(error);
     return { step: 'phone', phone, error: m.login.unreachable };
   }
 }
 
 async function signIn(prev: LoginState, formData: FormData): Promise<LoginState> {
-  const { m } = await getMessages();
+  const { m, lang } = await getMessages();
   const body = {
     challengeId: prev.challengeId,
     otp: String(formData.get('otp') ?? '').trim(),
@@ -49,6 +51,8 @@ async function signIn(prev: LoginState, formData: FormData): Promise<LoginState>
   try {
     login = await apiPost('/v1/auth/login', body, LoginResponse, { auth: false });
   } catch (error) {
+    const worded = error instanceof ApiRequestError ? signInErrorText(error, m, lang) : null;
+    if (worded) return { ...prev, error: worded };
     if (error instanceof ApiRequestError && error.status === 401) {
       const expired = /expired/i.test(error.message);
       return {
@@ -62,16 +66,12 @@ async function signIn(prev: LoginState, formData: FormData): Promise<LoginState>
     logUnreachable(error);
     return { ...prev, error: m.login.unreachable };
   }
-  if (!OFFICE_ROLES.has(login.user.role))
-    return { step: 'phone', phone: prev.phone, error: m.login.fieldOnly };
+  if (!OFFICE_ROLES.has(login.user.role)) {
+    const error = isAdminRole(login.user.role) ? m.login.adminLater : m.login.fieldOnly;
+    return { step: 'phone', phone: prev.phone, error };
+  }
 
-  (await cookies()).set(TOKEN_COOKIE, login.token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    expires: new Date(login.expiresAt),
-  });
+  await keepSignIn(login);
   redirect('/dashboard');
 }
 

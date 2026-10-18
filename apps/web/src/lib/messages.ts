@@ -3,7 +3,7 @@
  * (rule 7). The API sends a code plus values; this is where they become text.
  */
 import type { Blocker, FlagKind, MessageParams } from '@hunarpramaan/contracts';
-import { date, percent } from './format';
+import { date, dateTime, percent } from './format';
 import { fill, type Lang, type Messages } from './i18n';
 
 const str = (v: string | number | undefined) => (v === undefined ? '' : String(v));
@@ -56,5 +56,38 @@ export function blockerText(blocker: Blocker, m: Messages, lang: Lang): string {
       return mismatchText(blocker.params, m, lang);
     default:
       return fill(m.detail[blocker.code], blocker.params);
+  }
+}
+
+/** The parts of an API error that sign-in pages word. */
+export interface SignInError {
+  status: number;
+  code: string;
+  message: string;
+  details: string[];
+}
+
+/**
+ * Words a sign-in or PIN error from its code (rule 7), never the API's English.
+ * Null when the code isn't one of these, so the page can fall back to its own wording.
+ */
+export function signInErrorText(error: SignInError, m: Messages, lang: Lang): string | null {
+  switch (error.code) {
+    case 'rate_limited':
+      return m.login.rateLimited;
+    case 'account_locked': {
+      const until = error.details.find((d) => d.startsWith('until:'))?.slice('until:'.length);
+      return fill(m.login.locked, { time: until ? dateTime(until, lang) : '' });
+    }
+    case 'pin_rejected':
+      return error.details.includes('easy') ? m.pin.easy : fill(m.pin.length, { n: 6 });
+    case 'wrong_pin':
+      return m.account.wrong;
+    case 'invite_invalid':
+      return m.invite.invalid;
+    case 'phone_in_use':
+      return m.invite.existing;
+    default:
+      return null;
   }
 }

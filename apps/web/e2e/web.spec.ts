@@ -4,6 +4,9 @@ import { expect, test, type Page } from '@playwright/test';
 const AGENCY = '9000000006';
 const AWARDING_BODY = '9000000007';
 const NCVET = '9000000008';
+// The seed's pending agency invite (demo mode only).
+const INVITED = '9000000013';
+const DEMO_INVITE_CODE = '24681357';
 
 async function signIn(page: Page, phone: string) {
   await page.goto('/login');
@@ -83,4 +86,39 @@ test('NCVET sees aggregates only', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Assessors' })).toHaveCount(0);
   await page.goto('/sessions');
   await expect(page.getByText('Your role cannot see this page.')).toBeVisible();
+});
+
+test('an invited agency user sets up their account in the browser', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByRole('link', { name: 'Have an invite code? Set up your account' }).click();
+  await expect(page.getByRole('heading', { name: 'Set up your account', level: 1 })).toBeVisible();
+  await page.getByLabel('Mobile number').fill(INVITED);
+  await page.getByRole('button', { name: 'Send code' }).click();
+  const code = (await page.getByText(/^Demo code: \d{6}$/).textContent())!.replace(/\D/g, '');
+  await page.getByLabel('6-digit code').fill(code);
+  await page.getByRole('button', { name: 'Check code' }).click();
+
+  const used = page.getByText('This number already has an account. Sign in instead.');
+  const inviteCode = page.getByLabel('8-digit invite code');
+  await expect(used.or(inviteCode)).toBeVisible();
+  test.skip(await used.isVisible(), 'the demo invite was already accepted');
+  await inviteCode.fill(DEMO_INVITE_CODE);
+  await page.getByLabel('New PIN, 6 digits').fill('305718');
+  await page.getByLabel('New PIN again').fill('305718');
+  await page.getByRole('button', { name: 'Set up my account' }).click();
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  await noSidewaysScroll(page);
+});
+
+test('Change PIN refuses an easy PIN, and the header shows the last sign-in', async ({ page }) => {
+  await signIn(page, AGENCY);
+  await expect(page.getByText(/^(Last sign-in: .+|First sign-in)$/)).toBeAttached();
+  await page.getByRole('link', { name: 'Change PIN' }).click();
+  await expect(page.getByRole('heading', { name: 'Change your PIN', level: 1 })).toBeVisible();
+  await page.getByLabel('Current PIN').fill('1234');
+  await page.getByLabel('New PIN, 6 digits').fill('123456');
+  await page.getByLabel('New PIN again').fill('123456');
+  await page.getByRole('button', { name: 'Change PIN' }).click();
+  await expect(page.getByText(/easy to guess/)).toBeVisible();
+  await noSidewaysScroll(page);
 });

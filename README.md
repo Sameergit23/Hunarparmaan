@@ -349,7 +349,7 @@ Open `http://localhost:3000` and sign in with a demo account. The one-time code 
 | NCVET | `9000000008` | Dashboard (aggregates only) |
 | Mobiliser, assessors (3), master assessor | `9000000001`, `9000000002` to `9000000004`, `9000000005` | Phone roles: the API accepts them, and the web sign-in sends them to the phone app |
 | Platform, training-partner, agency and awarding-body admins | `9000000009` to `9000000012` | Invite staff through the API (`POST /v1/admin/invites`); admin screens come in Sprints 3 and 4 |
-| A pending agency invite | `9000000013` | Not an account yet: accept it with the SMS code, the invite code `24681357` (demo mode only) and a new 6-digit PIN |
+| A pending agency invite | `9000000013` | Not an account yet: on the sign-in page, open "Have an invite code? Set up your account", then use the SMS code, the invite code `24681357` (demo mode only) and a new 6-digit PIN |
 
 The names, numbers and study figures in the demo are made up; the study rounds are marked as demo numbers.
 
@@ -440,6 +440,7 @@ A setting typed in the shell, such as `PORT=4001 pnpm dev`, reaches the apps too
 | `JWT_SECRET` | A random string of 32 or more characters. Optional only in development with `PUBLIC_API_URL` on localhost | api |
 | `PORT` | `4000` | api |
 | `MOCK_INTEGRATIONS` | `true` (SIDH, eKYC, OTP, NQR); on by default outside production | api |
+| `SIGN_IN_LIMITS` | `true`: limits on sign-in codes and the lockout after 5 wrong PINs. On by default except in development, so demos and Playwright can sign the same accounts in again and again | api |
 | `PUBLIC_API_URL` | `http://localhost:4000`: where phones upload clips when there is no S3 store | api |
 | `PUBLIC_WEB_URL` | `http://localhost:3000`: the QR target on certificates (*planned*, S4) | api |
 | `RESCORE_SAMPLE_RATE` · `GEOFENCE_RADIUS_M` · `CLOCK_DRIFT_LIMIT_S` · `JWT_TTL_HOURS` | `0.10` · `200` · `300` · `12` | api |

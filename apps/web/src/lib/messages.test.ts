@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { BlockerCode, FlagKind, type MessageParams } from '@hunarpramaan/contracts';
 import { en } from './i18n/en';
 import { hi } from './i18n/hi';
-import { blockerText, flagText } from './messages';
+import { blockerText, flagText, signInErrorText } from './messages';
 
 const params: MessageParams = {
   criterionId: 'L3-N1.PC1',
@@ -63,5 +63,45 @@ describe.each([
     expect(blockerText({ code: 'result_mismatch', params }, m, lang)).toContain(
       m.sessions.outcome.pass,
     );
+  });
+});
+
+describe.each([
+  ['en', en],
+  ['hi', hi],
+] as const)('sign-in error wording in %s', (lang, m) => {
+  const error = (code: string, details: string[] = []) => ({
+    status: 400,
+    code,
+    message: 'English from the API, never shown',
+    details,
+  });
+
+  it.each(['rate_limited', 'pin_rejected', 'wrong_pin', 'invite_invalid', 'phone_in_use'])(
+    'words %s with every value filled',
+    (code) => {
+      const text = signInErrorText(error(code, ['length']), m, lang);
+      expect(text?.length).toBeGreaterThan(10);
+      expect(text).not.toMatch(/\{\w+\}/);
+    },
+  );
+
+  it('says until when an account is locked', () => {
+    const text = signInErrorText(
+      error('account_locked', ['until:2026-11-24T06:15:00.000Z']),
+      m,
+      lang,
+    );
+    expect(text).not.toMatch(/\{\w+\}/);
+    expect(text).toMatch(/11:45/);
+  });
+
+  it('tells an easy PIN from a short one', () => {
+    expect(signInErrorText(error('pin_rejected', ['easy']), m, lang)).toBe(m.pin.easy);
+    expect(signInErrorText(error('pin_rejected', ['length']), m, lang)).toContain('6');
+  });
+
+  it('leaves other codes to the page', () => {
+    expect(signInErrorText(error('unauthorized'), m, lang)).toBeNull();
   });
 });

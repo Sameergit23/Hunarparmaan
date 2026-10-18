@@ -1,13 +1,14 @@
 import Link from 'next/link';
-import { LogOut } from 'lucide-react';
+import { KeyRound, LogOut } from 'lucide-react';
 import type { Role } from '@hunarpramaan/contracts';
 import { signOut } from '@/app/actions';
-import type { Lang, Messages } from '@/lib/i18n';
+import { dateTime } from '@/lib/format';
+import { fill, type Lang, type Messages } from '@/lib/i18n';
 import { Icon } from './icon';
 import { LanguageSwitch } from './language-switch';
 import { BrandStripe, LogoTile, cx } from './wire';
 
-type NavKey = 'dashboard' | 'sessions' | 'approvals' | 'flags';
+export type NavKey = 'dashboard' | 'sessions' | 'approvals' | 'flags';
 
 /** Which pages each office role sees, matching READ_ACCESS in the contracts. */
 export const NAV_BY_ROLE: Record<string, NavKey[]> = {
@@ -26,12 +27,15 @@ export function OfficeHeader({
   user,
   active,
   path,
+  lastSignIn,
 }: {
   m: Messages;
   lang: Lang;
   user: { name: string; role: Role };
-  active: NavKey;
+  active?: NavKey | undefined;
   path: string;
+  /** The sign-in before this one, or null on someone's first. */
+  lastSignIn: string | null;
 }) {
   const items = NAV_BY_ROLE[user.role] ?? [];
   return (
@@ -70,8 +74,21 @@ export function OfficeHeader({
             <span className="hidden flex-col text-right leading-tight sm:flex">
               <span className="text-[15px] font-semibold">{user.name}</span>
               <span className="text-sm text-navOff">{m.roles[user.role]}</span>
+              <span className="text-sm text-navOff">
+                {lastSignIn
+                  ? fill(m.account.lastSignIn, { time: dateTime(lastSignIn, lang) })
+                  : m.account.firstSignIn}
+              </span>
             </span>
             <LanguageSwitch lang={lang} m={m} back={path} onDark />
+            <Link
+              href="/account/pin"
+              aria-label={m.account.changePin}
+              title={m.account.changePin}
+              className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-card border-2 border-plate text-plate no-underline hover:text-plate focus-visible:outline-plate"
+            >
+              <Icon as={KeyRound} size={20} />
+            </Link>
             <form action={signOut}>
               <button
                 type="submit"

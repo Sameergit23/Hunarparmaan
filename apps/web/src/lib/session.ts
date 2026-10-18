@@ -1,11 +1,44 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { SessionUser } from '@hunarpramaan/contracts';
+import { AdminRole, SessionUser, type LoginResponse } from '@hunarpramaan/contracts';
 
 export const TOKEN_COOKIE = 'hp_token';
+/** When the sign-in before this one happened, for "Last sign-in" in the header. */
+export const LAST_SIGN_IN_COOKIE = 'hp_last';
+/** The 10-minute ticket between the SMS code and the invite code. Never seen by the browser's scripts. */
+export const TICKET_COOKIE = 'hp_ticket';
 
 /** Roles that use this web app; field roles use the phone app. */
 export const OFFICE_ROLES = new Set(['agency', 'awarding_body', 'ncvet']);
+
+/** Admin roles have accounts, but their screens come in Sprints 3 and 4 (ADR 010). */
+export const isAdminRole = (role: string) => AdminRole.safeParse(role).success;
+
+/**
+ * Keep a sign-in: the token in an httpOnly cookie, as ADR 009 says, so the
+ * browser never holds it. `rememberLast: false` keeps "Last sign-in" as it
+ * is, for a new token that is not a new sign-in, such as after a PIN change.
+ */
+export async function keepSignIn(login: LoginResponse, options = { rememberLast: true }) {
+  const jar = await cookies();
+  const cookie = {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    expires: new Date(login.expiresAt),
+  };
+  jar.set(TOKEN_COOKIE, login.token, cookie);
+  if (!options.rememberLast) return;
+  if (login.previousSignInAt) jar.set(LAST_SIGN_IN_COOKIE, login.previousSignInAt, cookie);
+  else jar.delete(LAST_SIGN_IN_COOKIE);
+}
+
+/** The time of the sign-in before this one, or null on someone's first. */
+export async function lastSignIn(): Promise<string | null> {
+  const value = (await cookies()).get(LAST_SIGN_IN_COOKIE)?.value;
+  return value && !Number.isNaN(Date.parse(value)) ? value : null;
+}
 
 /**
  * The signed-in user, read from the token's payload. Only for display and

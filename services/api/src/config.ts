@@ -25,6 +25,12 @@ const Env = z.object({
   JWT_TTL_HOURS: z.coerce.number().positive().default(12),
   /** SIDH, eKYC, OTP and NQR mocks. On by default outside production. */
   MOCK_INTEGRATIONS: bool.optional(),
+  /**
+   * Limits on SMS codes and the lockout after wrong PINs. On by default except
+   * in development, where demos and the Playwright suite sign the same demo
+   * accounts in again and again (and the mocked code is always 123456).
+   */
+  SIGN_IN_LIMITS: bool.optional(),
   RESCORE_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
   GEOFENCE_RADIUS_M: z.coerce.number().positive().default(200),
   /** Device time this far from server time raises a clock-drift flag. */
@@ -35,9 +41,13 @@ const Env = z.object({
   PUBLIC_WEB_URL: z.string().url().default('http://localhost:3000'),
 });
 
-export type Config = Omit<z.infer<typeof Env>, 'JWT_SECRET' | 'MOCK_INTEGRATIONS'> & {
+export type Config = Omit<
+  z.infer<typeof Env>,
+  'JWT_SECRET' | 'MOCK_INTEGRATIONS' | 'SIGN_IN_LIMITS'
+> & {
   JWT_SECRET: string;
   MOCK_INTEGRATIONS: boolean;
+  SIGN_IN_LIMITS: boolean;
 };
 
 /**
@@ -57,7 +67,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     const problems = parsed.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`);
     throw new Error(`Invalid configuration:\n${problems.join('\n')}`);
   }
-  const { JWT_SECRET, MOCK_INTEGRATIONS, ...rest } = parsed.data;
+  const { JWT_SECRET, MOCK_INTEGRATIONS, SIGN_IN_LIMITS, ...rest } = parsed.data;
   const production = rest.NODE_ENV === 'production';
   if (production && rest.DATABASE_URL.startsWith('pglite:')) {
     throw new Error('Invalid configuration: production needs a PostgreSQL DATABASE_URL');
@@ -74,5 +84,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     ...rest,
     JWT_SECRET: JWT_SECRET ?? DEV_JWT_SECRET,
     MOCK_INTEGRATIONS: MOCK_INTEGRATIONS ?? !production,
+    SIGN_IN_LIMITS: SIGN_IN_LIMITS ?? rest.NODE_ENV !== 'development',
   };
 }

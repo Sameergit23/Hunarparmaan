@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LanguageSwitch } from '@/components/language-switch';
 import { BrandStripe, LogoTile } from '@/components/wire';
@@ -29,6 +30,9 @@ export default async function LoginPage() {
           <p className="m-0 text-[16px] text-ink2">{m.login.body}</p>
         </div>
         <LoginForm m={m} />
+        <Link href="/invite" className="self-start text-[16px] font-semibold">
+          {m.login.inviteLink}
+        </Link>
       </main>
     </>
   );

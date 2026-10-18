@@ -30,6 +30,14 @@ describe('loadConfig', () => {
     expect(config.MOCK_INTEGRATIONS).toBe(false);
   });
 
+  it('keeps the sign-in limits on everywhere but development, unless set', () => {
+    const production = { JWT_SECRET: 'x'.repeat(32), DATABASE_URL: 'postgres://x/y' };
+    expect(loadConfig({}).SIGN_IN_LIMITS).toBe(false);
+    expect(loadConfig({ NODE_ENV: 'test' }).SIGN_IN_LIMITS).toBe(true);
+    expect(loadConfig({ NODE_ENV: 'production', ...production }).SIGN_IN_LIMITS).toBe(true);
+    expect(loadConfig({ SIGN_IN_LIMITS: 'true' }).SIGN_IN_LIMITS).toBe(true);
+  });
+
   it('treats empty values from a .env file as unset', () => {
     const config = loadConfig({ S3_ENDPOINT: '', REDIS_URL: '', JWT_SECRET: '' });
     expect(config.S3_ENDPOINT).toBeUndefined();

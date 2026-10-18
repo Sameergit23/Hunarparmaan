@@ -186,7 +186,7 @@ export async function requestCode(deps: Deps, phone: string, ip: string | null) 
   const now = deps.now();
   const number = normalisePhone(phone);
   const ipHash = ip ? hashIp(ip, deps.config.JWT_SECRET) : null;
-  await checkCodeLimits(deps.db, number, ipHash, now);
+  if (deps.config.SIGN_IN_LIMITS) await checkCodeLimits(deps.db, number, ipHash, now);
   const id = deps.newId();
   const expiresAt = new Date(now.getTime() + CODE_TTL_MS);
   await deps.db.insert(otpChallenges).values({
@@ -293,8 +293,14 @@ async function spendTicket(db: Db | Tx, challengeId: string, now: Date) {
 
 // --- PINs and lockout --------------------------------------------------------
 
+/** Until when wrong PINs keep the account locked, or null. Never locked with SIGN_IN_LIMITS off. */
+const lockedUntil = (deps: Deps, user: UserRow, now: Date) =>
+  deps.config.SIGN_IN_LIMITS && user.lockedUntil && user.lockedUntil > now
+    ? user.lockedUntil
+    : null;
+
 /** Count a wrong PIN; the fifth in a row locks the account (15 min, doubling, at most 1 hour). */
-async function recordWrongPin(deps: Clock, userId: string) {
+async function recordWrongPin(deps: Deps, userId: string) {
   const now = deps.now();
   const [after] = await deps.db
     .update(users)
@@ -302,7 +308,7 @@ async function recordWrongPin(deps: Clock, userId: string) {
     .where(eq(users.id, userId))
     .returning({ failed: users.failedPinAttempts, lockouts: users.lockouts });
   await logEvent(deps, userId, 'sign_in_failed');
-  if (!after || after.failed < PIN_TRIES) return;
+  if (!deps.config.SIGN_IN_LIMITS || !after || after.failed < PIN_TRIES) return;
   const lockMs = Math.min(FIRST_LOCK_MS * 2 ** after.lockouts, MAX_LOCK_MS);
   const [lockedNow] = await deps.db
     .update(users)
@@ -330,7 +336,8 @@ async function checkPin(
   const now = deps.now();
   const [user] = await deps.db.select().from(users).where(eq(users.phone, phone));
   if (!user) throw missing();
-  if (user.lockedUntil && user.lockedUntil > now) throw locked(user.lockedUntil, now);
+  const until = lockedUntil(deps, user, now);
+  if (until) throw locked(until, now);
   if (await verifySecret(pin, user.pinHash)) return user;
   await recordWrongPin(deps, user.id);
   throw wrong();
@@ -556,7 +563,8 @@ export async function changePin(
   const now = deps.now();
   const [user] = await deps.db.select().from(users).where(eq(users.id, sessionUser.id));
   if (!user) throw unauthorized();
-  if (user.lockedUntil && user.lockedUntil > now) throw locked(user.lockedUntil, now);
+  const until = lockedUntil(deps, user, now);
+  if (until) throw locked(until, now);
   if (!(await verifySecret(input.currentPin, user.pinHash))) {
     await recordWrongPin(deps, user.id);
     throw new HttpError(403, 'wrong_pin', 'The current PIN is wrong');

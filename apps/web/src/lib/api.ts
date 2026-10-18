@@ -15,6 +15,8 @@ export class ApiRequestError extends Error {
     readonly status: number,
     message: string,
     readonly details: string[] = [],
+    /** The API's `error.code`, such as `pin_rejected`; pages word it in Hindi and English. */
+    readonly code = '',
   ) {
     super(message);
   }
@@ -36,6 +38,7 @@ async function request(path: string, init: RequestInit & { auth?: boolean } = {}
       res.status,
       body.success ? body.data.error.message : res.statusText,
       body.success ? (body.data.error.details ?? []) : [],
+      body.success ? body.data.error.code : '',
     );
   }
   return res;

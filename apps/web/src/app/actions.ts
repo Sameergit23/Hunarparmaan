@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { LANG_COOKIE } from '@/lib/i18n';
-import { TOKEN_COOKIE } from '@/lib/session';
+import { LAST_SIGN_IN_COOKIE, TOKEN_COOKIE } from '@/lib/session';
 
 const YEAR_S = 365 * 24 * 3600;
 
@@ -16,6 +16,8 @@ export async function switchLanguage(formData: FormData) {
 }
 
 export async function signOut() {
-  (await cookies()).delete(TOKEN_COOKIE);
+  const jar = await cookies();
+  jar.delete(TOKEN_COOKIE);
+  jar.delete(LAST_SIGN_IN_COOKIE);
   redirect('/');
 }
