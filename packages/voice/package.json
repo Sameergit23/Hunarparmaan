@@ -1,0 +1,17 @@
+{
+  "name": "@hunarpramaan/voice",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Spoken Hindi, Hinglish and English on sign-in screens: digits, mobile numbers, yes or no, commands and Vosk word lists. Pure TypeScript for the phone; it never sees audio",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@hunarpramaan/contracts": "workspace:*"
+  }
+}

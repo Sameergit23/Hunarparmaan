@@ -16,7 +16,7 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 
 ## Status and dates
 
-- Sprint 0 runs 19–25 Oct 2026. These exist: the four shared packages (`packages/contracts`, `scoring`, `audit`, `trade-packs`), `services/api` and `apps/web`. Still to come: `apps/mobile`, `services/ai` and `evaluation/`. README "Repository layout" marks which folders are planned.
+- Sprint 0 runs 19–25 Oct 2026. These exist: the five shared packages (`packages/contracts`, `scoring`, `audit`, `trade-packs`, `voice`), `services/api` and `apps/web`. Still to come: `apps/mobile`, `services/ai` and `evaluation/`. README "Repository layout" marks which folders are planned.
 - The team develops on their own computers (Windows, macOS and Linux), with GitHub for PRs and CI. Keep every script cross-platform: Node APIs instead of `rm -rf`, `cp` or shell-only syntax in `package.json`, and paths built with `node:path`.
 - The admin panel and organisation scoping are designed but not built: ADR 010, ADR 011 and `docs/design/access-control.md`. Organisations and personal data outside the hash chain come in Sprint 1, scoping (IT-05) in Sprint 2, admin screens in Sprints 3–5.
 - Gates: G1 Sprint 0 exit (25 Oct) · G2 feature complete (29 Nov) · G3 demo-ready (6 Dec). The 36-hour Grand Finale is in December 2026.
@@ -47,7 +47,7 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 | `services/api` | Node.js + Express (TypeScript), zod, JWT roles, BullMQ on Redis |
 | `services/ai` | Python 3.12, FastAPI, uv, multilingual-e5-small, statsmodels, krippendorff |
 | Data | PostgreSQL 17 + pgvector; SeaweedFS for clips (S3 API). Don't use MinIO: its community repo was archived in April 2026 |
-| Shared | `packages/contracts` (zod; OpenAPI planned), `packages/scoring`, `packages/audit`, `packages/trade-packs` |
+| Shared | `packages/contracts` (zod; OpenAPI planned), `packages/scoring`, `packages/audit`, `packages/trade-packs`, `packages/voice` (spoken numbers, yes or no and commands for voice sign-in) |
 
 SIDH, Aadhaar eKYC, OTP and NQR are mocked behind `MOCK_INTEGRATIONS=true`.
 
