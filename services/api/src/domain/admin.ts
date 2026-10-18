@@ -8,43 +8,62 @@ import { randomInt } from 'node:crypto';
 import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { seal, verifyChain, type ChainLink, type VerifyResult } from '@hunarpramaan/audit';
 import {
+  Phone,
+  SCOPE_BY_ROLE,
   canGrant,
+  canHold,
+  reasonFits,
   type AdminActionType,
+  type AdminReasonCode,
+  type AdminReasonFor,
+  type AdminSubjectKind,
   type CreateInviteRequest,
   type CreateInviteResponse,
+  type Role,
   type SessionUser,
 } from '@hunarpramaan/contracts';
 import { hashSecret } from '../auth/secrets';
 import type { Db, Tx } from '../db/client';
-import { accountInvites, adminEvents, users } from '../db/schema';
-import { HttpError } from '../http/errors';
+import { accountInvites, adminEvents, organisations, users } from '../db/schema';
+import { HttpError, notFound } from '../http/errors';
 import { normalisePhone, phoneInUse } from './auth';
 import type { Deps } from './context';
+import { PILOT_ORGANISATIONS, findOrganisation } from './organisations';
 
 /** The admin log is one chain for the whole server. */
 export const ADMIN_CHAIN = 'admin-log';
 export const INVITE_TTL_MS = 72 * 60 * 60_000;
 
-/** Why an admin acted. Codes, not free text, so the log never holds personal data. */
-export type AdminReason = 'new_staff';
-
-/** One entry exactly as hashed into the chain. */
+/**
+ * One entry exactly as hashed into the chain (TRD D-7: this shape is fixed
+ * before the log holds real entries). Ids and reason codes only, never a name,
+ * a phone number or free text (ADR 011).
+ */
 export interface AdminLogEntry extends ChainLink {
   id: string;
   type: AdminActionType;
   actorId: string;
   organisationId: string;
+  subjectKind: AdminSubjectKind;
   subjectId: string;
-  reason: AdminReason;
+  reason: AdminReasonCode;
   occurredAt: string;
 }
+
+export type NewAdminEvent = Pick<
+  AdminLogEntry,
+  'type' | 'actorId' | 'organisationId' | 'subjectKind' | 'subjectId' | 'reason'
+>;
 
 /** Append an admin action to the log, inside the transaction that performs it. */
 export async function appendAdminEvent(
   tx: Tx,
   deps: Pick<Deps, 'newId' | 'now'>,
-  entry: Pick<AdminLogEntry, 'type' | 'actorId' | 'organisationId' | 'subjectId' | 'reason'>,
+  entry: NewAdminEvent,
 ): Promise<AdminLogEntry> {
+  if (!reasonFits(entry.type, entry.reason)) {
+    throw new Error(`${entry.reason} is not a reason for ${entry.type}`);
+  }
   // One writer at a time, so two admins never fork the chain.
   await tx.execute(sql`select pg_advisory_xact_lock(hashtext('admin_events'))`);
   const [last] = await tx.select().from(adminEvents).orderBy(desc(adminEvents.seq)).limit(1);
@@ -63,6 +82,7 @@ export async function appendAdminEvent(
     type: sealed.type,
     actorId: sealed.actorId,
     organisationId: sealed.organisationId,
+    subjectKind: sealed.subjectKind,
     subjectId: sealed.subjectId,
     reason: sealed.reason,
     occurredAt: sealed.occurredAt,
@@ -84,18 +104,82 @@ export async function verifyAdminLog(db: Db): Promise<VerifyResult> {
     type: row.type,
     actorId: row.actorId,
     organisationId: row.organisationId,
+    subjectKind: row.subjectKind,
     subjectId: row.subjectId,
-    reason: row.reason as AdminReason,
+    reason: row.reason,
     occurredAt: row.occurredAt,
   }));
   return verifyChain(entries);
 }
 
+const newInviteCode = () => String(randomInt(0, 100_000_000)).padStart(8, '0');
+
+interface NewInvite {
+  phone: string;
+  name: string;
+  role: Role;
+  organisationId: string;
+  /** The inviting admin; null for the bootstrap. */
+  invitedBy: string | null;
+  code: string;
+  reason: AdminReasonFor<'account.invited'>;
+}
+
+/**
+ * Store an invite and log it, in one transaction. A newer invite replaces an
+ * older one for the same number. The code is stored only as a hash.
+ */
+async function insertInvite(deps: Deps, invite: NewInvite): Promise<CreateInviteResponse> {
+  const now = deps.now();
+  const codeHash = await hashSecret(invite.code);
+  const expiresAt = new Date(now.getTime() + INVITE_TTL_MS);
+  const id = deps.newId();
+  await deps.db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.phone, invite.phone));
+    if (existing) throw phoneInUse();
+    await tx
+      .update(accountInvites)
+      .set({ replacedAt: now })
+      .where(
+        and(
+          eq(accountInvites.phone, invite.phone),
+          isNull(accountInvites.acceptedAt),
+          isNull(accountInvites.replacedAt),
+        ),
+      );
+    await tx.insert(accountInvites).values({
+      id,
+      phone: invite.phone,
+      name: invite.name,
+      role: invite.role,
+      organisationId: invite.organisationId,
+      codeHash,
+      invitedBy: invite.invitedBy,
+      createdAt: now,
+      expiresAt,
+    });
+    await appendAdminEvent(tx, deps, {
+      type: 'account.invited',
+      // The bootstrap has no admin yet: its invite stands for itself.
+      actorId: invite.invitedBy ?? id,
+      organisationId: invite.organisationId,
+      subjectKind: 'invite',
+      subjectId: id,
+      reason: invite.reason,
+    });
+  });
+  return { inviteId: id, code: invite.code, expiresAt: expiresAt.toISOString() };
+}
+
 /**
  * POST /v1/admin/invites. The admin may invite only roles in GRANTABLE_ROLES,
- * into their own organisation. The code is returned once, for the admin to
- * pass on; it is never sent by SMS. A newer invite replaces an older one for
- * the same number. `options.code` fixes the code, for the demo seed only.
+ * into their own organisation; the platform admin, whose scope is governance,
+ * may name another one. The organisation's kind must hold the role. The code
+ * is returned once, for the admin to pass on; it is never sent by SMS.
+ * `options.code` fixes the code, for the demo seed only.
  */
 export async function createInvite(
   deps: Deps,
@@ -106,43 +190,75 @@ export async function createInvite(
   if (!canGrant(admin.role, input.role)) {
     throw new HttpError(403, 'role_not_grantable', `${admin.role} may not invite a ${input.role}`);
   }
-  const phone = normalisePhone(input.phone);
-  const now = deps.now();
-  const code = options.code ?? String(randomInt(0, 100_000_000)).padStart(8, '0');
-  const codeHash = await hashSecret(code);
-  const expiresAt = new Date(now.getTime() + INVITE_TTL_MS);
-  const id = deps.newId();
-  await deps.db.transaction(async (tx) => {
-    const [existing] = await tx.select({ id: users.id }).from(users).where(eq(users.phone, phone));
-    if (existing) throw phoneInUse();
-    await tx
-      .update(accountInvites)
-      .set({ replacedAt: now })
-      .where(
-        and(
-          eq(accountInvites.phone, phone),
-          isNull(accountInvites.acceptedAt),
-          isNull(accountInvites.replacedAt),
-        ),
-      );
-    await tx.insert(accountInvites).values({
-      id,
-      phone,
-      name: input.name,
-      role: input.role,
-      organisationId: admin.organisationId,
-      codeHash,
-      invitedBy: admin.id,
-      createdAt: now,
-      expiresAt,
-    });
-    await appendAdminEvent(tx, deps, {
-      type: 'account.invited',
-      actorId: admin.id,
-      organisationId: admin.organisationId,
-      subjectId: id,
-      reason: 'new_staff',
-    });
+  const organisationId = input.organisationId ?? admin.organisationId;
+  const acrossOrganisations = SCOPE_BY_ROLE[admin.role] === 'governance';
+  const organisation =
+    organisationId === admin.organisationId || acrossOrganisations
+      ? await findOrganisation(deps.db, organisationId)
+      : null;
+  // Outside the admin's scope reads the same as missing.
+  if (!organisation) throw notFound('Organisation');
+  if (organisation.status !== 'active') {
+    throw new HttpError(403, 'organisation_suspended', 'This organisation is suspended');
+  }
+  if (!canHold(organisation.kind, input.role)) {
+    throw new HttpError(
+      409,
+      'role_not_in_org',
+      `a ${organisation.kind} organisation cannot hold a ${input.role}`,
+    );
+  }
+  return insertInvite(deps, {
+    phone: normalisePhone(input.phone),
+    name: input.name,
+    role: input.role,
+    organisationId: organisation.id,
+    invitedBy: admin.id,
+    code: options.code ?? newInviteCode(),
+    reason: 'new_staff',
   });
-  return { inviteId: id, code, expiresAt: expiresAt.toISOString() };
+}
+
+/** Why the bootstrap would not run; the command prints it. */
+export class BootstrapRefused extends Error {}
+
+/**
+ * `pnpm --filter @hunarpramaan/api admin:bootstrap`: the first platform admin.
+ * Makes the operator organisation if it is missing, and an invite whose code
+ * is printed once; no account or PIN exists until the person accepts it.
+ * Refuses if a platform admin already exists, unless `additional` is set.
+ * Never on the web (ADR 010 point 11).
+ */
+export async function bootstrapPlatformAdmin(
+  deps: Deps,
+  input: { name: string; phone: string; reason: string; additional?: boolean },
+): Promise<CreateInviteResponse> {
+  if (input.reason !== 'bootstrap') throw new BootstrapRefused('the reason must be "bootstrap"');
+  const name = input.name.trim();
+  if (name.length === 0 || name.length > 120) throw new BootstrapRefused('give a name');
+  if (!Phone.safeParse(input.phone).success) {
+    throw new BootstrapRefused('give a 10-digit mobile number');
+  }
+  const [admin] = await deps.db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.role, 'platform_admin'))
+    .limit(1);
+  if (admin && !input.additional) {
+    throw new BootstrapRefused('a platform admin already exists; pass --additional to add another');
+  }
+  const operator = PILOT_ORGANISATIONS.operator;
+  await deps.db
+    .insert(organisations)
+    .values({ id: operator.id, kind: 'operator', name: operator.name })
+    .onConflictDoNothing();
+  return insertInvite(deps, {
+    phone: normalisePhone(input.phone),
+    name,
+    role: 'platform_admin',
+    organisationId: operator.id,
+    invitedBy: null,
+    code: newInviteCode(),
+    reason: 'bootstrap',
+  });
 }

@@ -6,3 +6,4 @@ export * from './pin';
 export * from './trade-pack';
 export * from './events';
 export * from './api';
+export * from './admin';

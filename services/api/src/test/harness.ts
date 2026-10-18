@@ -1,15 +1,15 @@
 import { v4 as uuidv4, v7 as uuidv7 } from 'uuid';
 import supertest from 'supertest';
 import { pino } from 'pino';
-import type { Actor, Role, SessionUser } from '@hunarpramaan/contracts';
+import type { Actor, OrgKind, Role, SessionUser } from '@hunarpramaan/contracts';
 import { loadPack } from '@hunarpramaan/trade-packs/node';
 import { createApp } from '../app';
 import { hashSecret } from '../auth/secrets';
 import { createTokenIssuer } from '../auth/tokens';
 import { loadConfig } from '../config';
-import { devices, users } from '../db/schema';
+import { devices, organisations, users } from '../db/schema';
 import type { Deps } from '../domain/context';
-import { PILOT_ORGANISATION_ID } from '../domain/organisations';
+import { pilotOrganisationFor } from '../domain/organisations';
 import { publishPack } from '../domain/packs';
 import { SimulatedPhone } from '../dev/simulated-phone';
 import { InlineQueue } from '../queue/queue';
@@ -67,13 +67,25 @@ export async function startHarness() {
     setDice(value: number) {
       dice = value;
     },
-    async user(role: Role, name = `${role} user`): Promise<TestUser> {
+    /** A new organisation of `kind`, beside the pilot ones migration 0008 made. */
+    async organisation(kind: OrgKind, name = `Test ${kind}`): Promise<string> {
+      const id = uuidv4();
+      await database.db.insert(organisations).values({ id, kind, name: { en: name, hi: name } });
+      return id;
+    },
+    /** An account, in the pilot organisation that holds its role unless another is given. */
+    async user(
+      role: Role,
+      name = `${role} user`,
+      options: { organisationId?: string } = {},
+    ): Promise<TestUser> {
       const id = uuidv4();
       const phone = `9${String(Math.floor(Math.random() * 1e9)).padStart(9, '0')}`;
+      const organisationId = options.organisationId ?? pilotOrganisationFor(role);
       await database.db
         .insert(users)
-        .values({ id, role, name, phone, pinHash: await hashSecret(PIN) });
-      const sessionUser: SessionUser = { id, role, name, organisationId: PILOT_ORGANISATION_ID };
+        .values({ id, organisationId, role, name, phone, pinHash: await hashSecret(PIN) });
+      const sessionUser: SessionUser = { id, role, name, organisationId };
       const { token } = await tokens.issue(sessionUser);
       return {
         ...sessionUser,

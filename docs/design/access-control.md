@@ -3,7 +3,7 @@
 How HunarPramaan decides who may see and do what. The decisions are in [ADR 006](../adr/006-ai-output-is-a-suggestion.md) (AI only suggests), [ADR 010](../adr/010-organisations-admin-roles-access-control.md) (organisations and admin roles) and [ADR 011](../adr/011-personal-data-outside-the-hash-chain.md) (personal data). The code is the source of truth: `AUTHORITY`, `READ_ACCESS`, `ROLES_BY_ORG_KIND`, `GRANTABLE_ROLES` and `SCOPE_BY_ROLE` in [`packages/contracts/src/authority.ts`](../../packages/contracts/src/authority.ts), the roles and organisation kinds in [`roles.ts`](../../packages/contracts/src/roles.ts), and the admin error codes in [`api.ts`](../../packages/contracts/src/api.ts).
 
 > [!NOTE]
-> **Built today:** the seven working roles, with every write checked against `AUTHORITY` and every read against `READ_ACCESS`. **In contracts only** (1.0.0-draft.5, before the v1 freeze at G1): the four admin roles, the five organisation kinds, admin actions, grant rules, scope levels, the organisation id in the session user and the token, and admin error codes. The API and web don't use them yet, and every account belongs to one pilot organisation until Sprint 1. **Planned (ADR 010):** organisations in the database, admin accounts, scoping by organisation, and the admin panel. Rows marked *contracts* exist only as contract tables; rows marked *planned* don't exist yet.
+> **Built today:** the seven working roles, with every write checked against `AUTHORITY` and every read against `READ_ACCESS`. In contracts: the four admin roles, the five organisation kinds, admin actions with their reason codes, grant rules, scope levels, the organisation id in the session user and the token, and admin error codes. In the API: real organisations (`organisations`, `qp_owners` and `users.organisation_id`; migration 0008 makes the pilot's five and places existing accounts by role), the bootstrap command for the first platform admin, admin accounts, and staff invites into an organisation whose kind holds the role, recorded in the hash-chained admin log. **Planned (ADR 010):** account and phone status, scoping by organisation, and the admin panel ([docs/design/admin-panel](admin-panel/)). Rows marked *contracts* exist only as contract tables; rows marked *planned* don't exist yet.
 
 ## The one rule
 
@@ -113,7 +113,7 @@ Phones sync days later, so admin actions must not destroy offline work:
 | When | What |
 |---|---|
 | Before G1 (25 Oct) | **Built** in contracts 1.0.0-draft.5: admin roles, organisation kinds, the organisation id in the session user and the token, admin actions, grant rules, scope levels, error codes, and the unit half of IT-04. Still to do: confirm with CSDCI where master assessors belong. |
-| Sprint 1 | Organisations, fixed accounts, the bootstrap command. Personal data outside the hash chain (ADR 011). Seed two agencies, a training partner, CSDCI and NCVET, with two admins each. |
+| Sprint 1 | **Built:** organisations, fixed accounts, the bootstrap command, and the seed with two agencies, a training partner, CSDCI and NCVET, with two admins each. Still to do: personal data outside the hash chain (ADR 011). |
 | Sprint 2 | Scoping on every endpoint (IT-05). Account status checked on every request. SIDH exports recorded. |
 | Sprint 3–4 | People, Devices and Audit log screens. Sign-in limits and lockout. Device revocation with draining. Invites. Trade-pack upload and release. Venues and accreditation, seeded. |
 | Sprint 5 | Accreditation and venue screens if time; read-only settings; NCVET governance log. |

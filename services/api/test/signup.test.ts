@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 import { declarations, users, workers } from '../src/db/schema';
 import { SimulatedPhone } from '../src/dev/simulated-phone';
-import { PILOT_ORGANISATION_ID } from '../src/domain/organisations';
+import { PILOT_ORGANISATIONS } from '../src/domain/organisations';
 import { startHarness, type Harness } from '../src/test/harness';
 import { newPhone, pushOk, registerWorker, signUpWorker, ticketFor } from '../src/test/scenario';
 
@@ -27,7 +27,8 @@ describe('workers sign up on their own phone (ADR 012)', () => {
     expect(res.body.user).toMatchObject({
       name: 'Kavita Joshi',
       role: 'worker',
-      organisationId: PILOT_ORGANISATION_ID,
+      // No mobiliser registered this number: the pilot's training partner for now.
+      organisationId: PILOT_ORGANISATIONS.training_partner.id,
     });
     expect(res.body).toMatchObject({ claimed: false, previousSignInAt: null });
     expect(res.body.workerId).toMatch(/^[0-9a-f-]{36}$/);

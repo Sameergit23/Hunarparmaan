@@ -1,5 +1,6 @@
 /**
- * pnpm db:seed: load the trade pack, demo users and a demo pilot.
+ * pnpm db:seed: load the trade pack, the pilot's organisations, demo users and
+ * a demo pilot (TRD section 10 in docs/design/admin-panel).
  *
  * Every demo session goes through the real sync, upload and approval code,
  * so hash chains, checks, flags and certificates are all genuine. Names and
@@ -11,6 +12,7 @@ import { v4 as uuidv4, v7 as uuidv7 } from 'uuid';
 import type {
   DeviceEventType,
   GeoPoint,
+  OrgKind,
   Role,
   ScoreValue,
   SessionUser,
@@ -23,7 +25,7 @@ import { loadConfig, loadEnvFiles } from '../config';
 import { SimulatedPhone, fakeClip } from '../dev/simulated-phone';
 import { createInvite } from '../domain/admin';
 import { clipForAssessor, receiveUpload, rehashEvidence } from '../domain/evidence';
-import { PILOT_ORGANISATION_ID } from '../domain/organisations';
+import { PILOT_ORGANISATIONS } from '../domain/organisations';
 import { publishPack, qualificationLoader } from '../domain/packs';
 import { decideRecommendation } from '../domain/recommendations';
 import { recordRescore } from '../domain/rescores';
@@ -31,25 +33,129 @@ import { pushEvents } from '../domain/sync';
 import { rescoreQueue } from '../domain/views';
 import { createRuntime } from '../runtime';
 import { exitIfDataDirInUse } from './pglite-lock';
-import { accountInvites, devices, sessions, studyRounds, users } from './schema';
+import {
+  accountInvites,
+  devices,
+  organisations,
+  qpOwners,
+  sessions,
+  studyRounds,
+  users,
+} from './schema';
 
 /** Demo PIN for every seeded account. */
 const DEMO_PIN = '1234';
 
-const DEMO_USERS: { key: string; role: Role; name: string; phone: string }[] = [
-  { key: 'mobiliser', role: 'mobiliser', name: 'Sunita Verma', phone: '9000000001' },
-  { key: 'anil', role: 'assessor', name: 'Anil Sharma', phone: '9000000002' },
-  { key: 'rekha', role: 'assessor', name: 'Rekha Nair', phone: '9000000003' },
-  { key: 'vikram', role: 'assessor', name: 'Vikram Rathore', phone: '9000000004' },
-  { key: 'master', role: 'master_assessor', name: 'Meena Iyer', phone: '9000000005' },
-  { key: 'agency', role: 'agency', name: 'Indore Assessment Agency', phone: '9000000006' },
-  { key: 'ssc', role: 'awarding_body', name: 'CSDCI Approvals Desk', phone: '9000000007' },
-  { key: 'ncvet', role: 'ncvet', name: 'NCVET Monitoring', phone: '9000000008' },
-  // One admin per admin role (ADR 010). They invite staff through the API; screens come later.
-  { key: 'operator', role: 'platform_admin', name: 'HunarPramaan Operator', phone: '9000000009' },
-  { key: 'tpadmin', role: 'tp_admin', name: 'Indore RPL Centre Admin', phone: '9000000010' },
-  { key: 'agencyadmin', role: 'agency_admin', name: 'Agency Admin', phone: '9000000011' },
-  { key: 'abadmin', role: 'ab_admin', name: 'CSDCI Admin', phone: '9000000012' },
+type DemoOrg = keyof typeof DEMO_ORGANISATIONS;
+
+/**
+ * The pilot's organisations. Migration 0008 makes the first five with these
+ * ids; the second agency is demo only, so IT-05 and the demo show two
+ * agencies kept apart.
+ */
+const DEMO_ORGANISATIONS = {
+  operator: { kind: 'operator', ...PILOT_ORGANISATIONS.operator },
+  csdci: { kind: 'awarding_body', ...PILOT_ORGANISATIONS.awarding_body },
+  indore: { kind: 'assessment_agency', ...PILOT_ORGANISATIONS.assessment_agency },
+  rplCentre: { kind: 'training_partner', ...PILOT_ORGANISATIONS.training_partner },
+  ncvet: { kind: 'regulator', ...PILOT_ORGANISATIONS.regulator },
+  bhopal: {
+    kind: 'assessment_agency',
+    id: '00000000-0000-4000-8000-000000000106',
+    name: { en: 'Bhopal Skills Assessment', hi: 'भोपाल स्किल्स असेसमेंट' },
+  },
+} as const satisfies Record<string, { kind: OrgKind; id: string; name: object }>;
+
+/** Who owns the electrician QPs, as migration 0008 records it (ADR 010 point 7). */
+const QP_OWNER: DemoOrg = 'csdci';
+
+const DEMO_USERS: { key: string; org: DemoOrg; role: Role; name: string; phone: string }[] = [
+  {
+    key: 'mobiliser',
+    org: 'rplCentre',
+    role: 'mobiliser',
+    name: 'Sunita Verma',
+    phone: '9000000001',
+  },
+  { key: 'anil', org: 'indore', role: 'assessor', name: 'Anil Sharma', phone: '9000000002' },
+  { key: 'rekha', org: 'indore', role: 'assessor', name: 'Rekha Nair', phone: '9000000003' },
+  { key: 'vikram', org: 'bhopal', role: 'assessor', name: 'Vikram Rathore', phone: '9000000004' },
+  { key: 'master', org: 'csdci', role: 'master_assessor', name: 'Meena Iyer', phone: '9000000005' },
+  {
+    key: 'agency',
+    org: 'indore',
+    role: 'agency',
+    name: 'Indore Assessment Agency',
+    phone: '9000000006',
+  },
+  {
+    key: 'ssc',
+    org: 'csdci',
+    role: 'awarding_body',
+    name: 'CSDCI Approvals Desk',
+    phone: '9000000007',
+  },
+  { key: 'ncvet', org: 'ncvet', role: 'ncvet', name: 'NCVET Monitoring', phone: '9000000008' },
+  // Two admins in every organisation that has an admin role (ADR 010 point 11).
+  {
+    key: 'operator',
+    org: 'operator',
+    role: 'platform_admin',
+    name: 'Priya Raman',
+    phone: '9000000009',
+  },
+  {
+    key: 'operator2',
+    org: 'operator',
+    role: 'platform_admin',
+    name: 'Arvind Menon',
+    phone: '9000000014',
+  },
+  { key: 'tpadmin', org: 'rplCentre', role: 'tp_admin', name: 'Neha Bansal', phone: '9000000010' },
+  {
+    key: 'tpadmin2',
+    org: 'rplCentre',
+    role: 'tp_admin',
+    name: 'Sanjay Dubey',
+    phone: '9000000015',
+  },
+  {
+    key: 'agencyadmin',
+    org: 'indore',
+    role: 'agency_admin',
+    name: 'Farhan Qureshi',
+    phone: '9000000011',
+  },
+  {
+    key: 'agencyadmin2',
+    org: 'indore',
+    role: 'agency_admin',
+    name: 'Meera Kulkarni',
+    phone: '9000000016',
+  },
+  { key: 'abadmin', org: 'csdci', role: 'ab_admin', name: 'Kiran Desai', phone: '9000000012' },
+  { key: 'abadmin2', org: 'csdci', role: 'ab_admin', name: 'Harish Patil', phone: '9000000017' },
+  {
+    key: 'bhopaladmin',
+    org: 'bhopal',
+    role: 'agency_admin',
+    name: 'Gaurav Saxena',
+    phone: '9000000018',
+  },
+  {
+    key: 'bhopaladmin2',
+    org: 'bhopal',
+    role: 'agency_admin',
+    name: 'Ritu Chouhan',
+    phone: '9000000019',
+  },
+  {
+    key: 'bhopalagency',
+    org: 'bhopal',
+    role: 'agency',
+    name: 'Bhopal Skills Assessment',
+    phone: '9000000020',
+  },
 ];
 
 /**
@@ -146,7 +252,8 @@ const PLANS: Plan[] = [
     awayM: 900,
   },
   {
-    assessor: 'vikram',
+    // The same clip as an earlier session of Anil's, and one file edited after capture.
+    assessor: 'anil',
     worker: 6,
     scores: [2, 2, 2, 2, 2, 2, 2, 2],
     daysAgo: 3,
@@ -164,8 +271,11 @@ const PLANS: Plan[] = [
   },
 ];
 
-/** Share of each assessor's re-scored clips where the master disagrees: Vikram is the outlier. */
-const MASTER_DISAGREES: Record<Plan['assessor'], number> = { anil: 0.17, rekha: 0.2, vikram: 0.6 };
+/**
+ * Share of each assessor's re-scored clips where the master disagrees. Anil,
+ * whose sessions also hold the reused and the edited clip, is the outlier.
+ */
+const MASTER_DISAGREES: Record<Plan['assessor'], number> = { anil: 0.6, rekha: 0.2, vikram: 0.17 };
 
 function offsetNorth(point: GeoPoint, metres: number): GeoPoint {
   return { ...point, lat: point.lat + metres / 111_195 };
@@ -195,20 +305,41 @@ async function seed(): Promise<void> {
   await publishPack(db, pack);
   console.log(`✓ trade pack ${pack.pack.id} ${pack.pack.version}`);
 
+  for (const org of Object.values(DEMO_ORGANISATIONS)) {
+    await db
+      .insert(organisations)
+      .values({ id: org.id, kind: org.kind, name: org.name })
+      .onConflictDoNothing();
+  }
+  for (const qualification of pack.qualifications) {
+    await db
+      .insert(qpOwners)
+      .values({ nqrCode: qualification.nqrCode, organisationId: DEMO_ORGANISATIONS[QP_OWNER].id })
+      .onConflictDoNothing();
+  }
+  console.log(`✓ ${Object.keys(DEMO_ORGANISATIONS).length} organisations; CSDCI owns the QPs`);
+
   const accounts = new Map<string, SessionUser>();
   for (const u of DEMO_USERS) {
     const [existing] = await db.select().from(users).where(eq(users.phone, u.phone));
     const id = existing?.id ?? uuidv4();
+    const organisationId = existing?.organisationId ?? DEMO_ORGANISATIONS[u.org].id;
     if (!existing) {
       await db.insert(users).values({
         id,
+        organisationId,
         role: u.role,
         name: u.name,
         phone: u.phone,
         pinHash: await hashSecret(DEMO_PIN),
       });
     }
-    accounts.set(u.key, { id, role: u.role, name: u.name, organisationId: PILOT_ORGANISATION_ID });
+    accounts.set(u.key, {
+      id,
+      role: existing?.role ?? u.role,
+      name: existing?.name ?? u.name,
+      organisationId,
+    });
   }
   console.log(
     `✓ ${DEMO_USERS.length} demo accounts (PIN ${DEMO_PIN}, OTP 123456 with MOCK_INTEGRATIONS=true)`,

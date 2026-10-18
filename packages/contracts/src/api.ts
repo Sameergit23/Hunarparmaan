@@ -212,11 +212,19 @@ export type RefreshResponse = z.infer<typeof RefreshResponse>;
 /** Digits only, so it is easy to say and type. Shown to the inviting admin once. */
 export const InviteCode = z.string().regex(/^\d{8}$/, 'expected the 8-digit invite code');
 
-/** POST /v1/admin/invites: which roles an admin may invite is GRANTABLE_ROLES. */
+/**
+ * POST /v1/admin/invites: which roles an admin may invite is GRANTABLE_ROLES,
+ * and the organisation's kind must hold the role (ROLES_BY_ORG_KIND).
+ */
 export const CreateInviteRequest = z.strictObject({
   phone: Phone,
   name: z.string().trim().min(1).max(120),
   role: Role,
+  /**
+   * Only the platform admin invites into another organisation (each one's first
+   * admin, and NCVET's accounts). Organisation admins invite into their own.
+   */
+  organisationId: EntityId.optional(),
 });
 export type CreateInviteRequest = z.infer<typeof CreateInviteRequest>;
 

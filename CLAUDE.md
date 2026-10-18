@@ -72,6 +72,7 @@ Node 22.18+ or 24.11+ (`.nvmrc` says 24) and pnpm 10 (`corepack enable` picks th
 | `pnpm dev` | API (:4000) and web (:3000) in watch mode; with no `DATABASE_URL` the API uses PGlite in `services/api/.data/` |
 | `pnpm db:seed` · `pnpm db:migrate` | Demo pilot through the real sync path (PIN `1234`, OTP shown on screen) · migrations |
 | `pnpm db:reset` | Delete the local PGlite database and clips; then `pnpm db:seed` again. Stop `pnpm dev` first |
+| `pnpm --filter @hunarpramaan/api admin:bootstrap -- --name "<name>" --phone <number> --reason bootstrap` | Invite the first platform admin and print the code once (ADR 010); refuses if one exists unless `--additional` |
 | `pnpm check` | `pnpm lint`, `pnpm typecheck` and `pnpm test`: run before every push |
 | `pnpm test` | Vitest in every workspace, through Turborepo |
 | `pnpm typecheck` · `pnpm build` | `tsc` and production builds in every workspace |

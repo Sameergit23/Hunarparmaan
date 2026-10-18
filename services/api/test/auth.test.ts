@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { SignJWT } from 'jose';
-import { PILOT_ORGANISATION_ID } from '../src/domain/organisations';
+import { PILOT_ORGANISATIONS } from '../src/domain/organisations';
 import { PIN, startHarness, type Harness, type TestUser } from '../src/test/harness';
 
 let h: Harness;
@@ -30,7 +30,7 @@ describe('OTP + PIN login (FR-05)', () => {
       id: assessor.id,
       name: 'Anil Sharma',
       role: 'assessor',
-      organisationId: PILOT_ORGANISATION_ID,
+      organisationId: PILOT_ORGANISATIONS.assessment_agency.id,
     });
 
     const pull = await h.http.get('/v1/sync/pull').set('Authorization', `Bearer ${res.body.token}`);

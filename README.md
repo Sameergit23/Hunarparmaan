@@ -342,14 +342,22 @@ The same commands work in PowerShell, Command Prompt, Git Bash and macOS or Linu
 
 Open `http://localhost:3000` and sign in with a demo account. The one-time code is shown on screen (OTP is mocked) and the PIN is `1234`.
 
-| Demo account | Mobile number | Sees |
-|---|---|---|
-| Assessment agency | `9000000006` | Dashboard, sessions, flags |
-| Awarding body | `9000000007` | Dashboard, approvals, sessions |
-| NCVET | `9000000008` | Dashboard (aggregates only) |
-| Mobiliser, assessors (3), master assessor | `9000000001`, `9000000002` to `9000000004`, `9000000005` | Phone roles: the API accepts them, and the web sign-in sends them to the phone app |
-| Platform, training-partner, agency and awarding-body admins | `9000000009` to `9000000012` | Invite staff through the API (`POST /v1/admin/invites`); admin screens come in Sprints 3 and 4 |
-| A pending agency invite | `9000000013` | Not an account yet: on the sign-in page, open "Have an invite code? Set up your account", then use the SMS code, the invite code `24681357` (demo mode only) and a new 6-digit PIN |
+Every account belongs to one organisation ([ADR 010](docs/adr/010-organisations-admin-roles-access-control.md)). The seed has six: HunarPramaan (the operator), CSDCI (the awarding body, which owns both electrician QPs), two assessment agencies (Indore Assessment Agency and Bhopal Skills Assessment), Indore RPL Centre (a training partner) and NCVET.
+
+| Demo account | Organisation | Mobile number | Sees |
+|---|---|---|---|
+| Assessment agency | Indore Assessment Agency | `9000000006` | Dashboard, sessions, flags |
+| Awarding body | CSDCI | `9000000007` | Dashboard, approvals, sessions |
+| NCVET | NCVET | `9000000008` | Dashboard (aggregates only) |
+| Mobiliser | Indore RPL Centre | `9000000001` | Phone role: the API accepts it, and the web sign-in sends it to the phone app |
+| Assessors Anil and Rekha · Vikram | Indore Assessment Agency · Bhopal Skills Assessment | `9000000002`, `9000000003` · `9000000004` | Phone roles |
+| Master assessor | CSDCI | `9000000005` | Phone role |
+| Second agency's user | Bhopal Skills Assessment | `9000000020` | Dashboard, sessions, flags |
+| Platform admins | HunarPramaan | `9000000009`, `9000000014` | Invite staff through the API (`POST /v1/admin/invites`); admin screens come in Sprints 3 and 4 |
+| Training-partner admins | Indore RPL Centre | `9000000010`, `9000000015` | The same |
+| Agency admins | Indore Assessment Agency · Bhopal Skills Assessment | `9000000011`, `9000000016` · `9000000018`, `9000000019` | The same |
+| Awarding-body admins | CSDCI | `9000000012`, `9000000017` | The same |
+| A pending agency invite | Indore Assessment Agency | `9000000013` | Not an account yet: on the sign-in page, open "Have an invite code? Set up your account", then use the SMS code, the invite code `24681357` (demo mode only) and a new 6-digit PIN |
 
 The names, numbers and study figures in the demo are made up; the study rounds are marked as demo numbers.
 
@@ -467,6 +475,7 @@ Run them from the repo root.
 | `pnpm db:seed` | Load the trade pack, demo accounts and demo pilot; running it again adds nothing | ✅ |
 | `pnpm db:reset` | Delete the local PGlite database and clips, to start the demo again (stop `pnpm dev` first) | ✅ |
 | `pnpm db:migrate` | Apply database migrations (the API also does this itself on PGlite) | ✅ |
+| `pnpm --filter @hunarpramaan/api admin:bootstrap -- --name "<name>" --phone <number> --reason bootstrap` | Invite the first platform admin of a new installation and print the invite code once; refuses if one exists, unless `--additional` is passed (stop `pnpm dev` first on PGlite) | ✅ |
 | `pnpm test` | Unit and integration tests in every workspace | ✅ TypeScript; Python with the AI service |
 | `pnpm lint` · `pnpm typecheck` · `pnpm build` | ESLint and Prettier, TypeScript, production builds | ✅ |
 | `pnpm format` | Rewrite files in Prettier style | ✅ |
@@ -709,7 +718,7 @@ Callers are checked against `AUTHORITY` (actions) and `READ_ACCESS` (reads) in `
 | POST | `/v1/auth/login` | Anyone with an account | Code + PIN (web) or ticket + PIN (phone); returns a JWT and the time of the sign-in before. 5 wrong PINs lock the account for 15 min, doubling up to an hour |
 | POST | `/v1/auth/register` | A worker, with a ticket | Signs a worker up on their own phone, claiming the record a mobiliser made for the same number ([ADR 012](docs/adr/012-voice-sign-in.md), proposed) |
 | POST | `/v1/auth/pin` · `/v1/auth/pin/reset` | Signed in · a worker with a ticket | Changes the PIN, or resets a forgotten worker PIN; older sign-ins and renewal keys end |
-| POST | `/v1/admin/invites` | Admins, for the roles `GRANTABLE_ROLES` gives them | Invites a staff member: returns an 8-digit invite code once, valid 72 hours, and records it in the hash-chained admin log |
+| POST | `/v1/admin/invites` | Admins, for the roles `GRANTABLE_ROLES` gives them | Invites a staff member into the admin's organisation (the platform admin names one) for a role its kind may hold: returns an 8-digit invite code once, valid 72 hours, and records it in the hash-chained admin log |
 | POST | `/v1/auth/invite/accept` | An invited person, with a ticket | Creates the account from the invite code and a new PIN (5 tries) |
 | POST | `/v1/auth/renewal-key` · `/v1/auth/refresh` | Phone roles, on their registered phone | Keeps a phone signed in: a 30-day key that renews the JWT and is replaced at each use |
 | POST | `/v1/devices` | Mobiliser, assessor, master assessor | Registers a phone and binds it to the account |

@@ -28,8 +28,8 @@ declare global {
 
 /**
  * A valid token is not enough: its version must still match the account's, so
- * a PIN change or reset ends every older sign-in (ADR 010: accounts are checked
- * on every request).
+ * a PIN change or reset ends every older sign-in, and its organisation must be
+ * the account's (ADR 010: accounts are checked on every request).
  */
 export function authenticate(tokens: TokenIssuer, db: Db): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -38,10 +38,14 @@ export function authenticate(tokens: TokenIssuer, db: Db): RequestHandler {
     const verified = await tokens.verify(header.slice('Bearer '.length));
     if (!verified) return next(unauthorized('Your sign-in has expired; sign in again'));
     const [account] = await db
-      .select({ tokenVersion: users.tokenVersion })
+      .select({ tokenVersion: users.tokenVersion, organisationId: users.organisationId })
       .from(users)
       .where(eq(users.id, verified.user.id));
-    if (!account || account.tokenVersion !== verified.tokenVersion) {
+    if (
+      !account ||
+      account.tokenVersion !== verified.tokenVersion ||
+      account.organisationId !== verified.user.organisationId
+    ) {
       return next(new HttpError(401, 'token_revoked', 'Your sign-in has ended; sign in again'));
     }
     res.locals.user = verified.user;

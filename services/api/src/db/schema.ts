@@ -24,10 +24,14 @@ import {
 import type {
   Actor,
   AdminActionType,
+  AdminReasonCode,
+  AdminSubjectKind,
   AiFlag,
   GeoPoint,
   LocalizedText,
   MessageParams,
+  OrgKind,
+  OrganisationStatus,
   PassRule,
   Role,
   TradePack,
@@ -41,10 +45,42 @@ const createdAt = () =>
 
 type Rubric = { '0': LocalizedText; '1': LocalizedText; '2': LocalizedText };
 
-// --- Accounts and devices (mutable) ------------------------------------------
+// --- Organisations, accounts and devices (mutable) ---------------------------
+
+/**
+ * Every account belongs to one organisation, for good (ADR 010). Entities, so
+ * mutable like users: every change goes through an admin action, which is
+ * logged in the same transaction.
+ */
+export const organisations = pgTable('organisations', {
+  id: uuid('id').primaryKey(),
+  kind: text('kind').$type<OrgKind>().notNull(),
+  name: jsonb('name').$type<LocalizedText>().notNull(),
+  status: text('status').$type<OrganisationStatus>().notNull().default('active'),
+  /** NCVET recognition number, for agencies and awarding bodies. A reference only. */
+  recognitionRef: text('recognition_ref'),
+  createdAt: createdAt(),
+  /** Null for the pilot organisations made by migration 0008 and the bootstrap. */
+  createdBy: uuid('created_by'),
+});
+
+/**
+ * Which awarding body owns each QP: a fixed record, never read from pack
+ * content, so uploading a pack cannot move approval rights (ADR 010 point 7).
+ */
+export const qpOwners = pgTable('qp_owners', {
+  nqrCode: text('nqr_code').primaryKey(),
+  organisationId: uuid('organisation_id')
+    .notNull()
+    .references(() => organisations.id),
+});
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
+  /** One organisation, whose kind may hold the role (`canHold`, checked in the domain). */
+  organisationId: uuid('organisation_id')
+    .notNull()
+    .references(() => organisations.id),
   role: text('role').$type<Role>().notNull(),
   name: text('name').notNull(),
   phone: text('phone').notNull().unique(),
@@ -160,13 +196,17 @@ export const accountInvites = pgTable(
     phone: text('phone').notNull(),
     name: text('name').notNull(),
     role: text('role').$type<Role>().notNull(),
-    /** The inviting admin's organisation: admins invite only into their own (ADR 010). */
-    organisationId: uuid('organisation_id').notNull(),
+    /**
+     * The organisation the account will belong to: the inviting admin's own, or
+     * for the platform admin, the one it named (ADR 010).
+     */
+    organisationId: uuid('organisation_id')
+      .notNull()
+      .references(() => organisations.id),
     codeHash: text('code_hash').notNull(),
     attempts: integer('attempts').notNull().default(0),
-    invitedBy: uuid('invited_by')
-      .notNull()
-      .references(() => users.id),
+    /** Null for the first platform admin's invite, made by the bootstrap command. */
+    invitedBy: uuid('invited_by').references(() => users.id),
     createdAt: at('created_at').notNull(),
     expiresAt: at('expires_at').notNull(),
     acceptedAt: at('accepted_at'),
@@ -179,19 +219,20 @@ export const accountInvites = pgTable(
 /**
  * Append-only. The admin log (ADR 010): every admin action, hash-chained like
  * a phone's events (one chain for the server), with ids and reason codes only,
- * never a name or a phone number.
+ * never a name or a phone number. No foreign keys: it is a record of ids.
  */
 export const adminEvents = pgTable('admin_events', {
   id: uuid('id').primaryKey(),
   seq: integer('seq').notNull().unique(),
   type: text('type').$type<AdminActionType>().notNull(),
-  actorId: uuid('actor_id')
-    .notNull()
-    .references(() => users.id),
+  /** The admin's account, or for the bootstrap, the first platform admin's own invite. */
+  actorId: uuid('actor_id').notNull(),
+  /** The organisation the subject belongs to; for the platform admin, the target's. */
   organisationId: uuid('organisation_id').notNull(),
-  /** What the action was about: an invite, an account or a phone. */
+  subjectKind: text('subject_kind').$type<AdminSubjectKind>().notNull(),
+  /** What the action was about: an invite, an account, a phone or an organisation. */
   subjectId: text('subject_id').notNull(),
-  reason: text('reason').notNull(),
+  reason: text('reason').$type<AdminReasonCode>().notNull(),
   /** ISO time, as hashed into the chain. */
   occurredAt: text('occurred_at').notNull(),
   prevHash: text('prev_hash').notNull(),

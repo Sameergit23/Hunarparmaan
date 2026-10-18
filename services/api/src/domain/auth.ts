@@ -45,7 +45,7 @@ import {
 } from '../db/schema';
 import { HttpError, forbidden, notFound, unauthorized } from '../http/errors';
 import type { Deps } from './context';
-import { PILOT_ORGANISATION_ID } from './organisations';
+import { PILOT_ORGANISATIONS } from './organisations';
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
@@ -347,8 +347,7 @@ export const toSessionUser = (user: UserRow): SessionUser => ({
   id: user.id,
   name: user.name,
   role: user.role,
-  // ADR 010's bridge until organisations exist (Sprint 1).
-  organisationId: PILOT_ORGANISATION_ID,
+  organisationId: user.organisationId,
 });
 
 /**
@@ -418,8 +417,10 @@ export async function loginWithTicket(deps: Deps, tokens: TokenIssuer, input: Ti
 
 /**
  * A worker signs up on their own phone (ADR 012). If a mobiliser already
- * registered this number, the account claims that worker record; otherwise the
- * phone registers a new one with the returned `workerId`.
+ * registered this number, the account claims that worker record and joins
+ * that mobiliser's training partner; otherwise the phone registers a new one
+ * with the returned `workerId`, in the pilot's training partner until workers
+ * choose their RPL centre.
  */
 export async function registerWorker(
   deps: Deps,
@@ -440,8 +441,9 @@ export async function registerWorker(
     // A mobiliser may have typed the number with +91.
     const n = challenge.phone;
     const [record] = await tx
-      .select({ id: workers.id })
+      .select({ id: workers.id, organisationId: users.organisationId })
       .from(workers)
+      .innerJoin(users, eq(users.id, workers.registeredBy))
       .where(inArray(workers.phone, [n, `+91${n}`, `91${n}`]))
       .orderBy(desc(workers.createdAt))
       .limit(1);
@@ -449,6 +451,7 @@ export async function registerWorker(
     const workerId = record?.id ?? uuidv4();
     await tx.insert(users).values({
       id,
+      organisationId: record?.organisationId ?? PILOT_ORGANISATIONS.training_partner.id,
       role: 'worker',
       name: input.name,
       phone: n,
@@ -511,6 +514,7 @@ export async function acceptInvite(
     if (!accepted) throw inviteInvalid();
     await tx.insert(users).values({
       id,
+      organisationId: invite.organisationId,
       role: invite.role,
       name: invite.name,
       phone: challenge.phone,
