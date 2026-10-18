@@ -20,7 +20,8 @@
     "dev": "turbo run dev",
     "db:migrate": "pnpm --filter @hunarpramaan/api run db:migrate",
     "db:seed": "pnpm --filter @hunarpramaan/api run db:seed",
-    "db:reset": "pnpm --filter @hunarpramaan/api run db:reset"
+    "db:reset": "pnpm --filter @hunarpramaan/api run db:reset",
+    "contracts:schemas": "pnpm --filter @hunarpramaan/contracts run schemas"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

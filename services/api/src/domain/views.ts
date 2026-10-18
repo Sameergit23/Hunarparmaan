@@ -230,6 +230,8 @@ export async function sessionDetail(db: Db, sessionId: string): Promise<SessionD
     durationSec: c.durationSec,
     capturedAt: iso(c.capturedAt),
     check: checks.get(c.id) ?? 'waiting_upload',
+    // AI checks on clips (ADR 012) are stored once the vision job lands.
+    vision: null,
   }));
 
   const standing = standingScores(
@@ -356,6 +358,8 @@ export async function dashboardSummary(db: Db): Promise<DashboardSummary> {
     ),
     evidenceVerified: [...checks.values()].filter((s) => s === 'verified').length,
     evidenceTotal: clipIds.length,
+    // Filled in from stored vision results once the vision job lands (ADR 012).
+    vision: { clipsAnalysed: 0, clipsWithHints: 0, conflicts: 0, byCheck: [] },
   };
 }
 

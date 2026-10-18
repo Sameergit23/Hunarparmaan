@@ -1,0 +1,65 @@
+[project]
+name = "hunarpramaan-ai"
+version = "0.1.0"
+description = "HunarPramaan AI service: video checks on evidence clips, QP mapping and rater agreement. Stateless; only the API's queue worker calls it."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = "Apache-2.0"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn>=0.32",
+  "python-multipart>=0.0.12",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+  "numpy>=2.0",
+  "pillow>=11.0",
+  "av>=14.0",
+  "regex>=2024.9",
+  "httpx>=0.27",
+  "statsmodels>=0.14",
+  "krippendorff>=0.8",
+  "onnxruntime>=1.20",
+  "tokenizers>=0.20",
+  # MediaPipe has no wheel for Intel Macs; there the people checks return `unavailable` (ADR 012).
+  "mediapipe>=0.10.21; sys_platform != 'darwin' or platform_machine == 'arm64'",
+  "scipy>=1.18.1",
+]
+
+[project.scripts]
+hp-ai = "hp_ai.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "ruff>=0.7",
+  "mypy>=1.13",
+  "jsonschema>=4.23",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hp_ai"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+  "models: needs the downloaded models (uv run hp-ai fetch-models); skipped without them",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+packages = ["hp_ai"]
+mypy_path = "src"
+strict = true
+ignore_missing_imports = true

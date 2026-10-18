@@ -4,6 +4,7 @@ import {
   Check,
   Clock,
   Copy,
+  Eye,
   Hash,
   Link2,
   MapPinOff,
@@ -67,6 +68,10 @@ const FLAG_ICONS: Record<FlagKind, typeof Hash> = {
   reused_clip: Copy,
   result_mismatch: TriangleAlert,
   invalid_event: TriangleAlert,
+  vision_evidence: Eye,
+  vision_quality: Eye,
+  vision_conflict: Eye,
+  similar_clip: Copy,
 };
 
 export const isBlocking = (kind: FlagKind) => BLOCKING_FLAGS.includes(kind);

@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "reportVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "engine": {
+      "type": "string",
+      "minLength": 1
+    },
+    "models": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "video": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["video", "photo"]
+        },
+        "durationSec": {
+          "type": "number",
+          "minimum": 0
+        },
+        "width": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "height": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "framesDecoded": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "framesAnalysed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": ["kind", "durationSec", "width", "height", "framesDecoded", "framesAnalysed"],
+      "additionalProperties": false
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "check": {
+            "type": "string",
+            "enum": [
+              "ppe.gloves",
+              "ppe.helmet",
+              "ppe.eye_protection",
+              "ppe.footwear",
+              "ppe.insulated_tools",
+              "hazard.exposed_conductor",
+              "hazard.water",
+              "hazard.height",
+              "hazard.clutter",
+              "evidence.no_person",
+              "evidence.multiple_people",
+              "evidence.screen_replay",
+              "evidence.static_image",
+              "evidence.off_task",
+              "quality.dark",
+              "quality.blurry",
+              "quality.shaky",
+              "quality.too_short",
+              "step.order",
+              "meter.reading"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["raised", "clear", "uncertain", "not_visible", "unavailable"]
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "framesSeen": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "framesTotal": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "moments": {
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "params": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": ["string", "number"]
+            }
+          }
+        },
+        "required": [
+          "check",
+          "status",
+          "confidence",
+          "framesSeen",
+          "framesTotal",
+          "moments",
+          "params"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "phash": {
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "const": "dct64"
+        },
+        "intervalSec": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          }
+        }
+      },
+      "required": ["algorithm", "intervalSec", "frames"],
+      "additionalProperties": false
+    },
+    "timingMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": ["reportVersion", "engine", "models", "video", "checks", "phash", "timingMs"],
+  "additionalProperties": false
+}

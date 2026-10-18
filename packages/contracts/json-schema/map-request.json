@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "transcript": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20000
+    },
+    "language": {
+      "type": "string",
+      "enum": ["hi", "en"]
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": ["text", "quote"],
+        "additionalProperties": false
+      }
+    },
+    "qualifications": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nqrCode": {
+            "type": "string",
+            "pattern": "^QG-\\d{2}-[A-Z]{2}-\\d{5}-\\d{4}-V\\d+-[A-Z]+$"
+          },
+          "criteria": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "text": {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "hi": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": ["en", "hi"],
+                  "additionalProperties": false
+                },
+                "glossary": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["id", "text", "glossary"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["nqrCode", "criteria"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["transcript", "language", "claims", "qualifications"],
+  "additionalProperties": false
+}

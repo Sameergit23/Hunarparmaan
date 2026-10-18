@@ -16,6 +16,9 @@ const params: MessageParams = {
   type: 'score.recorded',
   deviceId: 'demo-phone',
   criteria: 'L3-N2.PC1',
+  check: 'ppe.gloves',
+  confidence: 82,
+  similarity: 75,
 };
 
 // The path to every string in a dictionary. Paths are arrays: some keys contain dots.
@@ -63,5 +66,14 @@ describe.each([
     expect(blockerText({ code: 'result_mismatch', params }, m, lang)).toContain(
       m.sessions.outcome.pass,
     );
+  });
+});
+
+describe('AI check flags', () => {
+  it("name the check in the reader's language, not by its id", () => {
+    const flag = { kind: 'vision_conflict' as const, params };
+    expect(flagText(flag, en, 'en')).toContain('"Gloves"');
+    expect(flagText(flag, hi, 'hi')).toContain('"दस्ताने"');
+    expect(flagText(flag, en, 'en')).not.toContain('ppe.gloves');
   });
 });

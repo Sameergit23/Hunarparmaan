@@ -1,0 +1,102 @@
+{
+  "ppe.gloves": {
+    "group": "safety_gear",
+    "always": false,
+    "photo": true
+  },
+  "ppe.helmet": {
+    "group": "safety_gear",
+    "always": false,
+    "photo": true
+  },
+  "ppe.eye_protection": {
+    "group": "safety_gear",
+    "always": false,
+    "photo": true
+  },
+  "ppe.footwear": {
+    "group": "safety_gear",
+    "always": false,
+    "photo": true
+  },
+  "ppe.insulated_tools": {
+    "group": "safety_gear",
+    "always": false,
+    "photo": true
+  },
+  "hazard.exposed_conductor": {
+    "group": "hazard",
+    "always": true,
+    "photo": true
+  },
+  "hazard.water": {
+    "group": "hazard",
+    "always": true,
+    "photo": true
+  },
+  "hazard.height": {
+    "group": "hazard",
+    "always": true,
+    "photo": true
+  },
+  "hazard.clutter": {
+    "group": "hazard",
+    "always": true,
+    "photo": true
+  },
+  "evidence.no_person": {
+    "group": "evidence",
+    "always": true,
+    "photo": true
+  },
+  "evidence.multiple_people": {
+    "group": "evidence",
+    "always": true,
+    "photo": true
+  },
+  "evidence.screen_replay": {
+    "group": "evidence",
+    "always": true,
+    "photo": true
+  },
+  "evidence.static_image": {
+    "group": "evidence",
+    "always": true,
+    "photo": false
+  },
+  "evidence.off_task": {
+    "group": "evidence",
+    "always": true,
+    "photo": true
+  },
+  "quality.dark": {
+    "group": "quality",
+    "always": true,
+    "photo": true
+  },
+  "quality.blurry": {
+    "group": "quality",
+    "always": true,
+    "photo": true
+  },
+  "quality.shaky": {
+    "group": "quality",
+    "always": true,
+    "photo": false
+  },
+  "quality.too_short": {
+    "group": "quality",
+    "always": true,
+    "photo": false
+  },
+  "step.order": {
+    "group": "work",
+    "always": false,
+    "photo": false
+  },
+  "meter.reading": {
+    "group": "work",
+    "always": false,
+    "photo": true
+  }
+}

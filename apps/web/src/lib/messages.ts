@@ -42,6 +42,12 @@ export function flagText(
       return fill(m.detail.reused_clip, { ...p, date: p.date ? date(String(p.date), lang) : '' });
     case 'result_mismatch':
       return mismatchText(p, m, lang);
+    case 'vision_evidence':
+    case 'vision_quality':
+    case 'vision_conflict': {
+      const check = str(p.check);
+      return fill(m.detail[flag.kind], { ...p, check: m.aiChecks[check] ?? check });
+    }
     default:
       return fill(m.detail[flag.kind], p);
   }

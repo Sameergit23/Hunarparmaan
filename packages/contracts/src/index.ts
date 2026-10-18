@@ -5,3 +5,5 @@ export * from './authority';
 export * from './trade-pack';
 export * from './events';
 export * from './api';
+export * from './vision';
+export * from './ai-service';

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "matches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nqrCode": {
+            "type": "string",
+            "pattern": "^QG-\\d{2}-[A-Z]{2}-\\d{5}-\\d{4}-V\\d+-[A-Z]+$"
+          },
+          "criterionId": {
+            "type": "string"
+          },
+          "covered": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "method": {
+            "type": "string",
+            "enum": ["embedding", "keyword"]
+          },
+          "quote": {
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["nqrCode", "criterionId", "covered", "score", "confidence", "method", "quote"],
+        "additionalProperties": false
+      }
+    },
+    "engine": {
+      "type": "string",
+      "enum": ["embedding", "keyword"]
+    },
+    "model": {
+      "type": ["string", "null"]
+    }
+  },
+  "required": ["matches", "engine", "model"],
+  "additionalProperties": false
+}

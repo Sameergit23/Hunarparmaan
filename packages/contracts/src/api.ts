@@ -8,6 +8,7 @@ import {
   EntityId,
   EventId,
   LocalizedText,
+  MessageParams,
   NqrCode,
   Reason,
   Route,
@@ -17,6 +18,7 @@ import {
 } from './common';
 import { AiFlag, DeviceId, EventPayloads } from './events';
 import { Role } from './roles';
+import { EvidenceVision, VisionCheckId } from './vision';
 
 /** Indian mobile numbers, with or without +91. */
 export const Phone = z.string().regex(/^(\+91)?[6-9]\d{9}$/, 'expected a 10-digit mobile number');
@@ -167,6 +169,14 @@ export const FlagKind = z.enum([
   'reused_clip',
   'result_mismatch',
   'invalid_event',
+  /** An AI check on honest evidence was raised (ADR 012): params `check`, `confidence`, `criterionId`. */
+  'vision_evidence',
+  /** The clip is too dark, blurry or short to judge: params `check`, `criterionId`. */
+  'vision_quality',
+  /** The assessor gave full marks although the AI saw a problem the criterion checks for. */
+  'vision_conflict',
+  /** Perceptual hash: nearly the same picture as a clip in another session (FR-15). */
+  'similar_clip',
 ]);
 export type FlagKind = z.infer<typeof FlagKind>;
 
@@ -177,13 +187,6 @@ export const BLOCKING_FLAGS: readonly FlagKind[] = [
   'result_mismatch',
   'invalid_event',
 ];
-
-/**
- * Values for a message, so each app words it in Hindi or English (rule 7):
- * for example `{ criterionId: 'L3-N1.PC1', metres: 900 }` for a geofence flag.
- */
-export const MessageParams = z.record(z.string(), z.union([z.string(), z.number()]));
-export type MessageParams = z.infer<typeof MessageParams>;
 
 export const FlagView = z.strictObject({
   id: EntityId,
@@ -230,6 +233,8 @@ export const EvidenceView = z.strictObject({
   durationSec: z.number().nullable(),
   capturedAt: Timestamp,
   check: z.enum(['waiting_upload', 'verified', 'mismatch']),
+  /** The AI checks on this clip (hints only), or null before they have run. */
+  vision: EvidenceVision.nullable(),
 });
 export type EvidenceView = z.infer<typeof EvidenceView>;
 
@@ -346,6 +351,16 @@ export const DashboardSummary = z.strictObject({
   openFlags: z.int(),
   evidenceVerified: z.int(),
   evidenceTotal: z.int(),
+  /** AI checks on clips (ADR 012): counts only, so NCVET may see them. */
+  vision: z.strictObject({
+    clipsAnalysed: z.int(),
+    /** Clips where at least one check was raised. */
+    clipsWithHints: z.int(),
+    /** Clips given full marks although a check the criterion lists was raised. */
+    conflicts: z.int(),
+    /** For each check raised at least once: on how many clips. */
+    byCheck: z.array(z.strictObject({ check: VisionCheckId, clips: z.int() })),
+  }),
 });
 export type DashboardSummary = z.infer<typeof DashboardSummary>;
 

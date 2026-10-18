@@ -42,3 +42,10 @@ export type GeoPoint = z.infer<typeof GeoPoint>;
 
 /** A short, human-written reason, required for overrides and conflicts. */
 export const Reason = z.string().trim().min(3).max(500);
+
+/**
+ * Values for a message, so each app words it in Hindi or English (rule 7):
+ * for example `{ criterionId: 'L3-N1.PC1', metres: 900 }` for a geofence flag.
+ */
+export const MessageParams = z.record(z.string(), z.union([z.string(), z.number()]));
+export type MessageParams = z.infer<typeof MessageParams>;

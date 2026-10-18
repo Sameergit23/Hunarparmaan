@@ -41,8 +41,11 @@ __pycache__/
 
 # Models are downloaded by a script, not committed
 apps/mobile/assets/model-*/
+services/ai/.models/
 *.tflite
 *.onnx
+*.task
+*.pt
 
 # Recordings and personal data never go in Git
 evaluation/**/raw/

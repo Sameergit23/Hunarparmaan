@@ -56,6 +56,20 @@ export function describeFlag(kind: FlagKind, params: MessageParams): string {
       return describeMismatch(params);
     case 'invalid_event':
       return fill('{type} at entry {seq} could not be applied: {reason}', params);
+    case 'vision_evidence':
+      return fill('AI check {check} raised on the clip for {criterionId} ({confidence}%)', params);
+    case 'vision_quality':
+      return fill('the clip for {criterionId} may be too poor to judge: {check}', params);
+    case 'vision_conflict':
+      return fill(
+        'full marks for {criterionId}, although the AI saw {check} ({confidence}%)',
+        params,
+      );
+    case 'similar_clip':
+      return fill(
+        'clip for {criterionId} looks nearly the same as a clip in another session ({similarity}%)',
+        params,
+      );
   }
 }
 
