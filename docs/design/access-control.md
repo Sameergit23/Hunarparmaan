@@ -58,7 +58,7 @@ Today (Sprint 0) every agency and awarding-body account sees every session; scop
 | Approve or return a recommendation; export to SIDH | awarding_body | Built |
 | Suggest a QP match; store server check results | system | Built |
 | Create and suspend organisations; invite each organisation's first admin | platform_admin | *Contracts* |
-| Invite, deactivate, reactivate, unlock and reset the PIN of their own staff | agency_admin, tp_admin, ab_admin | *Contracts* |
+| Invite, deactivate, reactivate, unlock and reset the PIN of their own staff | agency_admin, tp_admin, ab_admin | Invite: built in the API, recorded in the hash-chained admin log. The rest: *contracts* |
 | Revoke a lost or retired phone | Each org admin for their own phones; platform_admin anywhere | *Contracts* |
 | Upload a trade-pack version | platform_admin | *Contracts* |
 | Release a trade-pack version for its QPs (never one they uploaded) | ab_admin | *Contracts* |

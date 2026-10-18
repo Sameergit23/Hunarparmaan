@@ -1,6 +1,7 @@
 /** Signing up and in (FR-05, ADR 012). HTTP only: the rules are in `domain/auth.ts`. */
 import { Router } from 'express';
 import {
+  AcceptInviteRequest,
   ChangePinRequest,
   LoginRequest,
   OtpRequest,
@@ -19,6 +20,7 @@ import {
 import type { TokenIssuer } from '../auth/tokens';
 import type { Deps } from '../domain/context';
 import {
+  acceptInvite,
   changePin,
   issueRenewalKey,
   loginWithCode,
@@ -62,6 +64,15 @@ export function authRoutes(deps: Deps, tokens: TokenIssuer) {
       deps,
       tokens,
       parse(RegisterRequest, req.body),
+    );
+    res.status(201).json(body);
+  });
+
+  router.post('/v1/auth/invite/accept', async (req, res) => {
+    const body: LoginResponse = await acceptInvite(
+      deps,
+      tokens,
+      parse(AcceptInviteRequest, req.body),
     );
     res.status(201).json(body);
   });

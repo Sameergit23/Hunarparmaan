@@ -23,6 +23,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import type {
   Actor,
+  AdminActionType,
   AiFlag,
   GeoPoint,
   LocalizedText,
@@ -103,6 +104,7 @@ export type AuthEventType =
   | 'sign_in_failed'
   | 'locked'
   | 'registered'
+  | 'invite_accepted'
   | 'pin_changed'
   | 'pin_reset'
   | 'renewal_issued'
@@ -145,6 +147,55 @@ export const renewalKeys = pgTable('renewal_keys', {
   revokedAt: at('revoked_at'),
   /** The key that replaced this one. Using a replaced key again ends every key on the phone. */
   replacedBy: uuid('replaced_by'),
+});
+
+/**
+ * Staff invites (ADR 010). Mutable: tries are counted, and an invite is
+ * accepted or replaced by a newer one. The code is stored only as a hash.
+ */
+export const accountInvites = pgTable(
+  'account_invites',
+  {
+    id: uuid('id').primaryKey(),
+    phone: text('phone').notNull(),
+    name: text('name').notNull(),
+    role: text('role').$type<Role>().notNull(),
+    /** The inviting admin's organisation: admins invite only into their own (ADR 010). */
+    organisationId: uuid('organisation_id').notNull(),
+    codeHash: text('code_hash').notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    invitedBy: uuid('invited_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: at('created_at').notNull(),
+    expiresAt: at('expires_at').notNull(),
+    acceptedAt: at('accepted_at'),
+    acceptedUserId: uuid('accepted_user_id'),
+    replacedAt: at('replaced_at'),
+  },
+  (t) => [index('account_invites_phone').on(t.phone, t.createdAt)],
+);
+
+/**
+ * Append-only. The admin log (ADR 010): every admin action, hash-chained like
+ * a phone's events (one chain for the server), with ids and reason codes only,
+ * never a name or a phone number.
+ */
+export const adminEvents = pgTable('admin_events', {
+  id: uuid('id').primaryKey(),
+  seq: integer('seq').notNull().unique(),
+  type: text('type').$type<AdminActionType>().notNull(),
+  actorId: uuid('actor_id')
+    .notNull()
+    .references(() => users.id),
+  organisationId: uuid('organisation_id').notNull(),
+  /** What the action was about: an invite, an account or a phone. */
+  subjectId: text('subject_id').notNull(),
+  reason: text('reason').notNull(),
+  /** ISO time, as hashed into the chain. */
+  occurredAt: text('occurred_at').notNull(),
+  prevHash: text('prev_hash').notNull(),
+  hash: text('hash').notNull(),
 });
 
 // --- The hash-chained event log (append-only) --------------------------------
@@ -541,6 +592,7 @@ export const studyRounds = pgTable('study_rounds', {
 export const APPEND_ONLY_TABLES = [
   'audit_entries',
   'auth_events',
+  'admin_events',
   'trade_packs',
   'consents',
   'consent_withdrawals',

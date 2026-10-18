@@ -6,6 +6,7 @@ import type { TokenIssuer } from './auth/tokens';
 import type { Deps } from './domain/context';
 import { authenticate } from './http/auth';
 import { errorHandler, notFound } from './http/errors';
+import { adminRoutes } from './routes/admin';
 import { accountRoutes, authRoutes } from './routes/auth';
 import { fieldRoutes } from './routes/field';
 import { officeRoutes, publicRoutes } from './routes/office';
@@ -34,6 +35,7 @@ export function createApp(deps: AppDeps) {
   // Everything below needs a valid token, of the account's current version.
   app.use('/v1', authenticate(deps.tokens, deps.db));
   app.use(accountRoutes(deps, deps.tokens));
+  app.use(adminRoutes(deps));
   app.use(fieldRoutes(deps));
   app.use(officeRoutes(deps));
 

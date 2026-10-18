@@ -21,6 +21,7 @@ import { loadPack } from '@hunarpramaan/trade-packs/node';
 import { hashSecret } from '../auth/secrets';
 import { loadConfig, loadEnvFiles } from '../config';
 import { SimulatedPhone, fakeClip } from '../dev/simulated-phone';
+import { createInvite } from '../domain/admin';
 import { clipForAssessor, receiveUpload, rehashEvidence } from '../domain/evidence';
 import { PILOT_ORGANISATION_ID } from '../domain/organisations';
 import { publishPack, qualificationLoader } from '../domain/packs';
@@ -30,7 +31,7 @@ import { pushEvents } from '../domain/sync';
 import { rescoreQueue } from '../domain/views';
 import { createRuntime } from '../runtime';
 import { exitIfDataDirInUse } from './pglite-lock';
-import { devices, sessions, studyRounds, users } from './schema';
+import { accountInvites, devices, sessions, studyRounds, users } from './schema';
 
 /** Demo PIN for every seeded account. */
 const DEMO_PIN = '1234';
@@ -44,7 +45,24 @@ const DEMO_USERS: { key: string; role: Role; name: string; phone: string }[] = [
   { key: 'agency', role: 'agency', name: 'Indore Assessment Agency', phone: '9000000006' },
   { key: 'ssc', role: 'awarding_body', name: 'CSDCI Approvals Desk', phone: '9000000007' },
   { key: 'ncvet', role: 'ncvet', name: 'NCVET Monitoring', phone: '9000000008' },
+  // One admin per admin role (ADR 010). They invite staff through the API; screens come later.
+  { key: 'operator', role: 'platform_admin', name: 'HunarPramaan Operator', phone: '9000000009' },
+  { key: 'tpadmin', role: 'tp_admin', name: 'Indore RPL Centre Admin', phone: '9000000010' },
+  { key: 'agencyadmin', role: 'agency_admin', name: 'Agency Admin', phone: '9000000011' },
+  { key: 'abadmin', role: 'ab_admin', name: 'CSDCI Admin', phone: '9000000012' },
 ];
+
+/**
+ * A pending invite, so the demo can show a new agency user accepting one. The
+ * code is fixed only here, in mock mode, and is never the SMS code 123456.
+ */
+const DEMO_INVITE = {
+  phone: '9000000013',
+  name: 'Farida Sheikh',
+  role: 'agency' as const,
+  code: '24681357',
+  by: 'agencyadmin',
+};
 
 const WORKERS = [
   'Ramesh Kumar',
@@ -195,6 +213,19 @@ async function seed(): Promise<void> {
   console.log(
     `✓ ${DEMO_USERS.length} demo accounts (PIN ${DEMO_PIN}, OTP 123456 with MOCK_INTEGRATIONS=true)`,
   );
+
+  const inviter = accounts.get(DEMO_INVITE.by);
+  const [invited] = await db.select().from(users).where(eq(users.phone, DEMO_INVITE.phone));
+  const [invitedBefore] = await db
+    .select({ id: accountInvites.id })
+    .from(accountInvites)
+    .where(eq(accountInvites.phone, DEMO_INVITE.phone));
+  if (config.MOCK_INTEGRATIONS && inviter && !invited && !invitedBefore) {
+    await createInvite(deps, inviter, DEMO_INVITE, { code: DEMO_INVITE.code });
+    console.log(
+      `✓ invite for ${DEMO_INVITE.phone} (${DEMO_INVITE.role}): invite code ${DEMO_INVITE.code}`,
+    );
+  }
 
   if ((await db.select({ id: sessions.id }).from(sessions).limit(1)).length > 0) {
     console.log('• demo sessions already exist; nothing more to add');

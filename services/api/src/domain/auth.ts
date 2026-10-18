@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   canPerform,
   pinProblem,
+  type AcceptInviteRequest,
   type AccountState,
   type ChangePinRequest,
   type CodeLoginRequest,
@@ -33,6 +34,7 @@ import { hashSecret, verifySecret } from '../auth/secrets';
 import type { TokenIssuer } from '../auth/tokens';
 import type { Db, Tx } from '../db/client';
 import {
+  accountInvites,
   authEvents,
   devices,
   otpChallenges,
@@ -57,6 +59,8 @@ export const CODES_PER_NUMBER_PER_DAY = { max: 10, windowMs: DAY };
 export const CODES_PER_IP = { max: 30, windowMs: 15 * MINUTE };
 export const TICKET_TTL_MS = 10 * MINUTE;
 export const PIN_TRIES = 5;
+/** Wrong invite codes allowed before the invite stops working. */
+export const INVITE_TRIES = 5;
 /** The first lockout; each one after doubles it, up to the cap (ADR 010). */
 export const FIRST_LOCK_MS = 15 * MINUTE;
 export const MAX_LOCK_MS = 60 * MINUTE;
@@ -107,6 +111,13 @@ const pinRejected = (problem: PinProblem) =>
   new HttpError(400, 'pin_rejected', 'This PIN is not allowed', [problem]);
 
 const signInEnded = () => new HttpError(401, 'token_revoked', 'This phone needs a fresh sign-in');
+
+/** One account per mobile number (ADR 010). */
+export const phoneInUse = () =>
+  new HttpError(409, 'phone_in_use', 'This number already has an account');
+
+const inviteInvalid = () =>
+  new HttpError(400, 'invite_invalid', 'The invite code is wrong, used or expired');
 
 async function logEvent(
   deps: Clock,
@@ -208,9 +219,28 @@ async function useCode(deps: Deps, challengeId: string, otp: string) {
 }
 
 /** Whether a number has an account. Only ever told after its code was right. */
-export async function accountState(db: Db, phone: string): Promise<AccountState> {
+export async function accountState(db: Db, phone: string, now: Date): Promise<AccountState> {
   const [user] = await db.select({ id: users.id }).from(users).where(eq(users.phone, phone));
-  return user ? 'existing' : 'none';
+  if (user) return 'existing';
+  return (await pendingInvite(db, phone, now)) ? 'invited' : 'none';
+}
+
+/** The newest invite for a number that is still waiting: not accepted, replaced or expired. */
+async function pendingInvite(db: Db | Tx, phone: string, now: Date) {
+  const [invite] = await db
+    .select()
+    .from(accountInvites)
+    .where(
+      and(
+        eq(accountInvites.phone, phone),
+        isNull(accountInvites.acceptedAt),
+        isNull(accountInvites.replacedAt),
+        gt(accountInvites.expiresAt, now),
+      ),
+    )
+    .orderBy(desc(accountInvites.createdAt))
+    .limit(1);
+  return invite ?? null;
 }
 
 /** POST /v1/auth/otp/verify: the code alone. A right code becomes a ticket for the next step. */
@@ -227,7 +257,7 @@ export async function verifyCode(deps: Deps, challengeId: string, otp: string) {
   return {
     ticket,
     expiresAt: expiresAt.toISOString(),
-    account: await accountState(deps.db, challenge.phone),
+    account: await accountState(deps.db, challenge.phone, now),
   };
 }
 
@@ -399,7 +429,7 @@ export async function registerWorker(
       .select({ id: users.id })
       .from(users)
       .where(eq(users.phone, challenge.phone));
-    if (existing) throw new HttpError(409, 'phone_in_use', 'This number already has an account');
+    if (existing) throw phoneInUse();
     // A mobiliser may have typed the number with +91.
     const n = challenge.phone;
     const [record] = await tx
@@ -427,6 +457,65 @@ export async function registerWorker(
   if (!user) throw new Error('registered account not found');
   const session = await issueSession(deps, tokens, user, { signIn: true });
   return { ...session, workerId: created.workerId, claimed: created.claimed };
+}
+
+/**
+ * POST /v1/auth/invite/accept: an invited staff member, after `otp/verify`
+ * said `invited`, enters the invite code from their admin and a new PIN.
+ * The PIN is checked first, so a typing slip doesn't use up an invite try.
+ */
+export async function acceptInvite(
+  deps: Deps,
+  tokens: TokenIssuer,
+  input: AcceptInviteRequest,
+): Promise<LoginResponse> {
+  const now = deps.now();
+  const challenge = await ticketChallenge(deps.db, input.ticket, now);
+  const invite = await pendingInvite(deps.db, challenge.phone, now);
+  if (!invite) throw inviteInvalid();
+  const problem = pinProblem(input.pin, invite.role);
+  if (problem) throw pinRejected(problem);
+  const [tried] = await deps.db
+    .update(accountInvites)
+    .set({ attempts: sql`${accountInvites.attempts} + 1` })
+    .where(and(eq(accountInvites.id, invite.id), lt(accountInvites.attempts, INVITE_TRIES)))
+    .returning();
+  if (!tried || !(await verifySecret(input.inviteCode, tried.codeHash))) throw inviteInvalid();
+
+  const pinHash = await hashSecret(input.pin);
+  const id = uuidv4();
+  await deps.db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.phone, challenge.phone));
+    if (existing) throw phoneInUse();
+    const [accepted] = await tx
+      .update(accountInvites)
+      .set({ acceptedAt: now, acceptedUserId: id })
+      .where(
+        and(
+          eq(accountInvites.id, invite.id),
+          isNull(accountInvites.acceptedAt),
+          isNull(accountInvites.replacedAt),
+        ),
+      )
+      .returning({ id: accountInvites.id });
+    if (!accepted) throw inviteInvalid();
+    await tx.insert(users).values({
+      id,
+      role: invite.role,
+      name: invite.name,
+      phone: challenge.phone,
+      pinHash,
+      createdAt: now,
+    });
+    await spendTicket(tx, challenge.id, now);
+    await logEvent(deps, id, 'invite_accepted', null, tx);
+  });
+  const [user] = await deps.db.select().from(users).where(eq(users.id, id));
+  if (!user) throw new Error('invited account not found');
+  return issueSession(deps, tokens, user, { signIn: true });
 }
 
 // --- Changing and resetting the PIN ------------------------------------------

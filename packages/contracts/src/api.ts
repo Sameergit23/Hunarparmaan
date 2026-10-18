@@ -207,6 +207,36 @@ export type RefreshRequest = z.infer<typeof RefreshRequest>;
 export const RefreshResponse = LoginResponse.extend({ renewal: RenewalKeyResponse });
 export type RefreshResponse = z.infer<typeof RefreshResponse>;
 
+// --- Staff invites (ADR 010) ------------------------------------------------
+
+/** Digits only, so it is easy to say and type. Shown to the inviting admin once. */
+export const InviteCode = z.string().regex(/^\d{8}$/, 'expected the 8-digit invite code');
+
+/** POST /v1/admin/invites: which roles an admin may invite is GRANTABLE_ROLES. */
+export const CreateInviteRequest = z.strictObject({
+  phone: Phone,
+  name: z.string().trim().min(1).max(120),
+  role: Role,
+});
+export type CreateInviteRequest = z.infer<typeof CreateInviteRequest>;
+
+export const CreateInviteResponse = z.strictObject({
+  inviteId: EntityId,
+  /** Given to the person face to face or by phone. Never sent by SMS. */
+  code: InviteCode,
+  /** 72 hours on. */
+  expiresAt: Timestamp,
+});
+export type CreateInviteResponse = z.infer<typeof CreateInviteResponse>;
+
+/** POST /v1/auth/invite/accept: after `otp/verify` says `invited`. */
+export const AcceptInviteRequest = z.strictObject({
+  ticket: Ticket,
+  inviteCode: InviteCode,
+  pin: Pin,
+});
+export type AcceptInviteRequest = z.infer<typeof AcceptInviteRequest>;
+
 // --- Devices ----------------------------------------------------------------
 
 export const RegisterDeviceRequest = z.strictObject({

@@ -348,6 +348,8 @@ Open `http://localhost:3000` and sign in with a demo account. The one-time code 
 | Awarding body | `9000000007` | Dashboard, approvals, sessions |
 | NCVET | `9000000008` | Dashboard (aggregates only) |
 | Mobiliser, assessors (3), master assessor | `9000000001`, `9000000002` to `9000000004`, `9000000005` | Phone roles: the API accepts them, and the web sign-in sends them to the phone app |
+| Platform, training-partner, agency and awarding-body admins | `9000000009` to `9000000012` | Invite staff through the API (`POST /v1/admin/invites`); admin screens come in Sprints 3 and 4 |
+| A pending agency invite | `9000000013` | Not an account yet: accept it with the SMS code, the invite code `24681357` (demo mode only) and a new 6-digit PIN |
 
 The names, numbers and study figures in the demo are made up; the study rounds are marked as demo numbers.
 
@@ -706,6 +708,8 @@ Callers are checked against `AUTHORITY` (actions) and `READ_ACCESS` (reads) in `
 | POST | `/v1/auth/login` | Anyone with an account | Code + PIN (web) or ticket + PIN (phone); returns a JWT and the time of the sign-in before. 5 wrong PINs lock the account for 15 min, doubling up to an hour |
 | POST | `/v1/auth/register` | A worker, with a ticket | Signs a worker up on their own phone, claiming the record a mobiliser made for the same number ([ADR 012](docs/adr/012-voice-sign-in.md), proposed) |
 | POST | `/v1/auth/pin` · `/v1/auth/pin/reset` | Signed in · a worker with a ticket | Changes the PIN, or resets a forgotten worker PIN; older sign-ins and renewal keys end |
+| POST | `/v1/admin/invites` | Admins, for the roles `GRANTABLE_ROLES` gives them | Invites a staff member: returns an 8-digit invite code once, valid 72 hours, and records it in the hash-chained admin log |
+| POST | `/v1/auth/invite/accept` | An invited person, with a ticket | Creates the account from the invite code and a new PIN (5 tries) |
 | POST | `/v1/auth/renewal-key` · `/v1/auth/refresh` | Phone roles, on their registered phone | Keeps a phone signed in: a 30-day key that renews the JWT and is replaced at each use |
 | POST | `/v1/devices` | Mobiliser, assessor, master assessor | Registers a phone and binds it to the account |
 | GET | `/v1/trade-packs/:id` | Every signed-in role | Downloads a versioned trade pack |
@@ -1042,7 +1046,7 @@ Rotate sleep so that nobody codes exhausted.
   - only an assessor account can sign;
   - only an awarding-body account can approve;
   - no AI job can write a score.
-- **IT-04 Admins never decide:** no admin token can score, sign, approve, review a flag or re-score. The unit half is built (`packages/contracts/src/authority.test.ts`); the API half is *planned* for when admin accounts exist (Sprint 1).
+- **IT-04 Admins never decide:** no admin token can score, sign, approve, review a flag or re-score. Both halves are built: the unit half in `packages/contracts/src/authority.test.ts`, and the API half in `services/api/test/invites.test.ts`, where every admin role gets 403 for every decision.
 - **IT-05 Scoping** (*planned*, Sprint 2): an account outside the record's organisation gets "not found".
 - **IT-06 Sign-in limits:** codes are limited per number and per IP address, and 5 wrong PINs lock the account for 15 minutes, doubling up to an hour (`services/api/test/signin.test.ts`).
 - **IT-07 Renewal keys:** a phone's renewal key is replaced at each use; reusing an old one, a PIN change, a revoked phone or 30 days unused ends it (`services/api/test/pin-renewal.test.ts`).

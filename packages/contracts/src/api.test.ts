@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AcceptInviteRequest,
   AdminErrorCode,
   ApproveRequest,
   AuthErrorCode,
+  CreateInviteRequest,
   BLOCKING_FLAGS,
   FlagKind,
   LoginRequest,
@@ -70,6 +72,18 @@ describe('API contracts', () => {
     expect(LoginRequest.safeParse({ ticket, pin: '4826' }).success).toBe(true);
     expect(LoginRequest.safeParse({ ticket: 'short', pin: '4826' }).success).toBe(false);
     expect(LoginRequest.safeParse({ ...viaCode, ticket }).success).toBe(false);
+  });
+
+  it('makes invite codes 8 digits, so they are easy to say and type', () => {
+    const ticket = 'Zm9vYmFyYmF6cXV4cXV1eGNvcmdlZ3JhdWx0Z2FycGx5';
+    const accept = { ticket, inviteCode: '24681357', pin: '305718' };
+    expect(AcceptInviteRequest.safeParse(accept).success).toBe(true);
+    expect(AcceptInviteRequest.safeParse({ ...accept, inviteCode: 'AB12CD34' }).success).toBe(
+      false,
+    );
+    const invite = { phone: '9000000013', name: 'Farida Sheikh', role: 'agency' };
+    expect(CreateInviteRequest.safeParse(invite).success).toBe(true);
+    expect(CreateInviteRequest.safeParse({ ...invite, role: 'chief' }).success).toBe(false);
   });
 
   it('asks a worker signing up for a name and a language', () => {
