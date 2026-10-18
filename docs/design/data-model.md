@@ -39,7 +39,7 @@ The schema lives in [`services/api/src/db/schema.ts`](../../services/api/src/db/
 
 | Table | Append-only | What it holds |
 |---|---|---|
-| `sessions` | yes | Worker, assessor, QP, pack version, eKYC reference, start photo hash, GPS, device |
+| `sessions` | yes | Worker, assessor, QP, pack version, eKYC reference, start photo hash, GPS, device. No foreign key to `workers`: the worker is registered on another phone, which may sync later, so approval waits for it (blocker `worker_unknown`) |
 | `calibration_scores` | yes | Scores on the reference clips before a session (FR-07) |
 | `evidence` | yes | One row per clip: criterion, SHA-256 at capture, size, time and GPS |
 | `evidence_checks` | yes | The server's re-hash of each upload: verified or mismatch |
@@ -64,11 +64,11 @@ The schema lives in [`services/api/src/db/schema.ts`](../../services/api/src/db/
 |---|---|---|
 | `hash_mismatch` | An uploaded clip does not match the hash taken at capture | Yes |
 | `chain_broken` | A pushed event does not continue the device's hash chain | Yes |
-| `invalid_event` | A synced event cannot be applied, for example a score for an unknown session | Yes |
+| `invalid_event` | A synced event cannot be applied, for example a score for an unknown session or data that breaks a database constraint. The push still succeeds, so the phone's later events are not held up | Yes |
 | `result_mismatch` | A signed result does not match the scores, recomputed with `packages/scoring` | Yes |
 | `geofence` | A clip was recorded more than `GEOFENCE_RADIUS_M` from where the session started | No, review |
 | `mock_gps` | The phone reported a mock location | No, review |
 | `reused_clip` | The exact same file was submitted before | No, review |
 | `clock_drift` | The phone's clock is more than `CLOCK_DRIFT_LIMIT_S` from server time | No, review |
 
-Approval is also blocked by a missing clip, an unchecked clip, or a stored chain that no longer verifies.
+Approval is also blocked by a worker who has not synced yet, a missing clip, an unchecked clip, or a stored chain that no longer verifies.

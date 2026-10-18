@@ -30,6 +30,7 @@ laptop and in CI, and Docker is not always available.
 - **Fast tests.** Vitest's global setup migrates one PGlite database, saves its data directory
   (cached by a hash of the migrations), and each test file loads a copy in about a second. CI
   also runs the same tests against a `pgvector/pgvector:0.8.7-pg17` service container.
+- **Phones sync in any order.** A projection never fails a push. A rule or a database constraint that an event breaks becomes an `invalid_event` flag. A reference to something another phone creates, such as a session's worker, has no foreign key; approval waits for it instead (blocker `worker_unknown`).
 - **Reads take no transaction.** PGlite has a single connection, so a read path that opened a
   transaction and then queried outside it would wait on itself. Read models use the database
   handle directly; writes use one transaction per request.

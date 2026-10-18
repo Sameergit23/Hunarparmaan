@@ -3,7 +3,15 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 import { auditEntries, flags } from '../src/db/schema';
 import { startHarness, type Harness, type TestUser } from '../src/test/harness';
-import { VENUE, buildAssessment, push, pushOk, registerWorker } from '../src/test/scenario';
+import {
+  VENUE,
+  buildAssessment,
+  push,
+  pushOk,
+  registerWorker,
+  signPayload,
+  uploadAll,
+} from '../src/test/scenario';
 import type { SimulatedPhone } from '../src/dev/simulated-phone';
 
 let h: Harness;
@@ -143,6 +151,58 @@ describe('POST /v1/sync/push', () => {
     ]);
     expect(res.acks[0].status).toBe('stored');
     expect((await flagsOf('invalid_event')).some((f) => f.deviceId === phone.deviceId)).toBe(true);
+  });
+});
+
+describe('phones sync in any order (rule 2)', () => {
+  it("stores a session that arrives before its worker's registration, and blocks approval until it does", async () => {
+    const lateMobiliserPhone = await h.phone(mobiliser);
+    const phone = await h.phone(assessor);
+    const workerFromLatePhone = uuidv4();
+    const a = buildAssessment(h, phone, workerFromLatePhone);
+
+    // The assessor's phone syncs first: everything is stored, nothing fails.
+    await pushOk(h, assessor, phone, a.events);
+    await uploadAll(h, assessor, a);
+    const payload = signPayload(a);
+    await pushOk(h, assessor, phone, [phone.event('recommendation.signed', payload)]);
+
+    const awardingBody = await h.user('awarding_body');
+    const blocked = await h.http.get('/v1/recommendations').set(awardingBody.auth);
+    const mine = blocked.body.find((r: { id: string }) => r.id === payload.recommendationId);
+    expect(mine.workerName).toBe('');
+    expect(mine.blockers).toContainEqual({ code: 'worker_unknown', params: {} });
+
+    // Then the mobiliser's phone syncs the registration, and the blocker goes away.
+    await pushOk(h, mobiliser, lateMobiliserPhone, [
+      lateMobiliserPhone.event('worker.registered', {
+        workerId: workerFromLatePhone,
+        name: 'Late Sync',
+        phone: '9000000099',
+        language: 'hi',
+      }),
+    ]);
+    const after = await h.http.get('/v1/recommendations').set(awardingBody.auth);
+    const now = after.body.find((r: { id: string }) => r.id === payload.recommendationId);
+    expect(now.workerName).toBe('Late Sync');
+    expect(now.blockers).toEqual([]);
+  });
+
+  it('flags, rather than fails, an event that breaks a database constraint', async () => {
+    const res = await pushOk(h, mobiliser, mobiliserPhone, [
+      mobiliserPhone.event('consent.given', {
+        consentId: uuidv4(),
+        workerId: uuidv4(), // a worker no phone has registered
+        noticeVersion: 'v1',
+        language: 'hi',
+        readAloud: true,
+      }),
+    ]);
+    expect(res.acks[0].status).toBe('stored');
+    const invalid = (await flagsOf('invalid_event')).filter(
+      (f) => f.deviceId === mobiliserPhone.deviceId,
+    );
+    expect(invalid.at(-1)?.params).toMatchObject({ type: 'consent.given' });
   });
 });
 

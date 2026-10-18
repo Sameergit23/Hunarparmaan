@@ -254,6 +254,8 @@ export const NosResult = z.strictObject({
 export type NosResult = z.infer<typeof NosResult>;
 
 export const BlockerCode = z.enum([
+  /** The session's worker has not synced from the mobiliser's phone yet. */
+  'worker_unknown',
   'no_evidence',
   'clip_unchecked',
   'clip_mismatch',

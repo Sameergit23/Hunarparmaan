@@ -61,6 +61,8 @@ export function describeFlag(kind: FlagKind, params: MessageParams): string {
 
 export function describeBlocker({ code, params }: Blocker): string {
   switch (code) {
+    case 'worker_unknown':
+      return "the worker has not synced from the mobiliser's phone yet";
     case 'no_evidence':
       return fill('no evidence for {criterionId}', params);
     case 'clip_unchecked':

@@ -240,9 +240,12 @@ export const routeDecisions = pgTable('route_decisions', {
 /** Append-only. */
 export const sessions = pgTable('sessions', {
   id: uuid('id').primaryKey(),
-  workerId: uuid('worker_id')
-    .notNull()
-    .references(() => workers.id),
+  /**
+   * No foreign key: the worker is registered on the mobiliser's phone and the
+   * session on the assessor's, and the two phones sync in any order (rule 2).
+   * Approval waits until the worker has synced (blocker `worker_unknown`).
+   */
+  workerId: uuid('worker_id').notNull(),
   assessorId: uuid('assessor_id')
     .notNull()
     .references(() => users.id),

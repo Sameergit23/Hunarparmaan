@@ -31,7 +31,9 @@ export default function SessionsPage() {
                       className="grid gap-3 rounded-card border-[1.5px] border-line bg-plate p-4 no-underline hover:border-ink hover:text-ink md:grid-cols-[1.4fr_1.2fr_1fr_auto] md:items-center"
                     >
                       <span className="flex flex-col">
-                        <span className="text-[18px] font-semibold">{s.workerName}</span>
+                        <span className="text-[18px] font-semibold">
+                          {s.workerName || m.sessions.workerUnknown}
+                        </span>
                         <span className="text-sm text-ink2">
                           {m.sessions.assessor}: {s.assessorName}
                         </span>

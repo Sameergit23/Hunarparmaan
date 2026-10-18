@@ -10,6 +10,7 @@ import {
   flags,
   recommendations,
   sessions,
+  workers,
 } from '../db/schema';
 import { conflict, notFound } from '../http/errors';
 import { sessionDevices, verifyDeviceChain, type DeviceChainResult } from './chain';
@@ -50,6 +51,13 @@ export async function approvalBlockers(
   if (!session) return [{ code: 'missing_data', params: {} }];
   const qualification = await loadQualification(session.packVersion, session.nqrCode);
   if (!qualification) return [{ code: 'missing_data', params: {} }];
+
+  // Phones sync in any order, so the session can arrive before its worker.
+  const [worker] = await tx
+    .select({ id: workers.id })
+    .from(workers)
+    .where(eq(workers.id, session.workerId));
+  if (!worker) blockers.push({ code: 'worker_unknown', params: {} });
 
   const clips = await tx.select().from(evidence).where(eq(evidence.sessionId, session.id));
   const checks = await latestChecks(

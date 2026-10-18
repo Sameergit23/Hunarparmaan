@@ -29,7 +29,7 @@ export default function ApprovalsPage() {
             )}
             <div className="grid gap-4 lg:grid-cols-2">
               {pending.map((r) => (
-                <Card key={r.id} strong title={r.workerName}>
+                <Card key={r.id} strong title={r.workerName || m.sessions.workerUnknown}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <span className="flex flex-col">
                       <span className="text-[16px] font-semibold">

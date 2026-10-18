@@ -27,6 +27,7 @@ import {
   sessions,
   tradePacks,
 } from '../db/schema';
+import { isIntegrityViolation } from '../db/errors';
 import { forbidden } from '../http/errors';
 import { parse } from '../http/validate';
 import type { Deps } from './context';
@@ -139,12 +140,17 @@ export async function pushEvents(
         // A savepoint, so a projection that fails leaves the stored chain intact.
         await tx.transaction(async (savepoint) => project({ ...ctx, tx: savepoint }, event));
       } catch (error) {
-        if (!(error instanceof InvalidEvent)) throw error;
+        // A projection that does not fit (a rule, or a database constraint such as a
+        // reference to something another phone has not synced yet) is flagged, never a
+        // failed push: the phone could not get past it and its later events would wait.
+        if (!(error instanceof InvalidEvent) && !isIntegrityViolation(error)) throw error;
+        const reason =
+          error instanceof InvalidEvent ? error.message : 'the data breaks a database constraint';
         await raiseFlag(tx, {
           kind: 'invalid_event',
           sessionId: sessionIdOf(event),
           deviceId: event.deviceId,
-          params: { type: event.type, seq: event.seq, reason: error.message },
+          params: { type: event.type, seq: event.seq, reason },
         });
       }
       acks.set(event.id, { id: event.id, status: 'stored' });

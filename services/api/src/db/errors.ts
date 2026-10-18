@@ -4,6 +4,9 @@ const PG = {
   restrictViolation: '23001',
 } as const;
 
+/** Class 23: the data broke a constraint (foreign key, unique, not null, check). */
+const INTEGRITY_CLASS = '23';
+
 function pgCode(error: unknown): string | undefined {
   for (let e: unknown = error; e && typeof e === 'object'; e = (e as { cause?: unknown }).cause) {
     const code = (e as { code?: unknown }).code;
@@ -13,5 +16,8 @@ function pgCode(error: unknown): string | undefined {
 }
 
 export const isUniqueViolation = (error: unknown) => pgCode(error) === PG.uniqueViolation;
+/** Any constraint violation: the event's data does not fit, not a server fault. */
+export const isIntegrityViolation = (error: unknown) =>
+  pgCode(error)?.startsWith(INTEGRITY_CLASS) ?? false;
 /** Raised by the append-only trigger (migration 0001). */
 export const isAppendOnlyViolation = (error: unknown) => pgCode(error) === PG.restrictViolation;

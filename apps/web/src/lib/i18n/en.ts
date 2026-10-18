@@ -172,6 +172,7 @@ export const en = {
     flags: 'Flags',
     status: 'Status',
     none: 'No sessions yet.',
+    workerUnknown: 'Worker not synced yet',
     statusLabel: {
       in_progress: 'In progress',
       signed: 'Signed',
@@ -268,6 +269,7 @@ export const en = {
     hash_mismatch: 'The uploaded file for {criterionId} does not match the hash taken at capture.',
     reused_clip: 'Same file as a clip for {criterionId} captured on {date}.',
     invalid_event: 'Event {type} at entry {seq} could not be applied.',
+    worker_unknown: "The worker's registration has not synced from the mobiliser's phone yet.",
     no_evidence: 'No clip for {criterionId}.',
     clip_unchecked: 'The clip for {criterionId} is not uploaded and checked yet.',
     clip_mismatch: 'The clip for {criterionId} does not match its hash.',

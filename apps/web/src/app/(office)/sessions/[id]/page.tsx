@@ -115,7 +115,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
               </Link>
               <div className="flex flex-1 flex-col">
                 <h1 className="m-0 font-heading text-[28px] font-bold leading-tight sm:text-[34px]">
-                  {s.workerName}
+                  {s.workerName || m.sessions.workerUnknown}
                 </h1>
                 <span className="text-[15px] text-ink2">
                   {s.qualificationTitle[lang]}, {fill(m.verify.level, { level: s.nsqfLevel })}.{' '}

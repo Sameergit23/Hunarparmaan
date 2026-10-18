@@ -177,6 +177,7 @@ export const hi: Messages = {
     flags: 'फ़्लैग',
     status: 'स्थिति',
     none: 'अभी कोई सेशन नहीं।',
+    workerUnknown: 'कारीगर अभी सिंक नहीं हुआ',
     statusLabel: {
       in_progress: 'चल रहा है',
       signed: 'साइन हुआ',
@@ -273,6 +274,7 @@ export const hi: Messages = {
     hash_mismatch: '{criterionId} की अपलोड की गई फ़ाइल रिकॉर्डिंग के समय के हैश से मेल नहीं खाती।',
     reused_clip: 'यही फ़ाइल {date} को {criterionId} की क्लिप में भी थी।',
     invalid_event: 'एंट्री {seq} पर घटना {type} लागू नहीं हो सकी।',
+    worker_unknown: 'कारीगर का रजिस्ट्रेशन अभी मोबिलाइज़र के फ़ोन से सिंक नहीं हुआ।',
     no_evidence: '{criterionId} की कोई क्लिप नहीं है।',
     clip_unchecked: '{criterionId} की क्लिप अभी अपलोड और जाँची नहीं गई।',
     clip_mismatch: '{criterionId} की क्लिप अपने हैश से मेल नहीं खाती।',
