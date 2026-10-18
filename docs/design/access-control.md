@@ -3,7 +3,7 @@
 How HunarPramaan decides who may see and do what. The decisions are in [ADR 006](../adr/006-ai-output-is-a-suggestion.md) (AI only suggests), [ADR 010](../adr/010-organisations-admin-roles-access-control.md) (organisations and admin roles) and [ADR 011](../adr/011-personal-data-outside-the-hash-chain.md) (personal data). The code is the source of truth: `AUTHORITY`, `READ_ACCESS`, `ROLES_BY_ORG_KIND`, `GRANTABLE_ROLES` and `SCOPE_BY_ROLE` in [`packages/contracts/src/authority.ts`](../../packages/contracts/src/authority.ts), the roles and organisation kinds in [`roles.ts`](../../packages/contracts/src/roles.ts), and the admin error codes in [`api.ts`](../../packages/contracts/src/api.ts).
 
 > [!NOTE]
-> **Built today:** the seven working roles, with every write checked against `AUTHORITY` and every read against `READ_ACCESS`. In contracts: the four admin roles, the five organisation kinds, admin actions with their reason codes, grant rules, scope levels, the organisation id in the session user and the token, and admin error codes. In the API: real organisations (`organisations`, `qp_owners` and `users.organisation_id`; migration 0008 makes the pilot's five and places existing accounts by role), the bootstrap command for the first platform admin, admin accounts, and staff invites into an organisation whose kind holds the role, recorded in the hash-chained admin log. Account and phone status, checked on every request and on sync (below). **Planned (ADR 010):** scoping by organisation, and the admin panel ([docs/design/admin-panel](admin-panel/)). Rows marked *contracts* exist only as contract tables; rows marked *planned* don't exist yet.
+> **Built today:** the seven working roles, with every write checked against `AUTHORITY` and every read against `READ_ACCESS`. In contracts: the four admin roles, the five organisation kinds, admin actions with their reason codes, grant rules, scope levels, the organisation id in the session user and the token, and admin error codes. In the API: real organisations (`organisations`, `qp_owners` and `users.organisation_id`; migration 0008 makes the pilot's five and places existing accounts by role), the bootstrap command for the first platform admin, admin accounts, and staff invites into an organisation whose kind holds the role, recorded in the hash-chained admin log. Account and phone status, checked on every request and on sync (below). The admin API: the admin read scopes and read models in each admin's scope, and deactivate, reactivate, unlock, PIN reset and revoke, each with a reason code and the admin's PIN again, logged in the same transaction. **Planned (ADR 010):** scoping of the case-data read models, and the admin screens ([docs/design/admin-panel](admin-panel/)). Rows marked *contracts* exist only as contract tables; rows marked *planned* don't exist yet.
 
 ## The one rule
 
@@ -37,10 +37,10 @@ Who may grant which role is `GRANTABLE_ROLES`. Each organisation admin grants th
 | agency | Own organisation | Their agency's sessions, flags and assessors | Other agencies' data |
 | awarding_body | Owned QPs | Sessions and approvals for the QPs it owns | Other awarding bodies' QPs |
 | ncvet | Aggregates | National totals and rates | Any single worker, session or assessor |
-| platform_admin *planned* | Governance | Organisations, accounts (phones masked), devices, the admin log | Worker data, transcripts, clips, scores |
-| agency_admin, tp_admin, ab_admin *planned* | Own organisation | Their organisation's accounts, devices and admin log | Case data |
+| platform_admin | Governance | Organisations, accounts (phones masked), devices, the admin log | Worker data, transcripts, clips, scores |
+| agency_admin, tp_admin, ab_admin | Own organisation | Their organisation's accounts, devices and admin log | Case data, and worker accounts |
 
-The scope column is in contracts today. What admins see is *planned*, because no read model takes a scope yet.
+The scope column is in contracts. The admin read models take it (`accounts.read`, `devices.read`, `admin_log.read`, and `governance_log.read` for NCVET's counts); the case-data read models take it from Sprint 2.
 
 Today (Sprint 0) every agency and awarding-body account sees every session; scoping by organisation lands in Sprint 2. A record outside your scope will return "not found".
 
@@ -58,8 +58,8 @@ Today (Sprint 0) every agency and awarding-body account sees every session; scop
 | Approve or return a recommendation; export to SIDH | awarding_body | Built |
 | Suggest a QP match; store server check results | system | Built |
 | Create and suspend organisations; invite each organisation's first admin | platform_admin | *Contracts* |
-| Invite, deactivate, reactivate, unlock and reset the PIN of their own staff | agency_admin, tp_admin, ab_admin | Invite: built in the API, recorded in the hash-chained admin log. The rest: *contracts* |
-| Revoke a lost or retired phone | Each org admin for their own phones; platform_admin anywhere | *Contracts* |
+| Invite, deactivate, reactivate, unlock and reset the PIN of their own staff | agency_admin, tp_admin, ab_admin; platform_admin for admins and NCVET accounts | Built in the API (IT-08), each with a reason code and the PIN, recorded in the hash-chained admin log (IT-10) |
+| Revoke a lost or retired phone | Each org admin for their own phones; platform_admin anywhere | Built in the API (IT-08, IT-09) |
 | Upload a trade-pack version | platform_admin | *Contracts* |
 | Release a trade-pack version for its QPs (never one they uploaded) | ab_admin | *Contracts* |
 | Accredit an assessor for a QP | ab_admin | *Contracts* |

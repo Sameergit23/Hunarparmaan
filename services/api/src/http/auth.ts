@@ -99,10 +99,13 @@ export function requireAction(action: Action): RequestHandler {
   };
 }
 
-export function requireRead(scope: ReadScope): RequestHandler {
+/** Allow the request only if the user's role may read one of `scopes`. */
+export function requireRead(...scopes: [ReadScope, ...ReadScope[]]): RequestHandler {
   return (_req, res, next) => {
     const user = currentUser(res);
-    if (!canRead(user.role, scope)) return next(forbidden(`${user.role} may not read ${scope}`));
+    if (!scopes.some((scope) => canRead(user.role, scope))) {
+      return next(forbidden(`${user.role} may not read ${scopes.join(' or ')}`));
+    }
     next();
   };
 }

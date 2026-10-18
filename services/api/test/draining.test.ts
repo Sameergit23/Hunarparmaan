@@ -199,7 +199,7 @@ describe('IT-09: a deactivated account drains', () => {
     const res = await h.http
       .post('/v1/admin/invites')
       .set(admin.auth)
-      .send({ phone: desk.phone, name: 'New Desk', role: 'agency' });
+      .send({ phone: desk.phone, name: 'New Desk', role: 'agency', reason: 'new_staff', pin: PIN });
     expect(res.status, JSON.stringify(res.body)).toBe(201);
     const [old] = await h.db.select().from(users).where(eq(users.id, desk.id));
     expect(old?.status).toBe('closed');

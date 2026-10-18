@@ -44,11 +44,14 @@ export const AdminErrorCode = z.enum([
   'account_deactivated',
   /** 401: the token's version is older than the account's, for example after a PIN reset. */
   'token_revoked',
-  /** 401: too many wrong PINs; the lockout lasts at most an hour. */
+  /** Too many wrong PINs; the lockout lasts at most an hour. 401 at sign-in, 423 on an admin write. */
   'account_locked',
   /** 429: too many codes asked for from one phone number or one IP address. */
   'rate_limited',
-  /** 403: approvals and admin actions need the PIN again. */
+  /**
+   * 403: approvals and admin actions need the PIN again; it was missing or wrong.
+   * Not 401, which tells apps to sign in again.
+   */
   'step_up_required',
   /** 403: the account's organisation is suspended. */
   'organisation_suspended',
@@ -56,7 +59,7 @@ export const AdminErrorCode = z.enum([
   'device_lost',
   /** 403: the phone was retired or replaced; recorded work still syncs, nothing new starts. */
   'device_retired',
-  /** 403: nobody acts on their own account. */
+  /** 409: nobody acts on their own account or phone. */
   'self_action',
   /** 409: the organisation's last active admin cannot be deactivated. */
   'last_admin',
@@ -64,7 +67,7 @@ export const AdminErrorCode = z.enum([
   'role_not_grantable',
   /** 409: ROLES_BY_ORG_KIND does not let this kind of organisation hold the role. */
   'role_not_in_org',
-  /** 409: another active account already uses this phone number. */
+  /** 409: another account that isn't closed already uses this number. Worded neutrally. */
   'phone_in_use',
   /** 403: only whoever deactivated an account, or a higher authority, may reactivate it. */
   'not_issuer',
@@ -73,6 +76,9 @@ export const AdminErrorCode = z.enum([
   /** 400: the invite or PIN-reset code is wrong, used or expired. */
   'invite_invalid',
 ]);
+
+/** 429 `rate_limited` also caps an admin at this many invites and PIN resets an hour. */
+export const ADMIN_CODES_PER_HOUR = 30;
 export type AdminErrorCode = z.infer<typeof AdminErrorCode>;
 
 /**
@@ -212,21 +218,7 @@ export type RefreshResponse = z.infer<typeof RefreshResponse>;
 /** Digits only, so it is easy to say and type. Shown to the inviting admin once. */
 export const InviteCode = z.string().regex(/^\d{8}$/, 'expected the 8-digit invite code');
 
-/**
- * POST /v1/admin/invites: which roles an admin may invite is GRANTABLE_ROLES,
- * and the organisation's kind must hold the role (ROLES_BY_ORG_KIND).
- */
-export const CreateInviteRequest = z.strictObject({
-  phone: Phone,
-  name: z.string().trim().min(1).max(120),
-  role: Role,
-  /**
-   * Only the platform admin invites into another organisation (each one's first
-   * admin, and NCVET's accounts). Organisation admins invite into their own.
-   */
-  organisationId: EntityId.optional(),
-});
-export type CreateInviteRequest = z.infer<typeof CreateInviteRequest>;
+// CreateInviteRequest, with its reason and PIN, is in admin.ts with the other admin writes.
 
 export const CreateInviteResponse = z.strictObject({
   inviteId: EntityId,

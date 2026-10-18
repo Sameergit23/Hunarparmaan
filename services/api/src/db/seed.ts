@@ -24,6 +24,7 @@ import { hashSecret } from '../auth/secrets';
 import { loadConfig, loadEnvFiles } from '../config';
 import { SimulatedPhone, fakeClip } from '../dev/simulated-phone';
 import { createInvite } from '../domain/admin';
+import { deactivateAccount, revokeDevice } from '../domain/admin-actions';
 import { clipForAssessor, receiveUpload, rehashEvidence } from '../domain/evidence';
 import { PILOT_ORGANISATIONS } from '../domain/organisations';
 import { publishPack, qualificationLoader } from '../domain/packs';
@@ -156,6 +157,9 @@ const DEMO_USERS: { key: string; org: DemoOrg; role: Role; name: string; phone: 
     name: 'Bhopal Skills Assessment',
     phone: '9000000020',
   },
+  // For the admin panel: an assessor who left (draining) and a desk user locked out.
+  { key: 'mohan', org: 'indore', role: 'assessor', name: 'Mohan Lal', phone: '9000000021' },
+  { key: 'nisha', org: 'indore', role: 'agency', name: 'Nisha Rao', phone: '9000000022' },
 ];
 
 /**
@@ -166,6 +170,7 @@ const DEMO_INVITE = {
   phone: '9000000013',
   name: 'Farida Sheikh',
   role: 'agency' as const,
+  reason: 'new_staff' as const,
   code: '24681357',
   by: 'agencyadmin',
 };
@@ -605,6 +610,29 @@ async function seed(): Promise<void> {
       `✓ ${WORKERS[plan.worker]}: ${decision.decision}${decision.certificateId ? `, certificate ${decision.certificateId}` : ''}`,
     );
   }
+
+  // Every status on the admin panel (TRD section 10), through the real admin actions, so the
+  // admin log holds them too. Mohan left: his phone last synced 4 days ago, and he drains.
+  const day = 86_400_000;
+  await db.insert(devices).values({
+    id: 'demo-mohan-phone',
+    userId: account('mohan').id,
+    label: 'Demo phone',
+    registeredAt: new Date(realNow.getTime() - 20 * day),
+    lastSyncAt: new Date(realNow.getTime() - 4 * day),
+  });
+  await deactivateAccount(deps, account('agencyadmin'), account('mohan').id, 'left_organisation');
+  // Rekha reported her phone lost: her unsigned session is listed for re-assessment.
+  await revokeDevice(deps, account('agencyadmin2'), 'demo-rekha-phone', {
+    status: 'lost',
+    reason: 'lost',
+  });
+  // Nisha typed a wrong PIN five times, which locks an account for up to an hour.
+  await db
+    .update(users)
+    .set({ lockedUntil: new Date(realNow.getTime() + 3_600_000), lockouts: 1 })
+    .where(eq(users.id, account('nisha').id));
+  console.log("✓ admin panel: Mohan Lal draining, Rekha Nair's phone lost, Nisha Rao locked");
 
   // Placeholder study numbers, shown as demo until Round A and Round B run.
   await db

@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import {
   AcceptInviteRequest,
+  AcceptPinResetRequest,
   ChangePinRequest,
   LoginRequest,
   OtpRequest,
@@ -21,6 +22,7 @@ import type { TokenIssuer } from '../auth/tokens';
 import type { Deps } from '../domain/context';
 import {
   acceptInvite,
+  acceptPinReset,
   changePin,
   issueRenewalKey,
   loginWithCode,
@@ -75,6 +77,16 @@ export function authRoutes(deps: Deps, tokens: TokenIssuer) {
       parse(AcceptInviteRequest, req.body),
     );
     res.status(201).json(body);
+  });
+
+  // Staff whose admin reset their PIN (FR-26): the SMS ticket, the reset code and a new PIN.
+  router.post('/v1/auth/pin-reset/accept', async (req, res) => {
+    const body: LoginResponse = await acceptPinReset(
+      deps,
+      tokens,
+      parse(AcceptPinResetRequest, req.body),
+    );
+    res.json(body);
   });
 
   router.post('/v1/auth/pin/reset', async (req, res) => {

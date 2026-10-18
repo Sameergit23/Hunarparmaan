@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Role } from '@hunarpramaan/contracts';
 import { accountInvites, adminEvents } from '../src/db/schema';
 import { INVITE_TTL_MS, verifyAdminLog } from '../src/domain/admin';
-import { startHarness, type Harness, type TestUser } from '../src/test/harness';
+import { PIN, startHarness, type Harness, type TestUser } from '../src/test/harness';
 import { newPhone, ticketFor } from '../src/test/scenario';
 
 let h: Harness;
@@ -17,7 +17,10 @@ beforeAll(async () => {
 afterAll(() => h.close());
 
 const invite = (admin: TestUser, body: { phone: string; name: string; role: Role }) =>
-  h.http.post('/v1/admin/invites').set(admin.auth).send(body);
+  h.http
+    .post('/v1/admin/invites')
+    .set(admin.auth)
+    .send({ reason: 'new_staff', pin: PIN, ...body });
 const accept = (ticket: string, inviteCode: string, pin = '305718') =>
   h.http.post('/v1/auth/invite/accept').send({ ticket, inviteCode, pin });
 

@@ -4,7 +4,6 @@ import {
   AdminErrorCode,
   ApproveRequest,
   AuthErrorCode,
-  CreateInviteRequest,
   BLOCKING_FLAGS,
   FlagKind,
   LoginRequest,
@@ -13,6 +12,7 @@ import {
   SessionUser,
   SignRequest,
 } from './api';
+import { CreateInviteRequest } from './admin';
 import { READ_ACCESS, canRead } from './authority';
 import { ids } from './test/fixtures';
 
@@ -81,7 +81,13 @@ describe('API contracts', () => {
     expect(AcceptInviteRequest.safeParse({ ...accept, inviteCode: 'AB12CD34' }).success).toBe(
       false,
     );
-    const invite = { phone: '9000000013', name: 'Farida Sheikh', role: 'agency' };
+    const invite = {
+      phone: '9000000013',
+      name: 'Farida Sheikh',
+      role: 'agency',
+      reason: 'new_staff',
+      pin: '1234',
+    };
     expect(CreateInviteRequest.safeParse(invite).success).toBe(true);
     expect(CreateInviteRequest.safeParse({ ...invite, role: 'chief' }).success).toBe(false);
   });

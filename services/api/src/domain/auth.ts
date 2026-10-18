@@ -15,6 +15,7 @@ import {
   canPerform,
   pinProblem,
   type AcceptInviteRequest,
+  type AcceptPinResetRequest,
   type AccountState,
   type ChangePinRequest,
   type CodeLoginRequest,
@@ -99,7 +100,7 @@ const rateLimited = (waitMs: number) =>
     { 'Retry-After': String(Math.max(1, Math.ceil(waitMs / 1000))) },
   );
 
-const locked = (until: Date, now: Date) =>
+export const locked = (until: Date, now: Date) =>
   new HttpError(
     401,
     'account_locked',
@@ -108,7 +109,7 @@ const locked = (until: Date, now: Date) =>
     { 'Retry-After': String(Math.max(1, Math.ceil((until.getTime() - now.getTime()) / 1000))) },
   );
 
-const pinRejected = (problem: PinProblem) =>
+export const pinRejected = (problem: PinProblem) =>
   new HttpError(400, 'pin_rejected', 'This PIN is not allowed', [problem]);
 
 const signInEnded = () => new HttpError(401, 'token_revoked', 'This phone needs a fresh sign-in');
@@ -117,7 +118,7 @@ const signInEnded = () => new HttpError(401, 'token_revoked', 'This phone needs 
 export const phoneInUse = () =>
   new HttpError(409, 'phone_in_use', 'This number already has an account');
 
-const inviteInvalid = () =>
+export const inviteInvalid = () =>
   new HttpError(400, 'invite_invalid', 'The invite code is wrong, used or expired');
 
 async function logEvent(
@@ -232,6 +233,7 @@ async function pendingInvite(db: Db | Tx, phone: string, now: Date) {
     .from(accountInvites)
     .where(
       and(
+        eq(accountInvites.kind, 'invite'),
         eq(accountInvites.phone, phone),
         isNull(accountInvites.acceptedAt),
         isNull(accountInvites.replacedAt),
@@ -294,13 +296,13 @@ async function spendTicket(db: Db | Tx, challengeId: string, now: Date) {
 // --- PINs and lockout --------------------------------------------------------
 
 /** Until when wrong PINs keep the account locked, or null. Never locked with SIGN_IN_LIMITS off. */
-const lockedUntil = (deps: Deps, user: UserRow, now: Date) =>
+export const lockedUntil = (deps: Deps, user: UserRow, now: Date) =>
   deps.config.SIGN_IN_LIMITS && user.lockedUntil && user.lockedUntil > now
     ? user.lockedUntil
     : null;
 
 /** Count a wrong PIN; the fifth in a row locks the account (15 min, doubling, at most 1 hour). */
-async function recordWrongPin(deps: Deps, userId: string) {
+export async function recordWrongPin(deps: Deps, userId: string) {
   const now = deps.now();
   const [after] = await deps.db
     .update(users)
@@ -592,6 +594,67 @@ export async function resetPin(
   await assertCanSignIn(deps.db, user, now);
   const problem = pinProblem(input.newPin, user.role);
   if (problem) throw pinRejected(problem);
+  await spendTicket(deps.db, challenge.id, now);
+  const updated = await setPin(deps, user, input.newPin, 'pin_reset');
+  return issueSession(deps, tokens, updated, { signIn: true });
+}
+
+/** The newest PIN reset an admin issued for this account that is still waiting. */
+async function pendingReset(db: Db | Tx, userId: string, now: Date) {
+  const [reset] = await db
+    .select()
+    .from(accountInvites)
+    .where(
+      and(
+        eq(accountInvites.kind, 'pin_reset'),
+        eq(accountInvites.userId, userId),
+        isNull(accountInvites.acceptedAt),
+        isNull(accountInvites.replacedAt),
+        gt(accountInvites.expiresAt, now),
+      ),
+    )
+    .orderBy(desc(accountInvites.createdAt))
+    .limit(1);
+  return reset ?? null;
+}
+
+/**
+ * POST /v1/auth/pin-reset/accept (FR-26): a staff member whose admin reset
+ * their PIN, after `otp/verify`, enters the reset code and a new PIN. The PIN
+ * rules come first, so a slip doesn't use up one of the tries. Nobody but the
+ * person ever knows the new PIN.
+ */
+export async function acceptPinReset(
+  deps: Deps,
+  tokens: TokenIssuer,
+  input: AcceptPinResetRequest,
+): Promise<LoginResponse> {
+  const now = deps.now();
+  const challenge = await ticketChallenge(deps.db, input.ticket, now);
+  const user = await openAccountByPhone(deps.db, challenge.phone, now);
+  const reset = user ? await pendingReset(deps.db, user.id, now) : null;
+  if (!user || !reset) throw inviteInvalid();
+  const problem = pinProblem(input.newPin, user.role);
+  if (problem) throw pinRejected(problem);
+  const [tried] = await deps.db
+    .update(accountInvites)
+    .set({ attempts: sql`${accountInvites.attempts} + 1` })
+    .where(and(eq(accountInvites.id, reset.id), lt(accountInvites.attempts, INVITE_TRIES)))
+    .returning();
+  if (!tried || !(await verifySecret(input.code, tried.codeHash))) throw inviteInvalid();
+  await assertCanSignIn(deps.db, user, now);
+  const [accepted] = await deps.db
+    .update(accountInvites)
+    .set({ acceptedAt: now, acceptedUserId: user.id })
+    .where(
+      and(
+        eq(accountInvites.id, reset.id),
+        isNull(accountInvites.acceptedAt),
+        isNull(accountInvites.replacedAt),
+      ),
+    )
+    .returning({ id: accountInvites.id });
+  if (!accepted) throw inviteInvalid();
   await spendTicket(deps.db, challenge.id, now);
   const updated = await setPin(deps, user, input.newPin, 'pin_reset');
   return issueSession(deps, tokens, updated, { signIn: true });

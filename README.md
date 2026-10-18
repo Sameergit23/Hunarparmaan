@@ -353,6 +353,7 @@ Every account belongs to one organisation ([ADR 010](docs/adr/010-organisations-
 | Assessors Anil and Rekha · Vikram | Indore Assessment Agency · Bhopal Skills Assessment | `9000000002`, `9000000003` · `9000000004` | Phone roles |
 | Master assessor | CSDCI | `9000000005` | Phone role |
 | Second agency's user | Bhopal Skills Assessment | `9000000020` | Dashboard, sessions, flags |
+| Mohan Lal (assessor, deactivated and draining) · Nisha Rao (agency, locked for an hour after seeding) | Indore Assessment Agency | `9000000021` · `9000000022` | Statuses for the admin panel, with Rekha's phone reported lost |
 | Platform admins | HunarPramaan | `9000000009`, `9000000014` | Invite staff through the API (`POST /v1/admin/invites`); admin screens come in Sprints 3 and 4 |
 | Training-partner admins | Indore RPL Centre | `9000000010`, `9000000015` | The same |
 | Agency admins | Indore Assessment Agency · Bhopal Skills Assessment | `9000000011`, `9000000016` · `9000000018`, `9000000019` | The same |
@@ -719,6 +720,12 @@ Callers are checked against `AUTHORITY` (actions) and `READ_ACCESS` (reads) in `
 | POST | `/v1/auth/register` | A worker, with a ticket | Signs a worker up on their own phone, claiming the record a mobiliser made for the same number ([ADR 012](docs/adr/012-voice-sign-in.md), proposed) |
 | POST | `/v1/auth/pin` · `/v1/auth/pin/reset` | Signed in · a worker with a ticket | Changes the PIN, or resets a forgotten worker PIN; older sign-ins and renewal keys end |
 | POST | `/v1/admin/invites` | Admins, for the roles `GRANTABLE_ROLES` gives them | Invites a staff member into the admin's organisation (the platform admin names one) for a role its kind may hold: returns an 8-digit invite code once, valid 72 hours, and records it in the hash-chained admin log |
+| GET | `/v1/admin/organisations` · `/v1/admin/accounts` · `/v1/admin/accounts/:id` · `/v1/admin/invites` | Admins | Organisations, people (masked numbers, status, last sign-in and sync, clips waiting) and invites, in the admin's scope: their own organisation, or every one for the platform admin |
+| POST | `/v1/admin/accounts/:id/deactivate` · `/reactivate` · `/unlock` · `/pin-reset` | Admins, on accounts whose role they could grant | Each with a reason code and the admin's PIN again. Deactivated accounts drain; only the issuer or the platform admin reactivates; a PIN reset returns an 8-digit code once, valid 24 hours |
+| GET · POST | `/v1/admin/devices` · `/v1/admin/devices/:id` · `/v1/admin/devices/:id/revoke` | Admins | Phones in scope, with "not synced for 3 days"; mark one lost (refused from then on, with the sessions to re-assess) or retired or replaced (drains) |
+| GET | `/v1/admin/log` · `/v1/admin/log/verify` | Admins · admins and NCVET | The admin log in scope, newest first, and the chain check |
+| GET | `/v1/governance` | NCVET | Admin actions counted by week, organisation kind and action, with no names or numbers |
+| POST | `/v1/auth/pin-reset/accept` | Staff with a reset code, and a ticket | Sets a new PIN from the code an admin gave them |
 | POST | `/v1/auth/invite/accept` | An invited person, with a ticket | Creates the account from the invite code and a new PIN (5 tries) |
 | POST | `/v1/auth/renewal-key` · `/v1/auth/refresh` | Phone roles, on their registered phone | Keeps a phone signed in: a 30-day key that renews the JWT and is replaced at each use |
 | POST | `/v1/devices` | Mobiliser, assessor, master assessor | Registers a phone and binds it to the account |
@@ -1057,10 +1064,12 @@ Rotate sleep so that nobody codes exhausted.
   - only an awarding-body account can approve;
   - no AI job can write a score.
 - **IT-04 Admins never decide:** no admin token can score, sign, approve, review a flag or re-score. Both halves are built: the unit half in `packages/contracts/src/authority.test.ts`, and the API half in `services/api/test/invites.test.ts`, where every admin role gets 403 for every decision.
-- **IT-05 Scoping** (*planned*, Sprint 2): an account outside the record's organisation gets "not found".
+- **IT-05 Scoping:** an account outside the record's organisation gets "not found". The admin half is built: two agencies never see each other's accounts, phones, invites or admin log (`services/api/test/admin-views.test.ts`). The read models for sessions, flags and approvals are *planned*, Sprint 2.
 - **IT-06 Sign-in limits:** codes are limited per number and per IP address, and 5 wrong PINs lock the account for 15 minutes, doubling up to an hour (`services/api/test/signin.test.ts`).
 - **IT-07 Renewal keys:** a phone's renewal key is replaced at each use; reusing an old one, a PIN change, a phone reported lost or 30 days unused ends it (`services/api/test/pin-renewal.test.ts`).
+- **IT-08 Admin rules:** no action on your own account or phone, never the last active admin, only grantable roles that fit the organisation, only the issuer or the platform admin reactivates, and the PIN on every admin write, with its lockout (`services/api/test/admin-rules.test.ts`).
 - **IT-09 Draining:** a deactivated account's phone and a retired phone still sync what they recorded, flagged `drained_work`; a session started after the cut-off can't be approved; a lost phone is refused on every push and renewal; a draining account closes 30 days after its last sync (`services/api/test/draining.test.ts`).
+- **IT-10 Admin log:** every admin write appends exactly one entry in the same transaction, with ids and reason codes only, and editing one entry makes verification fail at that entry (`services/api/test/admin-log.test.ts`).
 
 ### Evaluation: the evidence the PS asks for
 

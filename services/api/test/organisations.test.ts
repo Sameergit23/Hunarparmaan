@@ -139,7 +139,10 @@ describe('organisations (ADR 010)', () => {
 
 describe('invites into an organisation', () => {
   const invite = (auth: { Authorization: string }, body: object) =>
-    h.http.post('/v1/admin/invites').set(auth).send(body);
+    h.http
+      .post('/v1/admin/invites')
+      .set(auth)
+      .send({ reason: 'new_staff', pin: PIN, ...body });
 
   it('lets the platform admin invite an organisation admin into that organisation', async () => {
     const operator = await h.user('platform_admin');

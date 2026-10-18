@@ -219,13 +219,17 @@ export const renewalKeys = pgTable('renewal_keys', {
 });
 
 /**
- * Staff invites (ADR 010). Mutable: tries are counted, and an invite is
- * accepted or replaced by a newer one. The code is stored only as a hash.
+ * Staff invites and admin PIN resets (ADR 010; TRD D-6: one table for every
+ * one-time code). Mutable: tries are counted, and a code is accepted or
+ * replaced by a newer one. The code is stored only as a hash.
  */
 export const accountInvites = pgTable(
   'account_invites',
   {
     id: uuid('id').primaryKey(),
+    kind: text('kind').$type<'invite' | 'pin_reset'>().notNull().default('invite'),
+    /** For a PIN reset: the account being reset. */
+    userId: uuid('user_id').references(() => users.id),
     phone: text('phone').notNull(),
     name: text('name').notNull(),
     role: text('role').$type<Role>().notNull(),

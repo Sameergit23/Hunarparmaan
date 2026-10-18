@@ -3,7 +3,7 @@
  * trade-pack schema needs a version bump here and a note in the PR.
  * v1 is frozen at gate G1 (25 Oct 2026); until then it is a draft.
  */
-export const CONTRACTS_VERSION = '1.0.0-draft.9';
+export const CONTRACTS_VERSION = '1.0.0-draft.10';
 
 /** `schemaVersion` written at the top of every trade pack. */
 export const TRADE_PACK_SCHEMA_VERSION = '1.0';

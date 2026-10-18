@@ -5,9 +5,10 @@
  * and reason codes only, never a name or a phone number.
  */
 import { randomInt } from 'node:crypto';
-import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { seal, verifyChain, type ChainLink, type VerifyResult } from '@hunarpramaan/audit';
 import {
+  ADMIN_CODES_PER_HOUR,
   Phone,
   SCOPE_BY_ROLE,
   canGrant,
@@ -93,6 +94,27 @@ export async function appendAdminEvent(
   return sealed;
 }
 
+const HOUR = 60 * 60_000;
+
+/** At most 30 invites and PIN resets by one admin in an hour (TRD section 5.2). */
+export async function assertUnderCodeLimit(tx: Tx, adminId: string, now: Date) {
+  const since = new Date(now.getTime() - HOUR).toISOString();
+  const recent = await tx
+    .select({ occurredAt: adminEvents.occurredAt })
+    .from(adminEvents)
+    .where(
+      and(
+        eq(adminEvents.actorId, adminId),
+        inArray(adminEvents.type, ['account.invited', 'account.pin_reset']),
+      ),
+    );
+  if (recent.filter((r) => r.occurredAt >= since).length >= ADMIN_CODES_PER_HOUR) {
+    throw new HttpError(429, 'rate_limited', 'Too many invites and PIN resets in an hour', [], {
+      'Retry-After': String(HOUR / 1000),
+    });
+  }
+}
+
 /** Re-check the whole admin log against its hashes, from the first entry. */
 export async function verifyAdminLog(db: Db): Promise<VerifyResult> {
   const rows = await db.select().from(adminEvents).orderBy(asc(adminEvents.seq));
@@ -136,6 +158,7 @@ async function insertInvite(deps: Deps, invite: NewInvite): Promise<CreateInvite
   const expiresAt = new Date(now.getTime() + INVITE_TTL_MS);
   const id = deps.newId();
   await deps.db.transaction(async (tx) => {
+    if (invite.invitedBy) await assertUnderCodeLimit(tx, invite.invitedBy, now);
     // A closed account's number may be invited again, as a new account.
     if (await openAccountByPhone(tx, invite.phone, now)) throw phoneInUse();
     await tx
@@ -143,6 +166,7 @@ async function insertInvite(deps: Deps, invite: NewInvite): Promise<CreateInvite
       .set({ replacedAt: now })
       .where(
         and(
+          eq(accountInvites.kind, 'invite'),
           eq(accountInvites.phone, invite.phone),
           isNull(accountInvites.acceptedAt),
           isNull(accountInvites.replacedAt),
@@ -182,7 +206,7 @@ async function insertInvite(deps: Deps, invite: NewInvite): Promise<CreateInvite
 export async function createInvite(
   deps: Deps,
   admin: SessionUser,
-  input: CreateInviteRequest,
+  input: Omit<CreateInviteRequest, 'pin'>,
   options: { code?: string } = {},
 ): Promise<CreateInviteResponse> {
   if (!canGrant(admin.role, input.role)) {
@@ -213,7 +237,7 @@ export async function createInvite(
     organisationId: organisation.id,
     invitedBy: admin.id,
     code: options.code ?? newInviteCode(),
-    reason: 'new_staff',
+    reason: input.reason,
   });
 }
 

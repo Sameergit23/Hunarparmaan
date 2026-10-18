@@ -136,8 +136,22 @@ export const READ_ACCESS = {
   'recommendations.read': ['agency', 'awarding_body'],
   'audit.verify': ['agency', 'awarding_body'],
   'rescoring.read': ['master_assessor'],
+  // The admin panel (ADR 010): accounts, phones and the admin log, never case data.
+  'accounts.read': ADMINS,
+  'devices.read': ADMINS,
+  'admin_log.read': ADMINS,
+  // NCVET sees governance as counts by organisation kind and action, never a name.
+  'governance_log.read': ['ncvet'],
 } as const satisfies Record<string, readonly Role[]>;
 export type ReadScope = keyof typeof READ_ACCESS;
+
+/** Read scopes of the admin panel. No other scope reaches an admin role. */
+export const ADMIN_READ_SCOPES = [
+  'accounts.read',
+  'devices.read',
+  'admin_log.read',
+  'governance_log.read',
+] as const satisfies readonly ReadScope[];
 
 export function canRead(role: Role, scope: ReadScope): boolean {
   const allowed: readonly Role[] = READ_ACCESS[scope];
