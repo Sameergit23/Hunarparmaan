@@ -36,6 +36,16 @@ describe('loadConfig', () => {
     expect(config.REDIS_URL).toBeUndefined();
   });
 
+  it('refuses the development key anywhere but localhost, even when NODE_ENV is forgotten', () => {
+    expect(() => loadConfig({ PUBLIC_API_URL: 'https://staging.example.in' })).toThrow(
+      /JWT_SECRET/,
+    );
+    expect(
+      loadConfig({ PUBLIC_API_URL: 'https://staging.example.in', JWT_SECRET: 'y'.repeat(32) })
+        .JWT_SECRET,
+    ).toBe('y'.repeat(32));
+  });
+
   it('rejects a short signing key', () => {
     expect(() => loadConfig({ JWT_SECRET: 'short' })).toThrow(/32 characters/);
   });

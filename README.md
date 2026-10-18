@@ -351,7 +351,7 @@ The phone has to reach the API, so set `EXPO_PUBLIC_API_URL` to your laptop's LA
 | `DATABASE_URL` | `postgres://hp:hp@localhost:5432/hunarpramaan` | api |
 | `REDIS_URL` | `redis://localhost:6379` | api |
 | `S3_ENDPOINT` · `S3_BUCKET` · `S3_ACCESS_KEY` · `S3_SECRET_KEY` | `http://localhost:8333` · `evidence` · … | api |
-| `JWT_SECRET` | a long random string; required in production | api |
+| `JWT_SECRET` | a long random string; required anywhere but localhost | api |
 | `AI_SERVICE_URL` | `http://localhost:8000` | api worker |
 | `LLM_BASE_URL` · `LLM_API_KEY` · `LLM_MODEL` | any OpenAI-compatible endpoint, preferably hosted in India | ai |
 | `BHASHINI_USER_ID` · `BHASHINI_API_KEY` | from the Bhashini portal | ai |
@@ -360,7 +360,6 @@ The phone has to reach the API, so set `EXPO_PUBLIC_API_URL` to your laptop's LA
 | `PUBLIC_API_URL` | `http://localhost:4000` (where phones upload clips without S3) | api |
 | `CLOCK_DRIFT_LIMIT_S` | `300` | api |
 | `API_URL` | `http://localhost:4000` | web |
-| `ROUTING_THRESHOLD` | `0.70` (NCVET rule; sent to phones in the trade pack) | api |
 | `RESCORE_SAMPLE_RATE` | `0.10` | api |
 | `GEOFENCE_RADIUS_M` | `200` | api |
 | `EXPO_PUBLIC_API_URL` | `http://192.168.1.20:4000` | mobile |

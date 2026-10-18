@@ -1,15 +1,15 @@
 /** Builds the real dependencies from configuration, for the server, worker and seed. */
-import { pino } from 'pino';
 import { createTokenIssuer } from './auth/tokens';
 import type { Config } from './config';
 import { openDatabase } from './db/client';
+import { createLogger } from './logger';
 import { defaultClock, type Deps } from './domain/context';
 import { createJobHandler } from './worker/jobs';
 import { InlineQueue, createBullQueue, type JobQueue } from './queue/queue';
 import { LocalObjectStore, createS3ObjectStore, type ObjectStore } from './storage/object-store';
 
 export async function createRuntime(config: Config) {
-  const logger = pino({ level: config.NODE_ENV === 'test' ? 'silent' : 'info' });
+  const logger = createLogger(config);
   const database = await openDatabase(config.DATABASE_URL);
   const clock = defaultClock();
 

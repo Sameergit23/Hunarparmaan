@@ -25,7 +25,6 @@ const Env = z.object({
   JWT_TTL_HOURS: z.coerce.number().positive().default(12),
   /** SIDH, eKYC, OTP and NQR mocks. On by default outside production. */
   MOCK_INTEGRATIONS: bool.optional(),
-  ROUTING_THRESHOLD: z.coerce.number().gt(0).lte(1).default(0.7),
   RESCORE_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
   GEOFENCE_RADIUS_M: z.coerce.number().positive().default(200),
   /** Device time this far from server time raises a clock-drift flag. */
@@ -63,8 +62,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   if (production && rest.DATABASE_URL.startsWith('pglite:')) {
     throw new Error('Invalid configuration: production needs a PostgreSQL DATABASE_URL');
   }
-  if (production && !JWT_SECRET) {
-    throw new Error('Invalid configuration: production needs JWT_SECRET (32+ characters)');
+  // The development key is only for a laptop: anywhere else, a forgotten NODE_ENV
+  // must not quietly sign tokens with a key that is public in the repo.
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(new URL(rest.PUBLIC_API_URL).hostname);
+  if (!JWT_SECRET && (production || !local)) {
+    throw new Error(
+      'Invalid configuration: JWT_SECRET (32+ characters) is required unless the API runs on localhost in development',
+    );
   }
   return {
     ...rest,
