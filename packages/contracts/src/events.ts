@@ -140,7 +140,8 @@ export const EventPayloads = {
     /** Rule 5: hashed at capture; the server re-hashes the upload and compares. */
     sha256: Sha256Hex,
     bytes: z.int().positive(),
-    mimeType: z.enum(['video/mp4', 'image/jpeg']),
+    /** WebM comes from browsers (the app's browser preview); phones record MP4. */
+    mimeType: z.enum(['video/mp4', 'video/webm', 'image/jpeg']),
     durationSec: z.number().positive().optional(),
     capturedAt: Timestamp,
     gps: GeoPoint,

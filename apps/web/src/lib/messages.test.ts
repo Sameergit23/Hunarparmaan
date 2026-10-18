@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { BlockerCode, FlagKind, type MessageParams } from '@hunarpramaan/contracts';
+import {
+  ADMIN_ACTION_TYPES,
+  AccountStatus,
+  AdminErrorCode,
+  BlockerCode,
+  DeactivationReason,
+  DeviceStatus,
+  FlagKind,
+  OrgKind,
+  OrgSuspendReason,
+  Role,
+  type MessageParams,
+} from '@hunarpramaan/contracts';
 import { en } from './i18n/en';
 import { hi } from './i18n/hi';
 import { blockerText, flagText } from './messages';
@@ -75,5 +87,25 @@ describe('AI check flags', () => {
     expect(flagText(flag, en, 'en')).toContain('"Gloves"');
     expect(flagText(flag, hi, 'hi')).toContain('"दस्ताने"');
     expect(flagText(flag, en, 'en')).not.toContain('ppe.gloves');
+  });
+});
+
+describe('admin wording (ADR 010)', () => {
+  it.each([
+    ['en', en],
+    ['hi', hi],
+  ] as const)('words every admin code, reason, status and role in %s', (_lang, m) => {
+    for (const code of AdminErrorCode.options) expect(m.admin.errors[code]).toBeTruthy();
+    for (const reason of DeactivationReason.options)
+      expect(m.admin.deactivationReason[reason]).toBeTruthy();
+    for (const reason of OrgSuspendReason.options)
+      expect(m.admin.organisations.suspendReasons[reason]).toBeTruthy();
+    for (const status of DeviceStatus.options) expect(m.admin.deviceStatus[status]).toBeTruthy();
+    for (const reason of ['lost', 'retired', 'replaced'] as const)
+      expect(m.admin.devices.reasons[reason]).toBeTruthy();
+    for (const status of AccountStatus.options) expect(m.admin.status[status]).toBeTruthy();
+    for (const kind of OrgKind.options) expect(m.admin.orgKind[kind]).toBeTruthy();
+    for (const role of Role.options) expect(m.roles[role]).toBeTruthy();
+    for (const action of ADMIN_ACTION_TYPES) expect(m.admin.log.actions[action]).toBeTruthy();
   });
 });

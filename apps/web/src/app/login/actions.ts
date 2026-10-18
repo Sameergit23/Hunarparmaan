@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { LoginResponse, OtpResponse, Phone } from '@hunarpramaan/contracts';
 import { API_URL, ApiRequestError, apiPost } from '@/lib/api';
 import { getMessages } from '@/lib/i18n';
-import { OFFICE_ROLES, TOKEN_COOKIE } from '@/lib/session';
+import { OFFICE_ROLES, TOKEN_COOKIE, homePath } from '@/lib/session';
 
 export interface LoginState {
   step: 'phone' | 'code';
@@ -72,7 +72,7 @@ async function signIn(prev: LoginState, formData: FormData): Promise<LoginState>
     path: '/',
     expires: new Date(login.expiresAt),
   });
-  redirect('/dashboard');
+  redirect(homePath(login.user.role));
 }
 
 /** One action for both steps: send the code, then sign in with code and PIN. */

@@ -7,13 +7,30 @@ import { Icon } from './icon';
 import { LanguageSwitch } from './language-switch';
 import { BrandStripe, LogoTile, cx } from './wire';
 
-type NavKey = 'dashboard' | 'sessions' | 'approvals' | 'flags';
+export type NavKey =
+  'dashboard' | 'sessions' | 'approvals' | 'flags' | 'organisations' | 'people' | 'devices' | 'log';
 
 /** Which pages each office role sees, matching READ_ACCESS in the contracts. */
 export const NAV_BY_ROLE: Record<string, NavKey[]> = {
   agency: ['dashboard', 'sessions', 'flags'],
   awarding_body: ['dashboard', 'approvals', 'sessions'],
   ncvet: ['dashboard'],
+  // Admins manage people, organisations and phones; they see no case data (ADR 010).
+  platform_admin: ['organisations', 'people', 'devices', 'log'],
+  tp_admin: ['people', 'devices', 'log'],
+  agency_admin: ['people', 'devices', 'log'],
+  ab_admin: ['people', 'devices', 'log'],
+};
+
+export const NAV_HREF: Record<NavKey, string> = {
+  dashboard: '/dashboard',
+  sessions: '/sessions',
+  approvals: '/approvals',
+  flags: '/flags',
+  organisations: '/admin/organisations',
+  people: '/admin/people',
+  devices: '/admin/devices',
+  log: '/admin/log',
 };
 
 /**
@@ -40,7 +57,7 @@ export function OfficeHeader({
       <div className="bg-ink text-plate">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-[18px]">
           <Link
-            href="/dashboard"
+            href={items[0] ? NAV_HREF[items[0]] : '/'}
             className="flex items-center gap-3 py-2 text-plate no-underline hover:text-plate"
           >
             <LogoTile size={40} />
@@ -53,7 +70,7 @@ export function OfficeHeader({
             {items.map((key) => (
               <Link
                 key={key}
-                href={`/${key}`}
+                href={NAV_HREF[key]}
                 aria-current={active === key ? 'page' : undefined}
                 className={cx(
                   'flex min-h-[56px] items-center px-4 text-[16px] no-underline focus-visible:outline-plate',

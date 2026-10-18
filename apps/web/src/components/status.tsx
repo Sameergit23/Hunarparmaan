@@ -7,6 +7,8 @@ import {
   Eye,
   Hash,
   Link2,
+  PhoneOff,
+  UserX,
   MapPinOff,
   PenLine,
   TriangleAlert,
@@ -72,6 +74,9 @@ const FLAG_ICONS: Record<FlagKind, typeof Hash> = {
   vision_quality: Eye,
   vision_conflict: Eye,
   similar_clip: Copy,
+  account_draining: UserX,
+  device_draining: PhoneOff,
+  device_lost: PhoneOff,
 };
 
 export const isBlocking = (kind: FlagKind) => BLOCKING_FLAGS.includes(kind);
