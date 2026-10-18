@@ -49,6 +49,8 @@ Today (Sprint 0) every agency and awarding-body account sees every session; scop
 | Action | Who | Status |
 |---|---|---|
 | Register a worker, record consent and a declaration | mobiliser (worker) | Built |
+| Sign up on their own phone, or claim the record a mobiliser made; change or reset their PIN | worker | Built in the API; phone app planned |
+| Change their PIN; stay signed in on a registered phone with a renewal key | everyone (renewal: phone roles) | Built in the API |
 | Decide the route, overriding the AI's suggestion with a reason | mobiliser | Built |
 | Start a session, capture evidence, score, sign | assessor | Built |
 | Re-score a sampled clip blind | master_assessor | Built |

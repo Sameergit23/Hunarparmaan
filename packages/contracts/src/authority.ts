@@ -66,7 +66,8 @@ const ADMINS = ['platform_admin', 'tp_admin', 'agency_admin', 'ab_admin'] as con
 export const AUTHORITY = {
   'consent.given': ['worker', 'mobiliser'],
   'consent.withdrawn': ['worker', 'mobiliser'],
-  'worker.registered': ['mobiliser'],
+  // A mobiliser registers a worker, or a worker signs up on their own phone (ADR 012).
+  'worker.registered': ['mobiliser', 'worker'],
   'declaration.recorded': ['worker', 'mobiliser'],
   // A suggestion only: the provisional keyword match made on the phone.
   'mapping.suggested': ['system'],
@@ -76,7 +77,7 @@ export const AUTHORITY = {
   'evidence.captured': ASSESSORS,
   'score.recorded': ASSESSORS,
   'recommendation.signed': ASSESSORS,
-  'device.registered': ['mobiliser', ...ASSESSORS],
+  'device.registered': ['worker', 'mobiliser', ...ASSESSORS],
   // The queue worker stores AI results (mapping, flags, re-hash checks), never decisions.
   'ai_result.stored': ['system'],
   'flag.reviewed': ['agency'],

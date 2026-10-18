@@ -4,6 +4,7 @@ import { expect } from 'vitest';
 import type {
   EventPayload,
   GeoPoint,
+  Role,
   ScoreValue,
   SyncEventOf,
   DeviceEventType,
@@ -44,13 +45,14 @@ export async function registerWorker(
   mobiliser: TestUser,
   phone: SimulatedPhone,
   name = 'Ramesh Kumar',
+  workerPhone = '9000000001',
 ) {
   const workerId = uuidv4();
   await pushOk(h, mobiliser, phone, [
     phone.event('worker.registered', {
       workerId,
       name,
-      phone: '9000000001',
+      phone: workerPhone,
       language: 'hi',
       ekycRef: 'EKYC-MOCK-0001',
     }),
@@ -63,6 +65,65 @@ export async function registerWorker(
     }),
   ]);
   return workerId;
+}
+
+// --- Signing up and in ------------------------------------------------------
+
+/** A random mobile number, so tests don't share the per-number code limits. */
+export const newPhone = () => `9${String(Math.floor(Math.random() * 1e9)).padStart(9, '0')}`;
+
+/**
+ * Ask for an SMS code. The clock moves on first, past the 30-second wait
+ * between codes; pass a longer tick to ask again for the same number.
+ */
+export async function askForCode(h: Harness, phone: string, tickMs = 31_000) {
+  h.tick(tickMs);
+  const res = await h.http.post('/v1/auth/otp').send({ phone });
+  expect(res.status, JSON.stringify(res.body)).toBe(201);
+  return res.body as { challengeId: string; mockCode: string };
+}
+
+/** A code, checked: the ticket for the next step, and whether the number has an account. */
+export async function ticketFor(h: Harness, phone: string, tickMs?: number) {
+  const { challengeId, mockCode } = await askForCode(h, phone, tickMs);
+  const res = await h.http.post('/v1/auth/otp/verify').send({ challengeId, otp: mockCode });
+  expect(res.status, JSON.stringify(res.body)).toBe(200);
+  return res.body as { ticket: string; account: 'existing' | 'invited' | 'none' };
+}
+
+/** A sign-in response as a test user, with the auth header for later calls. */
+export function asTestUser(
+  login: { token: string; user: { id: string; name: string; role: Role; organisationId: string } },
+  phone: string,
+): TestUser {
+  return {
+    ...login.user,
+    phone,
+    token: login.token,
+    actor: { kind: 'user', userId: login.user.id, role: login.user.role },
+    auth: { Authorization: `Bearer ${login.token}` },
+  };
+}
+
+/** A worker signs up on their own phone. */
+export async function signUpWorker(
+  h: Harness,
+  phone = newPhone(),
+  options: { pin?: string; name?: string } = {},
+) {
+  const { ticket } = await ticketFor(h, phone);
+  const res = await h.http.post('/v1/auth/register').send({
+    ticket,
+    pin: options.pin ?? '9173',
+    name: options.name ?? 'Kavita Joshi',
+    language: 'hi',
+  });
+  expect(res.status, JSON.stringify(res.body)).toBe(201);
+  return {
+    worker: asTestUser(res.body, phone),
+    workerId: res.body.workerId as string,
+    claimed: res.body.claimed as boolean,
+  };
 }
 
 export interface Assessment {

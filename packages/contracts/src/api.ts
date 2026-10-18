@@ -7,6 +7,7 @@ import { z } from 'zod';
 import {
   EntityId,
   EventId,
+  Language,
   LocalizedText,
   NqrCode,
   Reason,
@@ -74,6 +75,21 @@ export const AdminErrorCode = z.enum([
 ]);
 export type AdminErrorCode = z.infer<typeof AdminErrorCode>;
 
+/**
+ * `error.code` values for signing up and in, beside the account codes above
+ * (`account_locked`, `rate_limited`, `token_revoked`, `phone_in_use`). Each app
+ * words them in Hindi and English (rule 7).
+ */
+export const AuthErrorCode = z.enum([
+  /** 400: a new PIN breaks a rule in `pin.ts`; `details` holds `length` or `easy`. */
+  'pin_rejected',
+  /** 403: only workers reset their own PIN with an SMS code; staff ask their admin. */
+  'pin_reset_by_admin',
+  /** 403: the current PIN is wrong when changing it. Not 401: the person is still signed in. */
+  'wrong_pin',
+]);
+export type AuthErrorCode = z.infer<typeof AuthErrorCode>;
+
 // --- Auth -------------------------------------------------------------------
 
 export const OtpRequest = z.strictObject({ phone: Phone });
@@ -87,11 +103,41 @@ export const OtpResponse = z.strictObject({
 });
 export type OtpResponse = z.infer<typeof OtpResponse>;
 
-export const LoginRequest = z.strictObject({
+/** A random, single-use proof that someone just entered the right SMS code. */
+export const Ticket = z.string().regex(/^[A-Za-z0-9_-]{32,128}$/, 'expected a sign-in ticket');
+
+/** POST /v1/auth/otp/verify: check the SMS code on its own, before the PIN. */
+export const OtpVerifyRequest = z.strictObject({ challengeId: EntityId, otp: Otp });
+export type OtpVerifyRequest = z.infer<typeof OtpVerifyRequest>;
+
+/**
+ * Whether the number has an account. It is told only after the code proves the
+ * person holds the number, so asking for a code still reveals nothing.
+ * `invited`: an admin invited the number and it has no account yet.
+ */
+export const AccountState = z.enum(['existing', 'invited', 'none']);
+export type AccountState = z.infer<typeof AccountState>;
+
+export const OtpVerifyResponse = z.strictObject({
+  /** Lasts 10 minutes, until it is used to sign in, sign up or reset the PIN. */
+  ticket: Ticket,
+  expiresAt: Timestamp,
+  account: AccountState,
+});
+export type OtpVerifyResponse = z.infer<typeof OtpVerifyResponse>;
+
+/** The web's one-step sign-in: a wrong code or PIN gets one message that never says which. */
+export const CodeLoginRequest = z.strictObject({
   challengeId: EntityId,
   otp: Otp,
   pin: Pin,
 });
+export type CodeLoginRequest = z.infer<typeof CodeLoginRequest>;
+
+/** The phone's second step, after `otp/verify`. */
+export const TicketLoginRequest = z.strictObject({ ticket: Ticket, pin: Pin });
+export type TicketLoginRequest = z.infer<typeof TicketLoginRequest>;
+export const LoginRequest = z.union([CodeLoginRequest, TicketLoginRequest]);
 export type LoginRequest = z.infer<typeof LoginRequest>;
 
 /** One account, one organisation, one role, for good (ADR 010). */
@@ -107,8 +153,59 @@ export const LoginResponse = z.strictObject({
   token: z.string(),
   expiresAt: Timestamp,
   user: SessionUser,
+  /** The sign-in before this one, shown as "Last sign-in"; null the first time. */
+  previousSignInAt: Timestamp.nullable(),
 });
 export type LoginResponse = z.infer<typeof LoginResponse>;
+
+/**
+ * POST /v1/auth/register: a worker signs up on their own phone (ADR 012). Only
+ * for a number with no account; staff accounts come from invites (ADR 010).
+ */
+export const RegisterRequest = z.strictObject({
+  ticket: Ticket,
+  pin: Pin,
+  name: z.string().trim().min(1).max(120),
+  language: Language,
+});
+export type RegisterRequest = z.infer<typeof RegisterRequest>;
+
+export const RegisterResponse = LoginResponse.extend({
+  /** The worker record for the phone's events: the one a mobiliser made for this number, or new. */
+  workerId: EntityId,
+  /** True when a mobiliser had already registered this number, so the account took that record. */
+  claimed: z.boolean(),
+});
+export type RegisterResponse = z.infer<typeof RegisterResponse>;
+
+/** POST /v1/auth/pin: change the PIN while signed in. Other sign-ins end. */
+export const ChangePinRequest = z.strictObject({ currentPin: Pin, newPin: Pin });
+export type ChangePinRequest = z.infer<typeof ChangePinRequest>;
+
+/** POST /v1/auth/pin/reset: a worker who forgot their PIN, after a fresh SMS code. */
+export const ResetPinRequest = z.strictObject({ ticket: Ticket, newPin: Pin });
+export type ResetPinRequest = z.infer<typeof ResetPinRequest>;
+
+/** A long random key that renews a phone's sign-in ("remember this phone"). */
+export const RenewalKey = z.string().regex(/^[A-Za-z0-9_-]{32,128}$/, 'expected a renewal key');
+
+/** POST /v1/auth/renewal-key: for a field role, on a phone bound to the account. */
+export const RenewalKeyRequest = z.strictObject({ deviceId: DeviceId });
+export type RenewalKeyRequest = z.infer<typeof RenewalKeyRequest>;
+
+export const RenewalKeyResponse = z.strictObject({
+  renewalKey: RenewalKey,
+  /** 30 days on; each renewal replaces the key and starts the 30 days again. */
+  expiresAt: Timestamp,
+});
+export type RenewalKeyResponse = z.infer<typeof RenewalKeyResponse>;
+
+/** POST /v1/auth/refresh: a new sign-in for the phone, and a new key in place of the old. */
+export const RefreshRequest = z.strictObject({ deviceId: DeviceId, renewalKey: RenewalKey });
+export type RefreshRequest = z.infer<typeof RefreshRequest>;
+
+export const RefreshResponse = LoginResponse.extend({ renewal: RenewalKeyResponse });
+export type RefreshResponse = z.infer<typeof RefreshResponse>;
 
 // --- Devices ----------------------------------------------------------------
 

@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   AdminErrorCode,
   ApproveRequest,
+  AuthErrorCode,
   BLOCKING_FLAGS,
   FlagKind,
   LoginRequest,
   OtpRequest,
+  RegisterRequest,
   SessionUser,
   SignRequest,
 } from './api';
@@ -55,6 +57,31 @@ describe('API contracts', () => {
     for (const generic of ['bad_request', 'unauthorized', 'forbidden', 'not_found', 'conflict']) {
       expect(AdminErrorCode.options).not.toContain(generic);
     }
+  });
+
+  it('keeps sign-in error codes apart from the admin ones', () => {
+    for (const code of AuthErrorCode.options) expect(AdminErrorCode.options).not.toContain(code);
+  });
+
+  it('signs in with code and PIN on the web, or ticket and PIN on the phone', () => {
+    const ticket = 'Zm9vYmFyYmF6cXV4cXV1eGNvcmdlZ3JhdWx0Z2FycGx5';
+    const viaCode = { challengeId: ids.v4(), otp: '123456', pin: '4826' };
+    expect(LoginRequest.safeParse(viaCode).success).toBe(true);
+    expect(LoginRequest.safeParse({ ticket, pin: '4826' }).success).toBe(true);
+    expect(LoginRequest.safeParse({ ticket: 'short', pin: '4826' }).success).toBe(false);
+    expect(LoginRequest.safeParse({ ...viaCode, ticket }).success).toBe(false);
+  });
+
+  it('asks a worker signing up for a name and a language', () => {
+    const base = {
+      ticket: 'Zm9vYmFyYmF6cXV4cXV1eGNvcmdlZ3JhdWx0Z2FycGx5',
+      pin: '4826',
+      name: 'Ramesh Kumar',
+      language: 'hi',
+    };
+    expect(RegisterRequest.safeParse(base).success).toBe(true);
+    expect(RegisterRequest.safeParse({ ...base, name: '  ' }).success).toBe(false);
+    expect(RegisterRequest.safeParse({ ...base, role: 'assessor' }).success).toBe(false);
   });
 });
 

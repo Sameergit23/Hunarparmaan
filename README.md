@@ -701,7 +701,12 @@ Callers are checked against `AUTHORITY` (actions) and `READ_ACCESS` (reads) in `
 | Method | Path | Who calls it | What it does |
 |---|---|---|---|
 | GET | `/healthz` | Anyone | Liveness check (CI and Docker use it) |
-| POST | `/v1/auth/otp` · `/v1/auth/login` | Anyone with an account | OTP (mocked) + PIN login; returns a JWT |
+| POST | `/v1/auth/otp` | Anyone | Sends a sign-in code (mocked). Limits: 30 s between codes, 3 per number in 15 min, 10 a day, and a cap per IP address |
+| POST | `/v1/auth/otp/verify` | Anyone with a code | Checks the code alone and returns a 10-minute ticket, plus whether the number has an account |
+| POST | `/v1/auth/login` | Anyone with an account | Code + PIN (web) or ticket + PIN (phone); returns a JWT and the time of the sign-in before. 5 wrong PINs lock the account for 15 min, doubling up to an hour |
+| POST | `/v1/auth/register` | A worker, with a ticket | Signs a worker up on their own phone, claiming the record a mobiliser made for the same number ([ADR 012](docs/adr/012-voice-sign-in.md), proposed) |
+| POST | `/v1/auth/pin` · `/v1/auth/pin/reset` | Signed in · a worker with a ticket | Changes the PIN, or resets a forgotten worker PIN; older sign-ins and renewal keys end |
+| POST | `/v1/auth/renewal-key` · `/v1/auth/refresh` | Phone roles, on their registered phone | Keeps a phone signed in: a 30-day key that renews the JWT and is replaced at each use |
 | POST | `/v1/devices` | Mobiliser, assessor, master assessor | Registers a phone and binds it to the account |
 | GET | `/v1/trade-packs/:id` | Every signed-in role | Downloads a versioned trade pack |
 | POST | `/v1/sync/push` | Phone roles: worker, mobiliser, assessor, master assessor | Uploads a batch of events (idempotent by event id); returns acks, server time and upload URLs |
@@ -730,7 +735,7 @@ The AI service (*planned*) is internal and only the queue worker will call it: `
 
 | Role | App | What the role can do | Status |
 |---|---|---|---|
-| Worker | Mobile, usually with a mobiliser | Give consent and a declaration; later, see their own profile | API built; phone app and profile planned |
+| Worker | Mobile, usually with a mobiliser | Give consent and a declaration; sign up on their own phone; later, see their own profile | API built; phone app and profile planned |
 | Mobiliser | Mobile | Register workers; review mapping; override the route with a reason | API built; phone app planned |
 | Assessor | Mobile | Calibrate, capture evidence, score and sign | API built; phone app planned |
 | Master assessor | Mobile | Re-score a sampled clip blind, for the awarding body | API built; phone app planned |
@@ -1039,6 +1044,8 @@ Rotate sleep so that nobody codes exhausted.
   - no AI job can write a score.
 - **IT-04 Admins never decide:** no admin token can score, sign, approve, review a flag or re-score. The unit half is built (`packages/contracts/src/authority.test.ts`); the API half is *planned* for when admin accounts exist (Sprint 1).
 - **IT-05 Scoping** (*planned*, Sprint 2): an account outside the record's organisation gets "not found".
+- **IT-06 Sign-in limits:** codes are limited per number and per IP address, and 5 wrong PINs lock the account for 15 minutes, doubling up to an hour (`services/api/test/signin.test.ts`).
+- **IT-07 Renewal keys:** a phone's renewal key is replaced at each use; reusing an old one, a PIN change, a revoked phone or 30 days unused ends it (`services/api/test/pin-renewal.test.ts`).
 
 ### Evaluation: the evidence the PS asks for
 

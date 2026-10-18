@@ -68,10 +68,17 @@ describe('server actions', () => {
     expect(canPerform(queueWorker, 'flag.reviewed')).toBe(false);
   });
 
-  it('lets field staff, not offices, register a device', () => {
+  it('lets field roles, not offices, register a device', () => {
     expect(canPerform(assessor, 'device.registered')).toBe(true);
     expect(canPerform(mobiliser, 'device.registered')).toBe(true);
+    expect(canPerform(worker, 'device.registered')).toBe(true);
     expect(canPerform(agency, 'device.registered')).toBe(false);
+  });
+
+  it('lets a worker register themself on their own phone, but never decide their route', () => {
+    expect(canPerform(worker, 'worker.registered')).toBe(true);
+    expect(canPerform(mobiliser, 'worker.registered')).toBe(true);
+    expect(canPerform(worker, 'route.decided')).toBe(false);
   });
 });
 

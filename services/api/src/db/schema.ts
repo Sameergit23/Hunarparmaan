@@ -48,18 +48,43 @@ export const users = pgTable('users', {
   name: text('name').notNull(),
   phone: text('phone').notNull().unique(),
   pinHash: text('pin_hash').notNull(),
+  /** Goes up when the PIN changes or is reset: older tokens and renewal keys stop working. */
+  tokenVersion: integer('token_version').notNull().default(0),
+  /** Wrong PINs since the last good sign-in or lockout. */
+  failedPinAttempts: integer('failed_pin_attempts').notNull().default(0),
+  lockedUntil: at('locked_until'),
+  /** Lockouts since the last good sign-in; each one doubles the next, up to an hour. */
+  lockouts: integer('lockouts').notNull().default(0),
+  /**
+   * A worker's own account: their worker record. No foreign key, because the
+   * record syncs from a phone after the account exists (rule 2).
+   */
+  workerId: uuid('worker_id').unique(),
   createdAt: createdAt(),
 });
 
-export const otpChallenges = pgTable('otp_challenges', {
-  id: uuid('id').primaryKey(),
-  phone: text('phone').notNull(),
-  codeHash: text('code_hash').notNull(),
-  attempts: integer('attempts').notNull().default(0),
-  expiresAt: at('expires_at').notNull(),
-  usedAt: at('used_at'),
-  createdAt: createdAt(),
-});
+export const otpChallenges = pgTable(
+  'otp_challenges',
+  {
+    id: uuid('id').primaryKey(),
+    phone: text('phone').notNull(),
+    codeHash: text('code_hash').notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    expiresAt: at('expires_at').notNull(),
+    usedAt: at('used_at'),
+    /** A keyed hash of the caller's IP address, for the per-IP limit. Never the address. */
+    ipHash: text('ip_hash'),
+    /** SHA-256 of the ticket issued once the code is right (`otp/verify`). */
+    ticketHash: text('ticket_hash').unique(),
+    ticketExpiresAt: at('ticket_expires_at'),
+    ticketUsedAt: at('ticket_used_at'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('otp_challenges_phone_created').on(t.phone, t.createdAt),
+    index('otp_challenges_ip_created').on(t.ipHash, t.createdAt),
+  ],
+);
 
 export const devices = pgTable('devices', {
   id: text('id').primaryKey(),
@@ -71,6 +96,55 @@ export const devices = pgTable('devices', {
     .notNull()
     .default(sql`now()`),
   revokedAt: at('revoked_at'),
+});
+
+export type AuthEventType =
+  | 'signed_in'
+  | 'sign_in_failed'
+  | 'locked'
+  | 'registered'
+  | 'pin_changed'
+  | 'pin_reset'
+  | 'renewal_issued'
+  | 'renewed'
+  | 'renewal_reused';
+
+/** Append-only. Sign-ins and account security changes (ADR 010). Never a phone number or IP. */
+export const authEvents = pgTable(
+  'auth_events',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    type: text('type').$type<AuthEventType>().notNull(),
+    deviceId: text('device_id'),
+    occurredAt: at('occurred_at').notNull(),
+  },
+  (t) => [index('auth_events_user_type_at').on(t.userId, t.type, t.occurredAt)],
+);
+
+/**
+ * Keys that renew a phone's sign-in ("remember this phone"). Mutable: each use
+ * replaces the key, and a PIN change, a revoked phone or a reused key ends them.
+ */
+export const renewalKeys = pgTable('renewal_keys', {
+  id: uuid('id').primaryKey(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
+  deviceId: text('device_id')
+    .notNull()
+    .references(() => devices.id),
+  /** SHA-256 of the key. The key itself is given to the phone once. */
+  keyHash: text('key_hash').notNull().unique(),
+  /** The account's token version when the key was issued. */
+  tokenVersion: integer('token_version').notNull(),
+  createdAt: at('created_at').notNull(),
+  expiresAt: at('expires_at').notNull(),
+  revokedAt: at('revoked_at'),
+  /** The key that replaced this one. Using a replaced key again ends every key on the phone. */
+  replacedBy: uuid('replaced_by'),
 });
 
 // --- The hash-chained event log (append-only) --------------------------------
@@ -466,6 +540,7 @@ export const studyRounds = pgTable('study_rounds', {
 /** Tables that reject UPDATE and DELETE (see migration 0001). */
 export const APPEND_ONLY_TABLES = [
   'audit_entries',
+  'auth_events',
   'trade_packs',
   'consents',
   'consent_withdrawals',

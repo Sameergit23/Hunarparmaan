@@ -13,6 +13,8 @@ beforeAll(async () => {
 afterAll(() => h.close());
 
 async function challenge(phone: string) {
+  // Past the per-number limits (3 codes in 15 minutes), so these tests can reuse one number.
+  h.tick(16 * 60_000);
   const res = await h.http.post('/v1/auth/otp').send({ phone });
   expect(res.status).toBe(201);
   return res.body as { challengeId: string; mockCode: string };

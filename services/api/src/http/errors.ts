@@ -10,6 +10,8 @@ export class HttpError extends Error {
     readonly code: string,
     message: string,
     readonly details?: string[],
+    /** Extra response headers, such as `Retry-After` on a 429. */
+    readonly headers?: Record<string, string>,
   ) {
     super(message);
   }
@@ -34,6 +36,7 @@ export const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
   let status: number;
   if (error instanceof HttpError) {
     status = error.status;
+    if (error.headers) res.set(error.headers);
     body = {
       error: {
         code: error.code,
