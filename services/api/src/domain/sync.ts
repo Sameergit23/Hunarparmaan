@@ -39,6 +39,7 @@ import { deviceLost } from './accounts';
 import type { Deps } from './context';
 import { raiseFlag } from './flags';
 import { qualificationLoader } from './packs';
+import { scopeOf, sessionsWhere } from './scope';
 import { InvalidEvent, project, sessionIdOf, type ProjectionContext } from './projection';
 
 /** Events from the logged-in user, or from the phone's own keyword mapper. */
@@ -295,6 +296,8 @@ export async function pullUpdates(
           isNull(rescores.id),
           gt(rescoreTasks.createdAt, since),
           sql`${sessions.assessorId} <> ${user.id}`,
+          // Only the QPs the master's awarding body owns.
+          sessionsWhere(scopeOf(user)),
         ),
       );
     for (const task of open) items.push({ type: 'rescore_task', ...task });

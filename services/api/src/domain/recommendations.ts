@@ -18,6 +18,7 @@ import type { Deps } from './context';
 import { describeBlocker } from './messages';
 import type { QualificationLoader } from './packs';
 import { recomputeResult, resultMismatch } from './results';
+import { sessionInScope, type Scope } from './scope';
 
 type Recommendation = typeof recommendations.$inferSelect;
 
@@ -175,6 +176,8 @@ export async function decideRecommendation(
     decision: ApprovalDecision;
     note?: string | undefined;
     userId: string;
+    /** Only the awarding body that owns the QP decides (ADR 010 point 7). */
+    scope: Scope;
   },
 ): Promise<Decision> {
   const [recommendation] = await tx
@@ -182,6 +185,11 @@ export async function decideRecommendation(
     .from(recommendations)
     .where(eq(recommendations.id, input.recommendationId));
   if (!recommendation) throw notFound('Recommendation');
+  const [owning] = await tx
+    .select()
+    .from(sessions)
+    .where(eq(sessions.id, recommendation.sessionId));
+  if (!owning || !sessionInScope(input.scope, owning)) throw notFound('Recommendation');
 
   const current = await currentRecommendation(tx, recommendation.sessionId);
   if (current?.id !== recommendation.id) {

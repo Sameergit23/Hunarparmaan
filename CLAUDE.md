@@ -18,7 +18,7 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 
 - Sprint 0 runs 19–25 Oct 2026. These exist: the four shared packages (`packages/contracts`, `scoring`, `audit`, `trade-packs`), `services/api` and `apps/web`. Still to come: `apps/mobile`, `services/ai` and `evaluation/`. README "Repository layout" marks which folders are planned.
 - The team develops on their own computers (Windows, macOS and Linux), with GitHub for PRs and CI. Keep every script cross-platform: Node APIs instead of `rm -rf`, `cp` or shell-only syntax in `package.json`, and paths built with `node:path`.
-- The admin panel and organisation scoping are designed but not built: ADR 010, ADR 011 and `docs/design/access-control.md`. Organisations and personal data outside the hash chain come in Sprint 1, scoping (IT-05) in Sprint 2, admin screens in Sprints 3–5.
+- Organisations, scoping (IT-05) and phase 1 of the admin panel (People, Devices, Audit log) are built: ADR 010, `docs/design/access-control.md` and `docs/design/admin-panel/`. Every read model takes the reader's scope (`services/api/src/domain/scope.ts` for case data, `admin-scope.ts` for the panel). Still to come: personal data outside the hash chain (ADR 011) and the phase 2 admin screens.
 - Gates: G1 Sprint 0 exit (25 Oct) · G2 feature complete (29 Nov) · G3 demo-ready (6 Dec). The 36-hour Grand Finale is in December 2026.
 - The sprint plan, requirements (FR-xx, NFR-xx) and test plan are in README "Development lifecycle (SDLC)".
 

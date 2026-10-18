@@ -766,7 +766,7 @@ The AI service (*planned*) is internal and only the queue worker will call it: `
 | Platform admin | Web admin | Invite each organisation's first admin and NCVET's accounts; see every organisation's people, phones and admin log; later, create and suspend organisations and upload trade packs | People, Devices and Audit log built; organisation and trade-pack screens planned |
 | Agency, training-partner and awarding-body admins | Web admin | Invite, deactivate, reactivate and unlock their own staff, reset a PIN, revoke lost phones; later, the awarding-body admin releases trade packs and accredits assessors | People, Devices and Audit log built; trade packs and accreditation planned |
 
-**Admins never decide.** Admin roles manage people, organisations and phones. They never score, sign, approve, review a flag or edit a record, and nobody who decides can administer ([ADR 010](docs/adr/010-organisations-admin-roles-access-control.md)). Every account belongs to one organisation, and from Sprint 2 each sees only its own organisation's records. Personal data such as names and phone numbers moves out of the hash chain early in Sprint 1, so it can be erased without breaking the chain ([ADR 011](docs/adr/011-personal-data-outside-the-hash-chain.md)).
+**Admins never decide.** Admin roles manage people, organisations and phones. They never score, sign, approve, review a flag or edit a record, and nobody who decides can administer ([ADR 010](docs/adr/010-organisations-admin-roles-access-control.md)). Every account belongs to one organisation, and each sees only its own organisation's records (an awarding body, the QPs it owns). Personal data such as names and phone numbers moves out of the hash chain early in Sprint 1, so it can be erased without breaking the chain ([ADR 011](docs/adr/011-personal-data-outside-the-hash-chain.md)).
 
 ## Offline, integrity and privacy
 
@@ -792,7 +792,7 @@ The AI service (*planned*) is internal and only the queue worker will call it: `
 - **DPDP Rules 2025:** [notified on 13 Nov 2025](https://www.hlc.com/en/publications/indias-digital-personal-data-protection-act-2023-brought-into-force-). Their notice, consent and security duties apply from 13 May 2027, and we build to them now.
 - **Consent:** before any recording, the worker hears a standalone consent notice in their language. Withdrawing consent is as easy as giving it.
 - **Encryption:** no Aadhaar number is stored, only the eKYC reference. Data is encrypted on the device (SQLCipher), in transit (TLS) and at rest.
-- **Access by role:** each role sees only what it needs, and NCVET only aggregates. Scoping by organisation (an agency sees only its own sessions) lands in Sprint 2; today every agency and awarding-body account sees every session.
+- **Access by role:** each role sees only what it needs, and NCVET only aggregates. Each also sees only its own organisation's records: an agency its own sessions and flags, an awarding body and its masters the QPs it owns, a mobiliser the workers it registered (IT-05).
 - **Logs:** request logs redact tokens and cookies and never include request bodies, so no phone number, OTP or PIN reaches them (`services/api/src/logger.ts`).
 - **Training data and retention:** faces are blurred in any clip used to improve the models, and data is deleted when the audit period ends.
 - **Breaches** are reported to the Data Protection Board without delay, with the follow-up report within 72 hours.
@@ -1066,7 +1066,7 @@ Rotate sleep so that nobody codes exhausted.
   - only an awarding-body account can approve;
   - no AI job can write a score.
 - **IT-04 Admins never decide:** no admin token can score, sign, approve, review a flag or re-score. Both halves are built: the unit half in `packages/contracts/src/authority.test.ts`, and the API half in `services/api/test/invites.test.ts`, where every admin role gets 403 for every decision.
-- **IT-05 Scoping:** an account outside the record's organisation gets "not found". The admin half is built: two agencies never see each other's accounts, phones, invites or admin log (`services/api/test/admin-views.test.ts`). The read models for sessions, flags and approvals are *planned*, Sprint 2.
+- **IT-05 Scoping:** an account outside the record's organisation gets "not found". Two agencies never see each other's sessions, flags, numbers, accounts, phones, invites or admin log; an awarding body sees and approves only the QPs it owns, and its masters re-score only those (`services/api/test/scoping.test.ts`, `services/api/test/admin-views.test.ts`).
 - **IT-06 Sign-in limits:** codes are limited per number and per IP address, and 5 wrong PINs lock the account for 15 minutes, doubling up to an hour (`services/api/test/signin.test.ts`).
 - **IT-07 Renewal keys:** a phone's renewal key is replaced at each use; reusing an old one, a PIN change, a phone reported lost or 30 days unused ends it (`services/api/test/pin-renewal.test.ts`).
 - **IT-08 Admin rules:** no action on your own account or phone, never the last active admin, only grantable roles that fit the organisation, only the issuer or the platform admin reactivates, and the PIN on every admin write, with its lockout (`services/api/test/admin-rules.test.ts`).

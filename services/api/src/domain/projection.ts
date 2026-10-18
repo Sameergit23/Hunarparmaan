@@ -12,10 +12,12 @@ import {
   declarations,
   evidence,
   mappingResults,
+  qpOwners,
   recommendations,
   routeDecisions,
   scores,
   sessions,
+  users,
   workers,
 } from '../db/schema';
 import type { Deps } from './context';
@@ -180,10 +182,22 @@ async function startSession(ctx: ProjectionContext, event: SyncEventOf<'session.
   const p = event.payload;
   const qualification = await ctx.loadQualification(p.packVersion, p.nqrCode);
   if (!qualification) throw new InvalidEvent(`pack ${p.packVersion} has no ${p.nqrCode}`);
+  const assessorId = personOf(event);
+  // Copied now, for scoping (ADR 010 points 6 and 7): never read from the pack.
+  const [assessor] = await ctx.tx
+    .select({ organisationId: users.organisationId })
+    .from(users)
+    .where(eq(users.id, assessorId));
+  const [owner] = await ctx.tx
+    .select({ organisationId: qpOwners.organisationId })
+    .from(qpOwners)
+    .where(eq(qpOwners.nqrCode, p.nqrCode));
   await ctx.tx.insert(sessions).values({
     id: p.sessionId,
     workerId: p.workerId,
-    assessorId: personOf(event),
+    assessorId,
+    agencyId: assessor?.organisationId ?? null,
+    ownerId: owner?.organisationId ?? null,
     nqrCode: p.nqrCode,
     packVersion: p.packVersion,
     ekycRef: p.ekycRef,

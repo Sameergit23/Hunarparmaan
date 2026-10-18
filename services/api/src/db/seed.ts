@@ -31,6 +31,7 @@ import { publishPack, qualificationLoader } from '../domain/packs';
 import { decideRecommendation } from '../domain/recommendations';
 import { recordRescore } from '../domain/rescores';
 import { pushEvents } from '../domain/sync';
+import { scopeOf } from '../domain/scope';
 import { rescoreQueue } from '../domain/views';
 import { createRuntime } from '../runtime';
 import { exitIfDataDirInUse } from './pglite-lock';
@@ -569,7 +570,7 @@ async function seed(): Promise<void> {
 
   // Blind re-scores by the master assessor.
   const master = account('master');
-  const tasks = await rescoreQueue(db, master.id);
+  const tasks = await rescoreQueue(db, scopeOf(master));
   const seen: Record<Plan['assessor'], number> = { anil: 0, rekha: 0, vikram: 0 };
   for (const task of tasks) {
     const p = sessionClips.findIndex((clips) =>
@@ -604,6 +605,7 @@ async function seed(): Promise<void> {
             ? 'Earthing clip is too dark to judge; please re-record PC2'
             : undefined,
         userId: ssc.id,
+        scope: scopeOf(ssc),
       }),
     );
     console.log(

@@ -1,6 +1,8 @@
 /**
  * Read models for the web dashboard. Data sets are small (one trade, a pilot),
- * so these favour plain queries assembled in code over clever SQL.
+ * so these favour plain queries assembled in code over clever SQL. Each takes
+ * the reader's scope (ADR 010 point 6, IT-05): a record outside it is "not
+ * found", and totals count only what the scope reaches.
  */
 import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type {
@@ -27,6 +29,7 @@ import {
   approvals,
   certificates,
   criteria,
+  devices,
   evidence,
   evidenceChecks,
   flagReviews,
@@ -46,6 +49,7 @@ import { sessionDevices, verifyDeviceChain, type DeviceChainResult } from './cha
 import { qualificationLoader } from './packs';
 import { approvalBlockers } from './recommendations';
 import { recomputeResult, standingScores } from './results';
+import { sessionInScope, sessionsWhere, type Scope } from './scope';
 
 /** An assessor is an outlier below this agreement with blind re-scores… */
 export const OUTLIER_AGREEMENT = 0.7;
@@ -114,11 +118,12 @@ async function checksByEvidence(db: Db, evidenceIds: string[]) {
   return new Map(rows.map((r) => [r.evidenceId, r.status]));
 }
 
-export async function listSessions(db: Db): Promise<SessionListItem[]> {
+export async function listSessions(db: Db, scope: Scope): Promise<SessionListItem[]> {
   const rows = await db
     .select({ session: sessions, qualification: qualifications })
     .from(sessions)
     .innerJoin(qualifications, eq(qualifications.nqrCode, sessions.nqrCode))
+    .where(sessionsWhere(scope))
     .orderBy(desc(sessions.startedAt));
   const ids = rows.map((r) => r.session.id);
   const [workerNames, assessorNames, recs, flagCounts] = await Promise.all([
@@ -202,12 +207,52 @@ async function flagViews(db: Db, where?: ReturnType<typeof eq>): Promise<FlagVie
   }));
 }
 
-export const listFlags = (db: Db) => flagViews(db);
+/**
+ * The flags in scope: those on a session in scope, and device-wide ones (such
+ * as a broken chain) from phones the scope reaches.
+ */
+export async function listFlags(db: Db, scope: Scope): Promise<FlagView[]> {
+  const all = await flagViews(db);
+  if (scope.level === 'aggregates') return all;
+  const scoped = await db
+    .select({ id: sessions.id, deviceId: sessions.deviceId })
+    .from(sessions)
+    .where(sessionsWhere(scope));
+  const sessionIds = new Set(scoped.map((s) => s.id));
+  const deviceIds = new Set(scoped.map((s) => s.deviceId));
+  if (scope.level === 'own_org') {
+    const phones = await db
+      .select({ id: devices.id })
+      .from(devices)
+      .innerJoin(users, eq(users.id, devices.userId))
+      .where(eq(users.organisationId, scope.organisationId));
+    for (const phone of phones) deviceIds.add(phone.id);
+  }
+  return all.filter((f) =>
+    f.sessionId ? sessionIds.has(f.sessionId) : f.deviceId !== null && deviceIds.has(f.deviceId),
+  );
+}
 
-export async function sessionDetail(db: Db, sessionId: string): Promise<SessionDetail> {
-  const [item] = (await listSessions(db)).filter((s) => s.id === sessionId);
+/** Whether a flag is in scope, for reviewing it. */
+export async function flagInScope(db: Db, scope: Scope, flagId: string): Promise<boolean> {
+  return (await listFlags(db, scope)).some((f) => f.id === flagId);
+}
+
+/** The session if it is in scope; "not found" otherwise, the same as missing. */
+export async function sessionInScopeOr404(db: Db, scope: Scope, sessionId: string) {
   const [session] = await db.select().from(sessions).where(eq(sessions.id, sessionId));
-  if (!item || !session) throw notFound('Session');
+  if (!session || !sessionInScope(scope, session)) throw notFound('Session');
+  return session;
+}
+
+export async function sessionDetail(
+  db: Db,
+  scope: Scope,
+  sessionId: string,
+): Promise<SessionDetail> {
+  const session = await sessionInScopeOr404(db, scope, sessionId);
+  const [item] = (await listSessions(db, scope)).filter((s) => s.id === sessionId);
+  if (!item) throw notFound('Session');
 
   const load = qualificationLoader(db);
   const qualification = await load(session.packVersion, session.nqrCode);
@@ -307,8 +352,11 @@ export async function sessionDetail(db: Db, sessionId: string): Promise<SessionD
   };
 }
 
-export async function pendingRecommendations(db: Db): Promise<PendingRecommendation[]> {
-  const items = (await listSessions(db)).filter((s) => s.status === 'signed');
+export async function pendingRecommendations(
+  db: Db,
+  scope: Scope,
+): Promise<PendingRecommendation[]> {
+  const items = (await listSessions(db, scope)).filter((s) => s.status === 'signed');
   const recs = await recommendationsBySession(
     db,
     items.map((s) => s.id),
@@ -336,30 +384,56 @@ export async function pendingRecommendations(db: Db): Promise<PendingRecommendat
   return out;
 }
 
-export async function dashboardSummary(db: Db): Promise<DashboardSummary> {
+/**
+ * Key numbers in scope: national totals for NCVET; for an agency or an
+ * awarding body, only its own sessions and what hangs off them.
+ */
+export async function dashboardSummary(db: Db, scope: Scope): Promise<DashboardSummary> {
   const one = async (query: Promise<{ n: number }[]>) => Number((await query)[0]?.n ?? 0);
-  const sessionsList = await listSessions(db);
-  const clipIds = (await db.select({ id: evidence.id }).from(evidence)).map((c) => c.id);
+  const national = scope.level === 'aggregates';
+  const sessionsList = await listSessions(db, scope);
+  const sessionIds = sessionsList.map((s) => s.id);
+  // An organisation with no sessions yet has no clips: no query, and no empty IN list.
+  const clipIds =
+    !national && sessionIds.length === 0
+      ? []
+      : (
+          await db
+            .select({ id: evidence.id })
+            .from(evidence)
+            .where(national ? undefined : inArray(evidence.sessionId, sessionIds))
+        ).map((c) => c.id);
   const checks = await checksByEvidence(db, clipIds);
+  const scopedRows = national
+    ? []
+    : await db.select({ workerId: sessions.workerId }).from(sessions).where(sessionsWhere(scope));
+  const certificateCount = national
+    ? await one(db.select({ n: count() }).from(certificates))
+    : sessionIds.length === 0
+      ? 0
+      : await one(
+          db
+            .select({ n: count() })
+            .from(certificates)
+            .innerJoin(recommendations, eq(recommendations.id, certificates.recommendationId))
+            .where(inArray(recommendations.sessionId, sessionIds)),
+        );
   return {
-    workers: await one(db.select({ n: count() }).from(workers)),
+    workers: national
+      ? await one(db.select({ n: count() }).from(workers))
+      : new Set(scopedRows.map((r) => r.workerId)).size,
     sessions: sessionsList.length,
     sessionsSigned: sessionsList.filter((s) => s.status !== 'in_progress').length,
-    certificates: await one(db.select({ n: count() }).from(certificates)),
+    certificates: certificateCount,
     pendingApprovals: sessionsList.filter((s) => s.status === 'signed').length,
-    openFlags: await one(
-      db
-        .select({ n: count() })
-        .from(flags)
-        .leftJoin(flagReviews, eq(flagReviews.flagId, flags.id))
-        .where(isNull(flagReviews.id)),
-    ),
+    openFlags: (await listFlags(db, scope)).filter((f) => !f.review).length,
     evidenceVerified: [...checks.values()].filter((s) => s === 'verified').length,
     evidenceTotal: clipIds.length,
   };
 }
 
-export async function agreementReport(db: Db): Promise<AgreementReport> {
+/** Agreement in scope: re-scores of the scope's sessions, and its assessors. */
+export async function agreementReport(db: Db, scope: Scope): Promise<AgreementReport> {
   const study: StudyRound[] = (
     await db.select().from(studyRounds).orderBy(asc(studyRounds.round))
   ).map((r) => ({
@@ -380,7 +454,8 @@ export async function agreementReport(db: Db): Promise<AgreementReport> {
     .select({ task: rescoreTasks, rescore: rescores, assessorId: sessions.assessorId })
     .from(rescoreTasks)
     .innerJoin(sessions, eq(sessions.id, rescoreTasks.sessionId))
-    .leftJoin(rescores, eq(rescores.taskId, rescoreTasks.id));
+    .leftJoin(rescores, eq(rescores.taskId, rescoreTasks.id))
+    .where(sessionsWhere(scope));
   const sessionIds = [...new Set(tasks.map((t) => t.task.sessionId))];
   const scoreRows = sessionIds.length
     ? await db.select().from(scores).where(inArray(scores.sessionId, sessionIds))
@@ -414,6 +489,7 @@ export async function agreementReport(db: Db): Promise<AgreementReport> {
       await db
         .select({ assessorId: sessions.assessorId, n: count() })
         .from(sessions)
+        .where(sessionsWhere(scope))
         .groupBy(sessions.assessorId)
     ).map((r) => [r.assessorId, Number(r.n)]),
   );
@@ -438,8 +514,12 @@ export async function agreementReport(db: Db): Promise<AgreementReport> {
   return { study, rescore: { tasks: tasks.length, done, matches }, assessors };
 }
 
-/** Blind tasks for a master assessor: never their own sessions, never the original score. */
-export async function rescoreQueue(db: Db, masterId: string): Promise<RescoreTask[]> {
+/**
+ * Blind tasks for a master assessor: the QPs their awarding body owns, never
+ * their own sessions, never the original score.
+ */
+export async function rescoreQueue(db: Db, scope: Scope): Promise<RescoreTask[]> {
+  const masterId = scope.userId;
   const rows = await db
     .select({ task: rescoreTasks, criterion: criteria })
     .from(rescoreTasks)
@@ -449,7 +529,9 @@ export async function rescoreQueue(db: Db, masterId: string): Promise<RescoreTas
       and(eq(criteria.nqrCode, sessions.nqrCode), eq(criteria.id, rescoreTasks.criterionId)),
     )
     .leftJoin(rescores, eq(rescores.taskId, rescoreTasks.id))
-    .where(and(isNull(rescores.id), sql`${sessions.assessorId} <> ${masterId}`))
+    .where(
+      and(isNull(rescores.id), sql`${sessions.assessorId} <> ${masterId}`, sessionsWhere(scope)),
+    )
     .orderBy(asc(rescoreTasks.createdAt));
   return rows.map(({ task, criterion }) => ({
     taskId: task.id,
@@ -488,21 +570,19 @@ export async function verifyCertificate(
 /** Re-verify the stored hash chain of every device that wrote to this session. */
 export async function verifySessionChains(
   db: Db,
+  scope: Scope,
   sessionId: string,
   now: Date,
 ): Promise<ChainVerification> {
-  const [session] = await db
-    .select({ id: sessions.id })
-    .from(sessions)
-    .where(eq(sessions.id, sessionId));
-  if (!session) throw notFound('Session');
+  await sessionInScopeOr404(db, scope, sessionId);
   const results = [];
   for (const deviceId of await sessionDevices(db, sessionId))
     results.push(await verifyDeviceChain(db, deviceId));
   return { sessionId, ok: results.every((r) => r.ok), checkedAt: iso(now), devices: results };
 }
 
-export async function sidhExport(db: Db, now: Date): Promise<SidhExport> {
+/** Certificates for the QPs the awarding body owns. */
+export async function sidhExport(db: Db, scope: Scope, now: Date): Promise<SidhExport> {
   const rows = await db
     .select({
       cert: certificates,
@@ -514,6 +594,7 @@ export async function sidhExport(db: Db, now: Date): Promise<SidhExport> {
     .innerJoin(recommendations, eq(recommendations.id, certificates.recommendationId))
     .innerJoin(sessions, eq(sessions.id, recommendations.sessionId))
     .innerJoin(qualifications, eq(qualifications.nqrCode, certificates.nqrCode))
+    .where(sessionsWhere(scope))
     .orderBy(asc(certificates.issuedAt));
   return {
     exportedAt: iso(now),
