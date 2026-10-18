@@ -1,0 +1,52 @@
+{
+  "name": "@hunarpramaan/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HunarPramaan Android app: the worker interview and the assessor's offline tools. Expo dev build (ADR 002)",
+  "main": "index.ts",
+  "scripts": {
+    "android": "expo run:android",
+    "start": "expo start --dev-client",
+    "expo:prebuild": "expo prebuild --platform android",
+    "model:download": "node scripts/download-model.mjs",
+    "db:generate": "drizzle-kit generate",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@expo-google-fonts/hind": "^0.4.1",
+    "@expo-google-fonts/rajdhani": "^0.4.1",
+    "@hunarpramaan/audit": "workspace:*",
+    "@hunarpramaan/contracts": "workspace:*",
+    "@hunarpramaan/scoring": "workspace:*",
+    "@hunarpramaan/trade-packs": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "expo": "~58.0.14",
+    "expo-crypto": "~58.0.7",
+    "expo-dev-client": "~58.0.14",
+    "expo-font": "~58.0.8",
+    "expo-network": "~58.0.3",
+    "expo-secure-store": "~58.0.2",
+    "expo-speech": "~58.0.3",
+    "expo-sqlite": "~58.0.13",
+    "expo-status-bar": "~58.0.3",
+    "lucide-react-native": "^1.59.0",
+    "react": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-safe-area-context": "~5.10.1",
+    "react-native-svg": "15.16.0",
+    "react-native-vosk": "2.1.7",
+    "uuid": "^14.0.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/react": "~19.3.0",
+    "@types/sql.js": "^1.4.11",
+    "babel-plugin-inline-import": "^3.0.0",
+    "babel-preset-expo": "~58.0.17",
+    "drizzle-kit": "^0.31.11",
+    "fflate": "^0.8.3",
+    "react-dom": "19.3.0",
+    "sql.js": "^1.15.0"
+  }
+}

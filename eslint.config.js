@@ -13,6 +13,12 @@ export default tseslint.config(
       '**/next-env.d.ts',
       '**/test-results/**',
       '**/playwright-report/**',
+      // Expo: generated native folders, Metro cache, the Vosk model and drizzle-kit output.
+      'apps/mobile/android/**',
+      'apps/mobile/ios/**',
+      '**/.expo/**',
+      'apps/mobile/assets/model-*/**',
+      'apps/mobile/drizzle/**',
     ],
   },
   js.configs.recommended,
@@ -27,6 +33,12 @@ export default tseslint.config(
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' },
       ],
     },
+  },
+  {
+    // Metro and Babel load these with require(), so they stay CommonJS.
+    files: ['apps/mobile/babel.config.js', 'apps/mobile/metro.config.js'],
+    languageOptions: { sourceType: 'commonjs' },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
   {
     // Tests index into fixtures they just built.

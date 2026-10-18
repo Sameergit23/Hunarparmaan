@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "customConditions": ["react-native"],
+    "allowJs": true,
+    "types": ["node"]
+  },
+  "include": [
+    "index.ts",
+    "app.config.ts",
+    "drizzle.config.ts",
+    "vitest.config.mts",
+    "src",
+    "drizzle/migrations.js"
+  ],
+  "exclude": ["node_modules", "android", "ios", ".expo"]
+}
