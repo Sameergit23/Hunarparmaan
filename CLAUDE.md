@@ -57,6 +57,7 @@ Every screen uses Wire code, our design language built on the wiring colours Ind
 
 - **Values:** take colours, fonts and sizes from `docs/design/tokens.json` through one theme file per app. Don't hard-code hex values in components.
 - **References:** `docs/design/screens/` has HTML references for landing, interview, match result, worker home and scoring. Match them closely, and build the other screens from the rules in `wire-code.md`.
+- **Workflows:** `docs/design/workflows.md` has every person's journey, from first use to everyday use, and every button with its Hindi and English label and its status. Check it before building a flow; anything marked proposed needs the team's agreement first. Voice sign-in follows ADR 012, which is still proposed: voice is an input, never a key, and the PIN is never spoken.
 - **Colour roles:** yellow `#F2B600` is an AI hint, black is a person's action or decision, green `#2E7D32` is done or verified, red `#C8102E` is errors and the recording dot, and blue `#1F4E9C` appears only in the brand stripe. No other colours, gradients or shadows, and colour never carries meaning alone: pair it with an icon and a word.
 - **AI on screen:** show AI output as a yellow hint beside the person's choice, never as the choice itself. This is rule 1 in the UI.
 - **Type and touch:** Rajdhani for headings and numbers, Hind for text. Touch targets are at least 48px, and worker buttons are 54px tall.

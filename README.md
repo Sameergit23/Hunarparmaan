@@ -144,7 +144,7 @@ Yellow boxes are AI steps, which only suggest. Black boxes are the people who ch
 
 ## UI design
 
-The screens use **Wire code**: the wiring colours Indian electricians already know, each with one job on screen. The rules are in [`docs/design/wire-code.md`](docs/design/wire-code.md), the values in [`tokens.json`](docs/design/tokens.json), and HTML references for five screens in [`docs/design/screens/`](docs/design/screens/).
+The screens use **Wire code**: the wiring colours Indian electricians already know, each with one job on screen. The rules are in [`docs/design/wire-code.md`](docs/design/wire-code.md), the values in [`tokens.json`](docs/design/tokens.json), and HTML references for five screens in [`docs/design/screens/`](docs/design/screens/). Every person's journey, screen by screen and button by button, is in [`docs/design/workflows.md`](docs/design/workflows.md).
 
 | Colour | Hex | Means |
 |---|---|---|
@@ -282,8 +282,8 @@ Hunarparmaan/
 │   └── postgres-init/         # creates the hp_test database
 ├── docs/
 │   ├── problem-statement.md   # the official SIH PS text
-│   ├── design/                # Wire code, tokens, screen references, data model, access control
-│   └── adr/                   # architecture decision records 001 to 011
+│   ├── design/                # Wire code, tokens, screen references, workflows, data model, access control
+│   └── adr/                   # architecture decision records 001 to 012
 └── .github/
     ├── workflows/ci.yml
     └── pull_request_template.md
@@ -726,7 +726,7 @@ The AI service (*planned*) is internal and only the queue worker will call it: `
 
 </details>
 
-**Roles and permissions.** The API checks the role in each JWT before every action, against the `AUTHORITY` and `READ_ACCESS` tables in [`packages/contracts/src/authority.ts`](packages/contracts/src/authority.ts). The full design, with what is built and what is planned, is in [docs/design/access-control.md](docs/design/access-control.md).
+**Roles and permissions.** The API checks the role in each JWT before every action, against the `AUTHORITY` and `READ_ACCESS` tables in [`packages/contracts/src/authority.ts`](packages/contracts/src/authority.ts). The full design, with what is built and what is planned, is in [docs/design/access-control.md](docs/design/access-control.md). How each person gets an account and signs in, including by voice in Hindi, is in [docs/design/workflows.md](docs/design/workflows.md#4-signing-in-the-rules); the voice design is proposed in [ADR 012](docs/adr/012-voice-sign-in.md).
 
 | Role | App | What the role can do | Status |
 |---|---|---|---|
