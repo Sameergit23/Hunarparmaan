@@ -14,3 +14,5 @@ An accepted ADR is not edited later; a new ADR supersedes it.
 | [007](007-detector-licence.md) | Safety-gear detector licence | Accepted |
 | [008](008-database-schema-and-tooling.md) | Database schema, append-only triggers and test databases | Accepted |
 | [009](009-web-app.md) | Web app: Next.js with server-side API calls and Wire code | Accepted |
+| [010](010-organisations-admin-roles-access-control.md) | Organisations, admin roles and access control | Accepted (design) |
+| [011](011-personal-data-outside-the-hash-chain.md) | Personal data outside the hash chain | Accepted |
