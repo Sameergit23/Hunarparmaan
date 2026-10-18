@@ -282,7 +282,7 @@ Hunarparmaan/
 │   └── postgres-init/         # creates the hp_test database
 ├── docs/
 │   ├── problem-statement.md   # the official SIH PS text
-│   ├── design/                # Wire code, tokens, screen references, data model, access control
+│   ├── design/                # Wire code, tokens, screen references, data model, access control, admin panel
 │   └── adr/                   # architecture decision records 001 to 011
 └── .github/
     ├── workflows/ci.yml
@@ -895,6 +895,8 @@ gantt
 | FR-18 | A second regional language through Bhashini | M1 | Could |
 | — | Real Aadhaar eKYC and SIDH integration, trades beyond electrician, iOS | — | Won't (this round) |
 
+The admin panel adds FR-19 to FR-39, in [`docs/design/admin-panel/requirements.md`](docs/design/admin-panel/requirements.md) (draft).
+
 </details>
 
 <details>
@@ -911,6 +913,8 @@ gantt
 | NFR-07 | Explainability | Every AI output shows its reason and confidence; people can override it, and overrides are logged |
 | NFR-08 | Mapping quality | Top-1 QP accuracy ≥ 80%; routing agreement with the instructor ≥ 85% |
 | NFR-09 | Languages | Every screen in Hindi and English |
+
+The admin panel adds NFR-10 to NFR-16, in the same file.
 
 </details>
 
