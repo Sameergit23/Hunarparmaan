@@ -4,7 +4,7 @@
   "description": "Offline-first, AI-assisted RPL assessment tool (SIH 2026)",
   "packageManager": "pnpm@10.28.0",
   "engines": {
-    "node": "^22.12.0 || >=24.0.0"
+    "node": "^22.12.0 || ^24.0.0"
   },
   "type": "module",
   "scripts": {
@@ -15,6 +15,7 @@
     "typecheck": "turbo run typecheck",
     "pack:build": "pnpm --filter @hunarpramaan/trade-packs run pack:build",
     "e2e:web": "pnpm --filter @hunarpramaan/web run e2e",
+    "e2e:install": "pnpm --filter @hunarpramaan/web run e2e:install",
     "dev": "turbo run dev",
     "db:migrate": "pnpm --filter @hunarpramaan/api run db:migrate",
     "db:seed": "pnpm --filter @hunarpramaan/api run db:seed",

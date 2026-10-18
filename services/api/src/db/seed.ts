@@ -6,8 +6,6 @@
  * phone numbers are made up (rule 8). The study numbers are placeholders and
  * are marked `demo` until the real rater study runs.
  */
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4, v7 as uuidv7 } from 'uuid';
 import type {
@@ -30,10 +28,11 @@ import { recordRescore } from '../domain/rescores';
 import { pushEvents } from '../domain/sync';
 import { rescoreQueue } from '../domain/views';
 import { createRuntime } from '../runtime';
+import { exitIfDataDirInUse } from './pglite-lock';
 import { devices, sessions, studyRounds, users } from './schema';
 
 /** Demo PIN for every seeded account. */
-export const DEMO_PIN = '1234';
+const DEMO_PIN = '1234';
 
 const DEMO_USERS: { key: string; role: Role; name: string; phone: string }[] = [
   { key: 'mobiliser', role: 'mobiliser', name: 'Sunita Verma', phone: '9000000001' },
@@ -165,7 +164,7 @@ function mulberry32(seed: number) {
   };
 }
 
-export async function seed(): Promise<void> {
+async function seed(): Promise<void> {
   loadEnvFiles();
   const config = loadConfig();
   const runtime = await createRuntime(config);
@@ -479,8 +478,5 @@ export async function seed(): Promise<void> {
   await runtime.close();
 }
 
-// Run when started as a script (pnpm db:seed). pathToFileURL keeps this working on
-// Windows, where process.argv[1] is a C:\ path and import.meta.url is file:///C:/...
-if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-  await seed();
-}
+// A script, not a module: nothing imports it, so it runs the same on every OS and path.
+await exitIfDataDirInUse(seed);

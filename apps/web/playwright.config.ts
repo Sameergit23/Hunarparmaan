@@ -1,9 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * pnpm e2e:web — needs the API (seeded with pnpm db:seed) and the web app running:
- *   pnpm --filter @hunarpramaan/api dev   and   pnpm --filter @hunarpramaan/web dev
- * PLAYWRIGHT_CHROMIUM_PATH points at a pre-installed Chromium, if you have one.
+ * pnpm e2e:web needs the API (seeded with pnpm db:seed) and the web app running
+ * (pnpm dev in another terminal). Run pnpm e2e:install once to download Chromium,
+ * or point PLAYWRIGHT_CHROMIUM_PATH at a Chromium you already have.
  */
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 

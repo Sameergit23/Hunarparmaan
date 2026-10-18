@@ -2,6 +2,7 @@ import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import type { PGlite } from '@electric-sql/pglite';
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
+import { lockDataDir } from './pglite-lock';
 import * as schema from './schema';
 
 export type Schema = typeof schema;
@@ -28,8 +29,15 @@ export async function openDatabase(url: string): Promise<Database> {
     const { PGlite } = await import('@electric-sql/pglite');
     const target = url.slice('pglite:'.length);
     if (target === '//memory' || target === '') return wrapPglite(new PGlite());
-    mkdirSync(path.dirname(path.resolve(target)), { recursive: true });
-    return wrapPglite(new PGlite(path.resolve(target)));
+    const dir = path.resolve(target);
+    mkdirSync(path.dirname(dir), { recursive: true });
+    const release = lockDataDir(dir);
+    try {
+      return await wrapPglite(new PGlite(dir), release);
+    } catch (error) {
+      release();
+      throw error;
+    }
   }
 
   const { Pool } = await import('pg');
@@ -46,7 +54,7 @@ export async function openDatabase(url: string): Promise<Database> {
 }
 
 /** Wrap an existing PGlite instance, for example one loaded from a test snapshot. */
-export async function wrapPglite(client: PGlite): Promise<Database> {
+export async function wrapPglite(client: PGlite, release = () => {}): Promise<Database> {
   const { drizzle } = await import('drizzle-orm/pglite');
   const { migrate } = await import('drizzle-orm/pglite/migrator');
   const db = drizzle(client, { schema });
@@ -54,6 +62,9 @@ export async function wrapPglite(client: PGlite): Promise<Database> {
     db: db as unknown as Db,
     driver: 'pglite',
     migrate: () => migrate(db, { migrationsFolder: MIGRATIONS_DIR }),
-    close: () => client.close(),
+    close: async () => {
+      await client.close();
+      release();
+    },
   };
 }

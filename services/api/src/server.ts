@@ -1,11 +1,12 @@
 /** The API process: pnpm dev (watch) or pnpm start (built). */
 import { createApp } from './app';
 import { loadConfig, loadEnvFiles } from './config';
+import { exitIfDataDirInUse } from './db/pglite-lock';
 import { createRuntime } from './runtime';
 
 loadEnvFiles();
 const config = loadConfig();
-const runtime = await createRuntime(config);
+const runtime = await exitIfDataDirInUse(() => createRuntime(config));
 if (runtime.database.driver === 'pglite') await runtime.database.migrate();
 
 const app = createApp({ ...runtime.deps, tokens: runtime.tokens, logger: runtime.logger });
