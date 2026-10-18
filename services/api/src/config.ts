@@ -31,7 +31,7 @@ const Env = z.object({
   CLOCK_DRIFT_LIMIT_S: z.coerce.number().positive().default(300),
   /** Public base URL of this API; phones upload clips here when there is no S3 store. */
   PUBLIC_API_URL: z.string().url().default('http://localhost:4000'),
-  /** Public base URL of the web app, printed on certificates as the QR target. */
+  /** Planned (S4): the web app's base URL, printed on certificates as the QR target. Not used yet. */
   PUBLIC_WEB_URL: z.string().url().default('http://localhost:3000'),
 });
 
