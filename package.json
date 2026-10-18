@@ -17,7 +17,8 @@
     "e2e:web": "pnpm --filter @hunarpramaan/web run e2e",
     "dev": "turbo run dev",
     "db:migrate": "pnpm --filter @hunarpramaan/api run db:migrate",
-    "db:seed": "pnpm --filter @hunarpramaan/api run db:seed"
+    "db:seed": "pnpm --filter @hunarpramaan/api run db:seed",
+    "db:reset": "pnpm --filter @hunarpramaan/api run db:reset"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

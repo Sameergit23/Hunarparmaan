@@ -6,6 +6,8 @@
  * phone numbers are made up (rule 8). The study numbers are placeholders and
  * are marked `demo` until the real rater study runs.
  */
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4, v7 as uuidv7 } from 'uuid';
 import type {
@@ -477,6 +479,8 @@ export async function seed(): Promise<void> {
   await runtime.close();
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run when started as a script (pnpm db:seed). pathToFileURL keeps this working on
+// Windows, where process.argv[1] is a C:\ path and import.meta.url is file:///C:/...
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   await seed();
 }
