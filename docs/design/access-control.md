@@ -3,7 +3,7 @@
 How HunarPramaan decides who may see and do what. The decisions are in [ADR 006](../adr/006-ai-output-is-a-suggestion.md) (AI only suggests), [ADR 010](../adr/010-organisations-admin-roles-access-control.md) (organisations and admin roles) and [ADR 011](../adr/011-personal-data-outside-the-hash-chain.md) (personal data). The code is the source of truth: `AUTHORITY`, `READ_ACCESS`, `ROLES_BY_ORG_KIND`, `GRANTABLE_ROLES` and `SCOPE_BY_ROLE` in [`packages/contracts/src/authority.ts`](../../packages/contracts/src/authority.ts), the roles and organisation kinds in [`roles.ts`](../../packages/contracts/src/roles.ts), and the admin error codes in [`api.ts`](../../packages/contracts/src/api.ts).
 
 > [!NOTE]
-> **Built today:** the seven working roles, with every write checked against `AUTHORITY` and every read against `READ_ACCESS`. In contracts: the four admin roles, the five organisation kinds, admin actions with their reason codes, grant rules, scope levels, the organisation id in the session user and the token, and admin error codes. In the API: real organisations (`organisations`, `qp_owners` and `users.organisation_id`; migration 0008 makes the pilot's five and places existing accounts by role), the bootstrap command for the first platform admin, admin accounts, and staff invites into an organisation whose kind holds the role, recorded in the hash-chained admin log. Account and phone status, checked on every request and on sync (below). The admin API: the admin read scopes and read models in each admin's scope, and deactivate, reactivate, unlock, PIN reset and revoke, each with a reason code and the admin's PIN again, logged in the same transaction. **Planned (ADR 010):** scoping of the case-data read models, and the admin screens ([docs/design/admin-panel](admin-panel/)). Rows marked *contracts* exist only as contract tables; rows marked *planned* don't exist yet.
+> **Built today:** the seven working roles, with every write checked against `AUTHORITY` and every read against `READ_ACCESS`. In contracts: the four admin roles, the five organisation kinds, admin actions with their reason codes, grant rules, scope levels, the organisation id in the session user and the token, and admin error codes. In the API: real organisations (`organisations`, `qp_owners` and `users.organisation_id`; migration 0008 makes the pilot's five and places existing accounts by role), the bootstrap command for the first platform admin, admin accounts, and staff invites into an organisation whose kind holds the role, recorded in the hash-chained admin log. Account and phone status, checked on every request and on sync (below). The admin API: the admin read scopes and read models in each admin's scope, and deactivate, reactivate, unlock, PIN reset and revoke, each with a reason code and the admin's PIN again, logged in the same transaction. The admin screens at `/admin` (People, Devices, Audit log) and NCVET's `/governance`. **Planned (ADR 010):** scoping of the case-data read models ([docs/design/admin-panel](admin-panel/)). Rows marked *contracts* exist only as contract tables; rows marked *planned* don't exist yet.
 
 ## The one rule
 
@@ -71,9 +71,9 @@ Today (Sprint 0) every agency and awarding-body account sees every session; scop
 
 | Screen | For | What it does | When |
 |---|---|---|---|
-| People | All four admin roles | List accounts with masked phone, role, status and last sync; deactivate (reason required), reactivate, unlock; invite with a one-time code | S3 (invite S4) |
-| Devices | All four admin roles | Each phone's owner, last sync and clips waiting; revoke as lost, retired or replaced | S3 |
-| Audit log | All four admin roles; NCVET sees governance entries only | Every admin action, with a "Verify chain" button | S3 |
+| People | All four admin roles | List accounts with masked phone, role, status and last sync; deactivate, reactivate, unlock and reset a PIN, each with a reason and the PIN; invite with a one-time code | **Built** |
+| Devices | All four admin roles | Each phone's owner, last sync and clips waiting; mark lost (with the sessions to re-assess), retire or replace | **Built** |
+| Audit log | All four admin roles; NCVET sees counts by week, organisation kind and action at `/governance` | Every admin action, with a "Verify chain" button | **Built** |
 | Trade packs | platform_admin uploads, ab_admin releases | Two people per release | S4 |
 | Accreditations | ab_admin | Grant and revoke per assessor and QP; outlier statistics as a yellow hint | S5 if time |
 | Venues | tp_admin | Name, place and geofence radius | S5 if time |
@@ -117,8 +117,8 @@ Phones sync days later, so admin actions must not destroy offline work. **Built*
 | Before G1 (25 Oct) | **Built** in contracts 1.0.0-draft.5: admin roles, organisation kinds, the organisation id in the session user and the token, admin actions, grant rules, scope levels, error codes, and the unit half of IT-04. Still to do: confirm with CSDCI where master assessors belong. |
 | Sprint 1 | **Built:** organisations, fixed accounts, the bootstrap command, and the seed with two agencies, a training partner, CSDCI and NCVET, with two admins each. Still to do: personal data outside the hash chain (ADR 011). |
 | Sprint 2 | **Built:** account status and token version checked on every request; draining and lost phones on sync (IT-09). Still to do: scoping on every endpoint (IT-05), SIDH exports recorded. |
-| Sprint 3–4 | People, Devices and Audit log screens. Sign-in limits and lockout. Device revocation with draining. Invites. Trade-pack upload and release. Venues and accreditation, seeded. |
-| Sprint 5 | Accreditation and venue screens if time; read-only settings; NCVET governance log. |
+| Sprint 3–4 | **Built:** People, Devices and Audit log screens, sign-in limits and lockout, device revocation with draining, invites, PIN resets. Still to do: trade-pack upload and release; venues and accreditation, seeded. |
+| Sprint 5 | Accreditation and venue screens if time; read-only settings. **Built:** NCVET governance view. |
 | After SIH | Agency empanelment, batches, editable settings, data-rights requests and erasure, break-glass access. |
 
 ## To confirm

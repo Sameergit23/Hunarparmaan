@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { getMessages, type Lang, type Messages } from '@/lib/i18n';
-import { OFFICE_ROLES, lastSignIn, requireUser } from '@/lib/session';
+import { OFFICE_ROLES, homeFor, isAdminRole, lastSignIn, requireUser } from '@/lib/session';
+import { NotYourPage } from './admin-shell';
 import { Icon } from './icon';
 import { NAV_BY_ROLE, OfficeHeader, type NavKey } from './office-header';
 
@@ -42,6 +43,8 @@ export async function OfficeShell({
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-[18px] py-6">
         {allowed ? (
           children({ m, lang, user })
+        ) : isAdminRole(user.role) ? (
+          <NotYourPage m={m} home={homeFor(user.role)} />
         ) : (
           <p
             role="alert"

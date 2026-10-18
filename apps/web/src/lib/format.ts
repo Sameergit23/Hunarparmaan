@@ -28,6 +28,21 @@ export function date(iso: string, lang: Lang): string {
   }).format(new Date(iso));
 }
 
+/** "in 2 days", "3 hours ago": the nearest whole unit, in the viewer's language. */
+export function fromNow(iso: string, lang: Lang, now = Date.now()): string {
+  const seconds = (new Date(iso).getTime() - now) / 1000;
+  const rtf = new Intl.RelativeTimeFormat(locale(lang), { numeric: 'auto' });
+  const units: [Intl.RelativeTimeFormatUnit, number][] = [
+    ['day', 86_400],
+    ['hour', 3_600],
+    ['minute', 60],
+  ];
+  for (const [unit, size] of units) {
+    if (Math.abs(seconds) >= size) return rtf.format(Math.round(seconds / size), unit);
+  }
+  return rtf.format(Math.round(seconds / 60), 'minute');
+}
+
 export function dateTime(iso: string, lang: Lang): string {
   return new Intl.DateTimeFormat(locale(lang), {
     day: 'numeric',

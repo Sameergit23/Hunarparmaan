@@ -348,14 +348,14 @@ Every account belongs to one organisation ([ADR 010](docs/adr/010-organisations-
 |---|---|---|---|
 | Assessment agency | Indore Assessment Agency | `9000000006` | Dashboard, sessions, flags |
 | Awarding body | CSDCI | `9000000007` | Dashboard, approvals, sessions |
-| NCVET | NCVET | `9000000008` | Dashboard (aggregates only) |
+| NCVET | NCVET | `9000000008` | Dashboard (aggregates only) and Governance (admin actions counted, no names) |
 | Mobiliser | Indore RPL Centre | `9000000001` | Phone role: the API accepts it, and the web sign-in sends it to the phone app |
 | Assessors Anil and Rekha · Vikram | Indore Assessment Agency · Bhopal Skills Assessment | `9000000002`, `9000000003` · `9000000004` | Phone roles |
 | Master assessor | CSDCI | `9000000005` | Phone role |
 | Second agency's user | Bhopal Skills Assessment | `9000000020` | Dashboard, sessions, flags |
 | Mohan Lal (assessor, deactivated and draining) · Nisha Rao (agency, locked for an hour after seeding) | Indore Assessment Agency | `9000000021` · `9000000022` | Statuses for the admin panel, with Rekha's phone reported lost |
-| Platform admins | HunarPramaan | `9000000009`, `9000000014` | Invite staff through the API (`POST /v1/admin/invites`); admin screens come in Sprints 3 and 4 |
-| Training-partner admins | Indore RPL Centre | `9000000010`, `9000000015` | The same |
+| Platform admins | HunarPramaan | `9000000009`, `9000000014` | The admin panel at `/admin`: People (every organisation; changes only admin and NCVET accounts), Devices and Audit log |
+| Training-partner admins | Indore RPL Centre | `9000000010`, `9000000015` | The admin panel for their own organisation: People, Devices, Audit log |
 | Agency admins | Indore Assessment Agency · Bhopal Skills Assessment | `9000000011`, `9000000016` · `9000000018`, `9000000019` | The same |
 | Awarding-body admins | CSDCI | `9000000012`, `9000000017` | The same |
 | A pending agency invite | Indore Assessment Agency | `9000000013` | Not an account yet: on the sign-in page, open "Have an invite code? Set up your account", then use the SMS code, the invite code `24681357` (demo mode only) and a new 6-digit PIN |
@@ -763,8 +763,8 @@ The AI service (*planned*) is internal and only the queue worker will call it: `
 | Agency | Web | Monitor sessions and assessors; investigate flags; see agreement and outlier assessors | Built |
 | Awarding body (SSC) | Web | Approve recommendations and issue certificates | Built |
 | NCVET | Web | See aggregates only | Built |
-| Platform admin | Web admin | Create and suspend organisations; invite each one's first admin; upload trade packs | Role and actions in contracts; accounts in S1, screens in S3–S4 |
-| Agency, training-partner and awarding-body admins | Web admin | Invite, deactivate and unlock their own staff; revoke lost phones; the awarding-body admin also releases trade packs and accredits assessors | Roles and actions in contracts; accounts in S1, screens in S3–S5 |
+| Platform admin | Web admin | Invite each organisation's first admin and NCVET's accounts; see every organisation's people, phones and admin log; later, create and suspend organisations and upload trade packs | People, Devices and Audit log built; organisation and trade-pack screens planned |
+| Agency, training-partner and awarding-body admins | Web admin | Invite, deactivate, reactivate and unlock their own staff, reset a PIN, revoke lost phones; later, the awarding-body admin releases trade packs and accredits assessors | People, Devices and Audit log built; trade packs and accreditation planned |
 
 **Admins never decide.** Admin roles manage people, organisations and phones. They never score, sign, approve, review a flag or edit a record, and nobody who decides can administer ([ADR 010](docs/adr/010-organisations-admin-roles-access-control.md)). Every account belongs to one organisation, and from Sprint 2 each sees only its own organisation's records. Personal data such as names and phone numbers moves out of the hash chain early in Sprint 1, so it can be erased without breaking the chain ([ADR 011](docs/adr/011-personal-data-outside-the-hash-chain.md)).
 
@@ -1057,6 +1057,8 @@ Rotate sleep so that nobody codes exhausted.
 - **E2E-02 Airplane mode:** every worker and assessor step works with no network.
 - **E2E-03 Sync time:** a completed session syncs within 2 minutes on 4G.
 - **E2E-04 Crash safety:** killing the app mid-recording loses no saved data.
+- **E2E-06 Admin flow:** an agency admin signs in, invites an assessor, who accepts and signs in; the admin deactivates them, and the audit log shows both actions and verifies (`apps/web/e2e/web.spec.ts`).
+- **E2E-07 Admin pages on a phone:** People, Devices, Audit log and their detail pages have no sideways scroll at phone width, in English and Hindi (`apps/web/e2e/web.spec.ts`).
 - **IT-01 Idempotency:** pushing the same batch twice stores it once.
 - **IT-02 Tampering:** a clip whose bytes don't match its captured hash is rejected and flagged. Editing one audit row makes verification fail at that row.
 - **IT-03 Authority:**

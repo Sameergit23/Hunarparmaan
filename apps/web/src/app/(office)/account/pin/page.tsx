@@ -1,13 +1,19 @@
+import { AdminShell } from '@/components/admin-shell';
 import { OfficeShell } from '@/components/office-shell';
 import { Card, PageTitle } from '@/components/wire';
+import { isAdminRole, requireUser } from '@/lib/session';
 import { PinForm } from './pin-form';
 
 export const metadata = { title: 'Change PIN' };
 
-/** Every office role may change their own PIN; it isn't in the nav, so no item is highlighted. */
-export default function ChangePinPage() {
+/**
+ * Every office and admin role may change their own PIN, in their own frame;
+ * it isn't in the nav, so no item is highlighted.
+ */
+export default async function ChangePinPage() {
+  const Shell = isAdminRole((await requireUser()).role) ? AdminShell : OfficeShell;
   return (
-    <OfficeShell path="/account/pin">
+    <Shell path="/account/pin">
       {({ m }) => (
         <>
           <PageTitle title={m.account.title} body={m.account.body} />
@@ -16,6 +22,6 @@ export default function ChangePinPage() {
           </Card>
         </>
       )}
-    </OfficeShell>
+    </Shell>
   );
 }

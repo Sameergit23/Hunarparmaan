@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { AdminRole, SessionUser, type LoginResponse } from '@hunarpramaan/contracts';
+import { AdminRole, SessionUser, type LoginResponse, type Role } from '@hunarpramaan/contracts';
 
 export const TOKEN_COOKIE = 'hp_token';
 /** When the sign-in before this one happened, for "Last sign-in" in the header. */
@@ -8,11 +8,21 @@ export const LAST_SIGN_IN_COOKIE = 'hp_last';
 /** The 10-minute ticket between the SMS code and the invite code. Never seen by the browser's scripts. */
 export const TICKET_COOKIE = 'hp_ticket';
 
-/** Roles that use this web app; field roles use the phone app. */
+/** Roles that use the office screens; field roles use the phone app. */
 export const OFFICE_ROLES = new Set(['agency', 'awarding_body', 'ncvet']);
 
-/** Admin roles have accounts, but their screens come in Sprints 3 and 4 (ADR 010). */
-export const isAdminRole = (role: string) => AdminRole.safeParse(role).success;
+/** Roles that use the admin panel under /admin (ADR 010), and nothing else. */
+export const ADMIN_ROLES = new Set<string>(AdminRole.options);
+export const isAdminRole = (role: string) => ADMIN_ROLES.has(role);
+
+/**
+ * Where each role lands after signing in: the role decides, never a button.
+ * Null for phone roles, which sign in on the phone app.
+ */
+export function homeFor(role: Role): string | null {
+  if (ADMIN_ROLES.has(role)) return '/admin/people';
+  return OFFICE_ROLES.has(role) ? '/dashboard' : null;
+}
 
 /**
  * Keep a sign-in: the token in an httpOnly cookie, as ADR 009 says, so the

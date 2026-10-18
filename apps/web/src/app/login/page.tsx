@@ -3,13 +3,15 @@ import { redirect } from 'next/navigation';
 import { LanguageSwitch } from '@/components/language-switch';
 import { BrandStripe, LogoTile } from '@/components/wire';
 import { getMessages } from '@/lib/i18n';
-import { currentUser } from '@/lib/session';
+import { currentUser, homeFor } from '@/lib/session';
 import { LoginForm } from './login-form';
 
 export const metadata = { title: 'Sign in' };
 
 export default async function LoginPage() {
-  if (await currentUser()) redirect('/dashboard');
+  const user = await currentUser();
+  const home = user && homeFor(user.role);
+  if (home) redirect(home);
   const { m, lang } = await getMessages();
   return (
     <>
@@ -30,9 +32,14 @@ export default async function LoginPage() {
           <p className="m-0 text-[16px] text-ink2">{m.login.body}</p>
         </div>
         <LoginForm m={m} />
-        <Link href="/invite" className="self-start text-[16px] font-semibold">
-          {m.login.inviteLink}
-        </Link>
+        <div className="flex flex-col gap-2">
+          <Link href="/invite" className="self-start text-[16px] font-semibold">
+            {m.login.inviteLink}
+          </Link>
+          <Link href="/reset-pin" className="self-start text-[16px] font-semibold">
+            {m.resetPin.link}
+          </Link>
+        </div>
       </main>
     </>
   );

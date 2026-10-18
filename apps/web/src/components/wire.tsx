@@ -119,10 +119,13 @@ export type ChipTone = 'done' | 'neutral' | 'progress' | 'error' | 'ai';
 export function Chip({
   tone,
   icon,
+  iconClassName,
   children,
 }: {
   tone: ChipTone;
   icon?: LucideIcon;
+  /** Only for an error state on a neutral chip, such as a lost phone's red icon. */
+  iconClassName?: string;
   children: ReactNode;
 }) {
   const tones: Record<ChipTone, string> = {
@@ -139,7 +142,7 @@ export function Chip({
         tones[tone],
       )}
     >
-      {icon && <Icon as={icon} size={15} strokeWidth={2.6} />}
+      {icon && <Icon as={icon} size={15} strokeWidth={2.6} className={iconClassName} />}
       {children}
     </span>
   );

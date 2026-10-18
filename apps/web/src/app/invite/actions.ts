@@ -6,7 +6,7 @@ import { LoginResponse, OtpResponse, OtpVerifyResponse, Phone } from '@hunarpram
 import { API_URL, ApiRequestError, apiPost } from '@/lib/api';
 import { getMessages } from '@/lib/i18n';
 import { signInErrorText } from '@/lib/messages';
-import { OFFICE_ROLES, TICKET_COOKIE, keepSignIn } from '@/lib/session';
+import { TICKET_COOKIE, homeFor, keepSignIn } from '@/lib/session';
 
 export interface InviteState {
   /** `ready`: a phone-app account was set up here; it signs in on the phone. */
@@ -113,9 +113,10 @@ async function accept(prev: InviteState, formData: FormData): Promise<InviteStat
     return { ...prev, error: m.login.unreachable };
   }
   jar.delete({ name: TICKET_COOKIE, path: TICKET_COOKIE_OPTIONS.path });
-  if (!OFFICE_ROLES.has(login.user.role)) return { step: 'ready', phone: prev.phone };
+  const home = homeFor(login.user.role);
+  if (!home) return { step: 'ready', phone: prev.phone };
   await keepSignIn(login);
-  redirect('/dashboard');
+  redirect(home);
 }
 
 /** One action for every step: phone, SMS code, then the invite code and a new PIN. */

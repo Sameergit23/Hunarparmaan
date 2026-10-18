@@ -68,6 +68,35 @@ export function blockerText(blocker: Blocker, m: Messages, lang: Lang): string {
   }
 }
 
+/** Admin error codes the panel words itself (TRD section 5.2). */
+const ADMIN_ERRORS = [
+  'step_up_required',
+  'self_action',
+  'last_admin',
+  'role_not_grantable',
+  'role_not_in_org',
+  'not_issuer',
+  'phone_in_use',
+  'organisation_suspended',
+  'rate_limited',
+  'not_found',
+  'conflict',
+] as const;
+
+/**
+ * Words an admin write's error from its code (rule 7). `phone_in_use` is
+ * neutral here: it never says which organisation holds the number.
+ */
+export function adminErrorText(error: SignInError, m: Messages, lang: Lang): string {
+  if (error.code === 'account_locked') {
+    const until = error.details.find((d) => d.startsWith('until:'))?.slice('until:'.length);
+    return fill(m.admin.errors.account_locked, { time: until ? dateTime(until, lang) : '' });
+  }
+  const code = ADMIN_ERRORS.find((c) => c === error.code);
+  if (code) return m.admin.errors[code];
+  return error.status === 400 ? m.admin.errors.invalid : m.admin.errors.unreachable;
+}
+
 /** The parts of an API error that sign-in pages word. */
 export interface SignInError {
   status: number;

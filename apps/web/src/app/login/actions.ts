@@ -5,7 +5,7 @@ import { LoginResponse, OtpResponse, Phone } from '@hunarpramaan/contracts';
 import { API_URL, ApiRequestError, apiPost } from '@/lib/api';
 import { getMessages } from '@/lib/i18n';
 import { signInErrorText } from '@/lib/messages';
-import { OFFICE_ROLES, isAdminRole, keepSignIn } from '@/lib/session';
+import { homeFor, keepSignIn } from '@/lib/session';
 
 export interface LoginState {
   step: 'phone' | 'code';
@@ -66,13 +66,11 @@ async function signIn(prev: LoginState, formData: FormData): Promise<LoginState>
     logUnreachable(error);
     return { ...prev, error: m.login.unreachable };
   }
-  if (!OFFICE_ROLES.has(login.user.role)) {
-    const error = isAdminRole(login.user.role) ? m.login.adminLater : m.login.fieldOnly;
-    return { step: 'phone', phone: prev.phone, error };
-  }
+  const home = homeFor(login.user.role);
+  if (!home) return { step: 'phone', phone: prev.phone, error: m.login.fieldOnly };
 
   await keepSignIn(login);
-  redirect('/dashboard');
+  redirect(home);
 }
 
 /** One action for both steps: send the code, then sign in with code and PIN. */

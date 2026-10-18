@@ -3,14 +3,16 @@ import { redirect } from 'next/navigation';
 import { LanguageSwitch } from '@/components/language-switch';
 import { BrandStripe, LogoTile } from '@/components/wire';
 import { getMessages } from '@/lib/i18n';
-import { currentUser } from '@/lib/session';
+import { currentUser, homeFor } from '@/lib/session';
 import { InviteForm } from './invite-form';
 
 export const metadata = { title: 'Set up your account' };
 
 /** Accepting a staff invite (ADR 010): SMS code, then the invite code and a new PIN. */
 export default async function InvitePage() {
-  if (await currentUser()) redirect('/dashboard');
+  const user = await currentUser();
+  const home = user && homeFor(user.role);
+  if (home) redirect(home);
   const { m, lang } = await getMessages();
   return (
     <>
