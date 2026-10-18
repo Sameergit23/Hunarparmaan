@@ -21,3 +21,7 @@ their SHA-256 hash.
 - A maintained, permissively licensed store for local and demo use.
 - Production can switch to any S3 store, including MeghRaj/NIC object storage, through
   configuration only.
+- Sprint 0 uses one pre-signed PUT per clip (`services/api/src/storage/object-store.ts`).
+  Multipart, resumable uploads come with the phone app's sync work (FR-10). Without an S3
+  store, local runs upload through the API (`PUT /v1/evidence/:id/content`) and keep clips
+  on disk.

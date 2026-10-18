@@ -211,7 +211,7 @@ sequenceDiagram
     P->>A: POST /v1/sync/push (events with hashes)
     A->>D: verify the device chain, insert events (idempotent by id)
     A-->>P: acks, server time, upload URLs
-    P->>O: upload clips in parts (resumable)
+    P->>O: upload clips (one PUT today, resumable parts planned)
     P->>A: POST /v1/evidence/:id/complete
     A->>W: queue jobs (re-hash, map, vision)
     W->>O: read the clip, re-hash, compare
@@ -338,7 +338,7 @@ The same commands work in PowerShell, Command Prompt, Git Bash and macOS or Linu
 - runs [PGlite](https://pglite.dev), a real PostgreSQL inside Node, with its data in `services/api/.data/pglite`;
 - keeps clips in `services/api/.data/objects`;
 - runs background jobs in its own process, without Redis;
-- signs logins with a development-only key, which it accepts only on localhost.
+- signs logins with a development-only key. It does this only in development with `PUBLIC_API_URL` on localhost; set `JWT_SECRET` as soon as you change `PUBLIC_API_URL` to a LAN address for a phone.
 
 Open `http://localhost:3000` and sign in with a demo account. The one-time code is shown on screen (OTP is mocked) and the PIN is `1234`.
 
@@ -347,6 +347,7 @@ Open `http://localhost:3000` and sign in with a demo account. The one-time code 
 | Assessment agency | `9000000006` | Dashboard, sessions, flags |
 | Awarding body | `9000000007` | Dashboard, approvals, sessions |
 | NCVET | `9000000008` | Dashboard (aggregates only) |
+| Mobiliser, assessors (3), master assessor | `9000000001`, `9000000002` to `9000000004`, `9000000005` | Phone roles: the API accepts them, and the web sign-in sends them to the phone app |
 
 The names, numbers and study figures in the demo are made up; the study rounds are marked as demo numbers.
 
@@ -356,11 +357,11 @@ The names, numbers and study figures in the demo are made up; the study rounds a
 pnpm check        # lint, typecheck and test, the same checks as CI
 ```
 
-Run it before every push. The first run takes about a minute, because the API tests build a migrated database once and cache it in `node_modules/.cache`. CI also runs `pnpm build`, the API tests on PostgreSQL, the browser tests, a secret scan (gitleaks) and `pnpm audit --audit-level high`; the sections below show how to run them locally.
+Run it before every push. The first run takes about a minute, because the API tests build a migrated database once and cache it in `node_modules/.cache`. CI runs them on Linux (Node 22 and 24) and Windows (Node 24), and also runs `pnpm build`, the API tests on PostgreSQL, the browser tests, a secret scan (gitleaks) and `pnpm audit --audit-level high`; the sections below show how to run those locally. In VS Code, accept the recommended extensions (ESLint, Prettier, EditorConfig, Tailwind, Vitest, Playwright) so problems show while you type.
 
 ### End-to-end tests in a browser
 
-The Playwright tests sign in and approve real recommendations, so start them on fresh demo data.
+The Playwright tests sign in and approve a real recommendation, so start them on fresh demo data; on a second run, the 2 approval tests are skipped.
 
 ```bash
 pnpm e2e:install                 # once: downloads Chromium for Playwright
@@ -394,7 +395,7 @@ This runs the same services as production: PostgreSQL 17 with pgvector, Redis fo
 
 `docker compose -f infra/docker-compose.yml down` stops the services, and `down -v` also deletes their data. If PostgreSQL, Redis or another program already uses port 5432, 6379 or 8333 on your computer, stop it, or move the Docker port: for example `HP_POSTGRES_PORT=5433` before `docker compose` (PowerShell: `$env:HP_POSTGRES_PORT=5433`), with `localhost:5433` in `DATABASE_URL`. `HP_REDIS_PORT` and `HP_S3_PORT` work the same way.
 
-**API tests on PostgreSQL.** The Docker setup also creates an empty `hp_test` database. The tests delete everything in it, and refuse any database without "test" in its name.
+**API tests on PostgreSQL.** The Docker setup also creates an empty `hp_test` database when it first creates its data volume. With a volume from before, create it once: `docker compose -f infra/docker-compose.yml exec postgres createdb -U hp hp_test`. The tests delete everything in it, and refuse any database without "test" in its name.
 
 ```bash
 # macOS, Linux, Git Bash
@@ -434,11 +435,13 @@ A setting typed in the shell, such as `PORT=4001 pnpm dev`, reaches the apps too
 | `DATABASE_URL` | `postgres://hp:hp@localhost:5432/hunarpramaan`; default `pglite:./.data/pglite` | api |
 | `REDIS_URL` | `redis://localhost:6379`; without it, jobs run in the API process | api |
 | `S3_ENDPOINT` · `S3_BUCKET` · `S3_ACCESS_KEY` · `S3_SECRET_KEY` | `http://localhost:8333` · `evidence` · …; without them, clips go to `LOCAL_OBJECT_DIR` | api |
-| `JWT_SECRET` | A random string of 32 or more characters; required anywhere but localhost | api |
+| `JWT_SECRET` | A random string of 32 or more characters. Optional only in development with `PUBLIC_API_URL` on localhost | api |
 | `PORT` | `4000` | api |
 | `MOCK_INTEGRATIONS` | `true` (SIDH, eKYC, OTP, NQR); on by default outside production | api |
-| `PUBLIC_API_URL` · `PUBLIC_WEB_URL` | `http://localhost:4000` · `http://localhost:3000` | api |
-| `RESCORE_SAMPLE_RATE` · `GEOFENCE_RADIUS_M` · `CLOCK_DRIFT_LIMIT_S` | `0.10` · `200` · `300` | api |
+| `PUBLIC_API_URL` | `http://localhost:4000`: where phones upload clips when there is no S3 store | api |
+| `PUBLIC_WEB_URL` | `http://localhost:3000`: the QR target on certificates (*planned*, S4) | api |
+| `RESCORE_SAMPLE_RATE` · `GEOFENCE_RADIUS_M` · `CLOCK_DRIFT_LIMIT_S` · `JWT_TTL_HOURS` | `0.10` · `200` · `300` · `12` | api |
+| `TEST_DATABASE_URL` | `postgres://hp:hp@localhost:5432/hp_test`: API tests on PostgreSQL; the name must contain "test" | api tests |
 | `API_URL` | `http://localhost:4000` (the default) | web |
 | `AI_SERVICE_URL` | `http://localhost:8000` | api worker (*planned*) |
 | `LLM_BASE_URL` · `LLM_API_KEY` · `LLM_MODEL` | Any OpenAI-compatible endpoint, preferably hosted in India | ai (*planned*) |
@@ -482,7 +485,7 @@ Run them from the repo root.
 | `corepack enable` fails with `EPERM` | Run it in an administrator terminal, or `npm install -g pnpm@10.28.0` |
 | `corepack: command not found`, or `pnpm install` warns about your Node version | Use Node 22.18+ or 24.11+; Node 25 and later ship without Corepack |
 | `pnpm e2e:web` says Chromium's executable doesn't exist | Run `pnpm e2e:install` once |
-| `pnpm e2e:web` fails after an earlier run | The tests approved the demo recommendations. Stop `pnpm dev`, run `pnpm db:reset && pnpm db:seed`, and start again |
+| `pnpm e2e:web` skips 2 tests | An earlier run approved the demo's clean recommendation. Stop `pnpm dev`, run `pnpm db:reset && pnpm db:seed`, and start again |
 | The sign-in page says the server cannot be reached | The web app cannot reach the API. The `pnpm dev` terminal prints the address it tried: check that the API started and that `API_URL` in `apps/web/.env` matches its port |
 | `API_URL` or `PORT` is ignored | Put API settings in the root `.env` or `services/api/.env`, and `API_URL` in `apps/web/.env`; the web app never reads the root `.env` |
 | `pnpm build` fails with a font download error | The web build downloads the Rajdhani and Hind fonts from Google Fonts, so it needs internet. `pnpm dev` falls back to system fonts when offline |
@@ -582,21 +585,22 @@ A `released` pack also needs real NOS codes and at least 3 calibration clips; `p
 
 ## Data model
 
-The core entities are below. The full schema has 27 tables, adding accounts, devices, flags, re-scoring, approvals and certificates; [`docs/design/data-model.md`](docs/design/data-model.md) describes every one. Scores, evidence and audit entries are append-only, enforced by a database trigger. Each session stores the trade-pack version it used, so results stay valid after a QP is revised.
+The core entities are below. The full schema has 27 tables, adding accounts, devices, calibration, evidence checks, flags and re-scoring; [`docs/design/data-model.md`](docs/design/data-model.md) describes every one. Scores, evidence and audit entries are append-only, enforced by a database trigger. Each session stores the trade-pack version it used, so results stay valid after a QP is revised.
 
 ```mermaid
 erDiagram
+    WORKER ||--o{ CONSENT : gives
     WORKER ||--o{ DECLARATION : gives
-    WORKER ||--o{ SESSION : "is assessed in"
+    DECLARATION ||--o{ MAPPING_RESULT : "AI suggests"
+    DECLARATION ||--o{ ROUTE_DECISION : "mobiliser decides"
+    WORKER ||..o{ SESSION : "is assessed in (no FK)"
     QUALIFICATION ||--|{ NOS : contains
     NOS ||--|{ CRITERION : contains
-    QUALIFICATION ||--o{ SESSION : "assessed against"
     SESSION ||--|{ EVIDENCE : collects
-    CRITERION ||--o{ EVIDENCE : "proved by"
     SESSION ||--|{ SCORE : records
-    CRITERION ||--o{ SCORE : "rated in"
-    SESSION ||--o| RECOMMENDATION : produces
-    SESSION ||--|{ AUDIT_ENTRY : logs
+    SESSION ||--o{ RECOMMENDATION : "assessor signs"
+    RECOMMENDATION ||--o| APPROVAL : "awarding body decides"
+    RECOMMENDATION ||--o| CERTIFICATE : issues
 
     WORKER {
         uuid id PK
@@ -604,111 +608,121 @@ erDiagram
         string phone
         string language
         string ekyc_ref "reference only, never the Aadhaar number"
-        uuid consent_id
     }
     QUALIFICATION {
         string nqr_code PK
-        string title
+        string pack_version
         int nsqf_level
-        float pass_mark
-        string version
+        json pass_rule
     }
     NOS {
+        string nqr_code PK
         string code PK
-        string nqr_code FK
-        string title
         float weight
     }
     CRITERION {
+        string nqr_code PK
         string id PK
-        string nos_code FK
-        string text
+        string nos_code
         int marks
-        json rubric "0/1/2 anchors with example photos"
-        json glossary
+        json rubric "0/1/2 anchors"
     }
     DECLARATION {
         uuid id PK
         uuid worker_id FK
         text transcript
-        json claims
-        json coverage "per qualification"
+    }
+    MAPPING_RESULT {
+        uuid id PK
+        uuid declaration_id FK
+        json results "coverage per QP"
+        string suggested_route
+    }
+    ROUTE_DECISION {
+        uuid id PK
+        uuid declaration_id FK
         string route
+        string reason "required when it differs from the AI"
     }
     SESSION {
         uuid id PK
-        uuid worker_id FK
+        uuid worker_id "no FK: phones sync in any order"
         uuid assessor_id FK
-        string nqr_code FK
+        string nqr_code
         string pack_version
-        json geofence
-        timestamp started_at
+        string ekyc_ref
+        json gps
         string device_id
     }
     EVIDENCE {
         uuid id PK
         uuid session_id FK
-        string criterion_id FK
+        string criterion_id
         string sha256
-        timestamp captured_at
         json gps
     }
     SCORE {
         uuid id PK
         uuid session_id FK
-        string criterion_id FK
+        string criterion_id
         int value "0, 1 or 2"
         json ai_flags
-        string override_reason
-    }
-    AUDIT_ENTRY {
-        string device_id PK
-        bigint seq PK
-        uuid session_id FK
-        string event
-        string actor
-        string prev_hash
-        string hash
+        string conflict_reason
+        uuid supersedes "a correction is a new score"
     }
     RECOMMENDATION {
         uuid id PK
         uuid session_id FK
+        string outcome "pass or fail"
         json nos_totals
-        string result
-        string assessor_signature
-        string approval_status
+        uuid signed_by FK
+    }
+    APPROVAL {
+        uuid id PK
+        uuid recommendation_id FK
+        string decision "approved or returned"
+        uuid decided_by FK
+    }
+    CERTIFICATE {
+        string id PK "the QR code"
+        uuid recommendation_id FK
     }
 ```
+
+Every event a phone sends is stored as an `AUDIT_ENTRY` in that device's hash chain (`device_id`, `seq`, `type`, `actor`, `prev_hash`, `hash`), and the API projects it into the tables above. Decisions made on the web, such as approvals, flag reviews and route overrides, are written by the API as rows in the same append-only tables. Flags carry a code plus values (`flags.params`), which the web app words in Hindi and English.
 
 ## API overview
 
 <details>
 <summary><b>Main endpoints (v1)</b></summary>
 
+Callers are checked against `AUTHORITY` (actions) and `READ_ACCESS` (reads) in `packages/contracts/src/authority.ts`.
+
 | Method | Path | Who calls it | What it does |
 |---|---|---|---|
-| POST | `/v1/auth/otp` · `/v1/auth/login` | All signed-in roles | OTP (mocked) + PIN login; returns a JWT |
-| POST | `/v1/devices` | Assessor | Registers and binds a device |
-| GET | `/v1/trade-packs/:id` | Phones | Downloads a versioned trade pack |
-| POST | `/v1/sync/push` | Phones | Uploads a batch of events (idempotent by event id); returns acks, server time and upload URLs |
-| GET | `/v1/sync/pull?cursor=` | Phones | Returns new packs, assignments, re-score tasks and results |
-| PUT | `/v1/evidence/:id/content` | Phones | Uploads a clip through the API when there is no S3 store; a file that does not match its hash is refused |
-| POST | `/v1/evidence/:id/complete` | Phones | Confirms a clip upload; queues the hash re-check and vision jobs |
-| POST | `/v1/declarations/:id/override` | Mobiliser | Changes the route or QP, with a reason |
+| GET | `/healthz` | Anyone | Liveness check (CI and Docker use it) |
+| POST | `/v1/auth/otp` · `/v1/auth/login` | Anyone with an account | OTP (mocked) + PIN login; returns a JWT |
+| POST | `/v1/devices` | Mobiliser, assessor, master assessor | Registers a phone and binds it to the account |
+| GET | `/v1/trade-packs/:id` | Every signed-in role | Downloads a versioned trade pack |
+| POST | `/v1/sync/push` | Phone roles: worker, mobiliser, assessor, master assessor | Uploads a batch of events (idempotent by event id); returns acks, server time and upload URLs |
+| GET | `/v1/sync/pull?cursor=` | Phone roles | New trade packs, the server's checks of your clips, and (master assessors) re-score tasks |
+| PUT | `/v1/evidence/:id/content` | Assessor, master assessor | Uploads a clip through the API when there is no S3 store; a file that does not match its hash is refused |
+| POST | `/v1/evidence/:id/complete` | Assessor, master assessor | Confirms a clip upload and queues the server re-hash (vision jobs come with the AI service) |
+| POST | `/v1/declarations/:id/override` | Mobiliser | Changes the route or QP online, with a reason |
 | GET | `/v1/sessions` · `/v1/sessions/:id` | Agency, awarding body | Sessions with evidence checks, scores, flags and the recommendation |
-| POST | `/v1/sessions/:id/sign` | Assessor | Signs the recommendation; refused if the result does not match the scores |
-| GET | `/v1/recommendations` | Agency, awarding body | Signed recommendations waiting for approval, with what blocks them |
-| POST | `/v1/recommendations/:id/approve` | Awarding body | Approves the recommendation and issues the certificate |
-| GET | `/v1/audit/sessions/:id/verify` | Agency | Verifies the hash chain |
+| POST | `/v1/sessions/:id/sign` | Assessor, master assessor | Signs the recommendation online; refused if the result does not match the scores |
+| GET | `/v1/recommendations` | Agency, awarding body | Signed recommendations waiting for a decision, with what blocks them |
+| POST | `/v1/recommendations/:id/approve` | Awarding body | Approves (and issues the certificate) or returns the recommendation |
+| GET | `/v1/audit/sessions/:id/verify` | Agency, awarding body | Verifies the hash chain |
 | GET | `/v1/flags` · POST `/v1/flags/:id/review` | Agency | Integrity flags and the agency's review notes |
 | GET | `/v1/dashboard/summary` | Agency, awarding body, NCVET | Key numbers |
 | GET | `/v1/dashboard/agreement` | Agency, awarding body, NCVET | Agreement metrics and outlier assessors (NCVET gets no per-assessor rows) |
 | GET · POST | `/v1/rescoring` | Master assessor | Blind re-score queue and submissions |
-| GET | `/v1/certificates/:id/verify` | Public | QR verification page |
+| GET | `/v1/certificates/:id/verify` | Public | Certificate status as JSON, for the web app's `/verify/:id` page that the QR code opens |
 | GET | `/v1/public/study` | Public | Rater-study results for the website |
 | POST | `/v1/exports/sidh` | Awarding body | Mock SIDH export |
 
-The AI service is internal and only the queue worker calls it: `POST /extract`, `/embed`, `/map`, `/vision/ppe`, `/phash` and `/stats/agreement`.
+The AI service (*planned*) is internal and only the queue worker will call it: `POST /extract`, `/embed`, `/map`, `/vision/ppe`, `/phash` and `/stats/agreement`.
 
 </details>
 
@@ -716,11 +730,11 @@ The AI service is internal and only the queue worker calls it: `POST /extract`, 
 
 | Role | App | What the role can do | Status |
 |---|---|---|---|
-| Worker | Mobile, usually with a mobiliser | Give consent and a declaration; see their own profile | Built |
-| Mobiliser | Mobile | Register workers; review mapping; override the route with a reason | Built |
-| Assessor | Mobile | Calibrate, capture evidence, score and sign | Built |
-| Master assessor | Mobile | Re-score a sampled clip blind, for the awarding body | Built |
-| Agency | Web | Monitor sessions and assessors; investigate flags; run re-scoring | Built |
+| Worker | Mobile, usually with a mobiliser | Give consent and a declaration; later, see their own profile | API built; phone app and profile planned |
+| Mobiliser | Mobile | Register workers; review mapping; override the route with a reason | API built; phone app planned |
+| Assessor | Mobile | Calibrate, capture evidence, score and sign | API built; phone app planned |
+| Master assessor | Mobile | Re-score a sampled clip blind, for the awarding body | API built; phone app planned |
+| Agency | Web | Monitor sessions and assessors; investigate flags; see agreement and outlier assessors | Built |
 | Awarding body (SSC) | Web | Approve recommendations and issue certificates | Built |
 | NCVET | Web | See aggregates only | Built |
 | Platform admin | Web admin | Create and suspend organisations; invite each one's first admin; upload trade packs | Planned: accounts in S1, screens in S3–S4 |
@@ -752,7 +766,8 @@ The AI service is internal and only the queue worker calls it: `POST /extract`, 
 - **DPDP Rules 2025:** [notified on 13 Nov 2025](https://www.hlc.com/en/publications/indias-digital-personal-data-protection-act-2023-brought-into-force-). Their notice, consent and security duties apply from 13 May 2027, and we build to them now.
 - **Consent:** before any recording, the worker hears a standalone consent notice in their language. Withdrawing consent is as easy as giving it.
 - **Encryption:** no Aadhaar number is stored, only the eKYC reference. Data is encrypted on the device (SQLCipher), in transit (TLS) and at rest.
-- **Access by role:** assessors see their own sessions, agencies their own centres, and NCVET only aggregates.
+- **Access by role:** each role sees only what it needs, and NCVET only aggregates. Scoping by organisation (an agency sees only its own sessions) lands in Sprint 2; today every agency and awarding-body account sees every session.
+- **Logs:** request logs redact tokens and cookies and never include request bodies, so no phone number, OTP or PIN reaches them (`services/api/src/logger.ts`).
 - **Training data and retention:** faces are blurred in any clip used to improve the models, and data is deleted when the audit period ends.
 - **Breaches** are reported to the Data Protection Board without delay, with the follow-up report within 72 hours.
 - **Hosting:** everything is hosted in India.
@@ -1001,12 +1016,12 @@ Rotate sleep so that nobody codes exhausted.
 
 | Level | Tools | What it covers | When it runs |
 |---|---|---|---|
-| Unit | Vitest, jest-expo, pytest | Coverage and result formulas; the routing edge case (0.699 vs 0.700); hash chain; rubric rules; kappa and alpha against a published worked example | Every PR |
-| Contract | zod schemas, OpenAPI | Phone ↔ API payloads; trade-pack schema | Every PR |
-| Integration | Supertest with PostgreSQL and Redis in Docker; FastAPI TestClient | Idempotent sync; chain verification; queue → AI → database; role checks | Every PR |
-| End-to-end | [Maestro](https://maestro.mobile.dev/) (Android), Playwright (web) | The full flow; the airplane-mode drill; the dashboard updating after sync | Before every review |
-| Performance | k6; Android Studio profiler on the 3 GB phone | 50 phones syncing at once; app memory; time to transcript | S5–S6 |
-| Security | gitleaks, npm audit, pip-audit, tamper tests | Secrets; vulnerable packages; an edited clip rejected; the wrong role blocked | Every PR, and in S6 |
+| Unit | Vitest; jest-expo and pytest *planned* | Coverage and result formulas; the routing edge case (0.699 vs 0.700); hash chain; rubric rules; kappa and alpha against a published worked example | Every PR |
+| Contract | zod schemas (OpenAPI *planned*) | Phone ↔ API payloads; trade-pack schema | Every PR |
+| Integration | Supertest on in-process PGlite, or PostgreSQL 17 with `TEST_DATABASE_URL` (CI); jobs run inline. FastAPI TestClient *planned* | Idempotent sync; chain verification; queue → AI → database; role checks | Every PR |
+| End-to-end | Playwright (web); [Maestro](https://maestro.mobile.dev/) (Android) *planned* | The full flow; the airplane-mode drill; the dashboard updating after sync | Before every review |
+| Performance | k6 and the Android Studio profiler on the 3 GB phone (*planned*) | 50 phones syncing at once; app memory; time to transcript | S5–S6 |
+| Security | gitleaks, `pnpm audit`, tamper tests; pip-audit *planned* | Secrets; vulnerable packages; an edited clip rejected; the wrong role blocked | Every PR, and in S6 |
 | Usability | SUS questionnaire, think-aloud sessions | 5 workers and 3 assessors | S2 and S4 |
 | Acceptance | UAT with the mentor, evaluation studies | Whether the PS outcomes are met | S5–S6 |
 
@@ -1019,9 +1034,11 @@ Rotate sleep so that nobody codes exhausted.
 - **IT-01 Idempotency:** pushing the same batch twice stores it once.
 - **IT-02 Tampering:** a clip whose bytes don't match its captured hash is rejected and flagged. Editing one audit row makes verification fail at that row.
 - **IT-03 Authority:**
-  - only an assessor token can sign;
-  - only an awarding-body token can approve;
+  - only an assessor account can sign;
+  - only an awarding-body account can approve;
   - no AI job can write a score.
+- **IT-04 Admins never decide** (*planned*, with the admin roles): no admin token can score, sign, approve, review a flag or re-score.
+- **IT-05 Scoping** (*planned*, Sprint 2): an account outside the record's organisation gets "not found".
 
 ### Evaluation: the evidence the PS asks for
 

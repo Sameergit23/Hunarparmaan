@@ -14,14 +14,22 @@ concurrency:
 
 jobs:
   checks:
-    name: Lint, typecheck and test
-    runs-on: ubuntu-latest
+    # The team develops on Windows, macOS and Linux, on Node 22 or 24 (package.json engines).
+    name: Lint, typecheck and test (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, node: 24 }
+          - { os: ubuntu-latest, node: 22 }
+          - { os: windows-latest, node: 24 }
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6 # version comes from packageManager in package.json
       - uses: actions/setup-node@v7
         with:
-          node-version-file: .nvmrc
+          node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
@@ -31,6 +39,7 @@ jobs:
       - name: Validate and package the trade packs
         run: pnpm pack:build electrician
       - name: Dependency audit
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 24
         run: pnpm audit --audit-level high
 
   api-postgres:

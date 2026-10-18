@@ -31,10 +31,11 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 5. **Evidence integrity.** Hash every evidence file (SHA-256) at capture and record it in the per-device hash chain (canonical JSON, RFC 8785).
 6. **One scoring implementation.** Coverage, routing and result maths live only in `packages/scoring` and run the same on the phone and the server.
 7. **Two languages.** Every user-facing string exists in Hindi and English.
-8. **No personal data in Git or prompts.**
+8. **No personal data in Git, logs or prompts.**
    - Never commit secrets, `.env`, recordings, names, phone numbers or Aadhaar numbers. Use seeded fixtures; media files are git-ignored on purpose.
    - Store only the eKYC reference, never the Aadhaar number.
    - Send only transcripts to outside AI services.
+   - Request logs redact tokens and cookies and never log bodies (`services/api/src/logger.ts`); keep it that way.
 9. **Contracts change on purpose.** A change to `packages/contracts` or the trade-pack schema needs a version bump and a note in the PR.
 
 ## Stack
@@ -46,7 +47,7 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 | `services/api` | Node.js + Express (TypeScript), zod, JWT roles, BullMQ on Redis |
 | `services/ai` | Python 3.12, FastAPI, uv, multilingual-e5-small, statsmodels, krippendorff |
 | Data | PostgreSQL 17 + pgvector; SeaweedFS for clips (S3 API). Don't use MinIO: its community repo was archived in April 2026 |
-| Shared | `packages/contracts` (zod + OpenAPI), `packages/scoring`, `packages/audit`, `packages/trade-packs` |
+| Shared | `packages/contracts` (zod; OpenAPI planned), `packages/scoring`, `packages/audit`, `packages/trade-packs` |
 
 SIDH, Aadhaar eKYC, OTP and NQR are mocked behind `MOCK_INTEGRATIONS=true`.
 
@@ -75,7 +76,7 @@ Node 22.18+ or 24.11+ (`.nvmrc` says 24) and pnpm 10 (`corepack enable` picks th
 | `pnpm test` | Vitest in every workspace, through Turborepo |
 | `pnpm typecheck` · `pnpm build` | `tsc` and production builds in every workspace |
 | `pnpm lint` | ESLint, then a Prettier check (`pnpm format` fixes formatting) |
-| `pnpm e2e:install` · `pnpm e2e:web` | Download Chromium once · Playwright against a running `pnpm dev` on fresh demo data (`pnpm db:reset && pnpm db:seed`, because the tests approve recommendations). `PLAYWRIGHT_CHROMIUM_PATH` uses an installed Chromium instead |
+| `pnpm e2e:install` · `pnpm e2e:web` | Download Chromium once · Playwright against a running `pnpm dev` on fresh demo data (`pnpm db:reset && pnpm db:seed`; the approval tests skip once the demo recommendation is approved). `PLAYWRIGHT_CHROMIUM_PATH` uses an installed Chromium instead |
 | `pnpm pack:build electrician` | Validate the trade pack and write `packages/trade-packs/dist/` |
 | `pnpm --filter @hunarpramaan/<pkg> test` | One workspace only |
 | `pnpm --filter @hunarpramaan/api db:generate` | New migration from `services/api/src/db/schema.ts` |
@@ -92,7 +93,7 @@ Still planned: `pnpm e2e:mobile`, `pnpm eval:*`. Add them here when they exist.
 - `@hunarpramaan/audit` hashes events as RFC 8785 canonical JSON. Don't hash `JSON.stringify` output anywhere else.
 - Who may create which event or action is the `AUTHORITY` table in `packages/contracts/src/authority.ts` (ADR 006), and reads are `READ_ACCESS`. Check them there; don't hard-code roles in handlers. New admin actions follow the same tables (ADR 010 and `docs/design/access-control.md`).
 - API code layout: `src/routes` (HTTP only) → `src/domain` (rules and queries) → `src/db`. Read models take no transaction (ADR 008).
-- Schema changes: edit `schema.ts`, run `db:generate`, and add the table to `APPEND_ONLY_TABLES` and the trigger migration if it holds events.
+- Schema changes: edit `schema.ts` and run `db:generate`. If a new table holds events, add it to `APPEND_ONLY_TABLES` and write a new migration with its `_append_only` and `_no_truncate` triggers (`pnpm --filter @hunarpramaan/api exec drizzle-kit generate --custom --name <table>_append_only`), copying the pattern in `0001_append_only.sql`. Never edit a migration that has been applied: databases that ran it would not get the change.
 - Flags and approval blockers are codes plus values; word them in `apps/web/src/lib/messages.ts` and both dictionaries, never as English from the API.
 - Web strings live in `apps/web/src/lib/i18n/en.ts` and `hi.ts`; the Hindi file is typed against the English one.
 

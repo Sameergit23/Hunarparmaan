@@ -1,6 +1,7 @@
 import { count, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
+import type { EventPayload } from '@hunarpramaan/contracts';
 import { auditEntries, flags } from '../src/db/schema';
 import { startHarness, type Harness, type TestUser } from '../src/test/harness';
 import {
@@ -130,7 +131,7 @@ describe('POST /v1/sync/push', () => {
     const res = await push(h, assessor, phone, [
       phone.event(
         'session.started',
-        { ...(start.payload as never), sessionId: uuidv4() },
+        { ...(start.payload as EventPayload<'session.started'>), sessionId: uuidv4() },
         { actor: impostor.actor },
       ),
     ]);

@@ -67,7 +67,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(new URL(rest.PUBLIC_API_URL).hostname);
   if (!JWT_SECRET && (production || !local)) {
     throw new Error(
-      'Invalid configuration: JWT_SECRET (32+ characters) is required unless the API runs on localhost in development',
+      'Invalid configuration: set JWT_SECRET (32+ characters). It may be left out only in development with PUBLIC_API_URL on localhost',
     );
   }
   return {
