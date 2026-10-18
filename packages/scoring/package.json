@@ -1,0 +1,17 @@
+{
+  "name": "@hunarpramaan/scoring",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Coverage, routing and QP result maths. Pure TypeScript; the same code runs on the phone and the server",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@hunarpramaan/contracts": "workspace:*"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": { "@/*": ["./src/*"] },
+    "types": ["node"]
+  },
+  "include": [
+    "next-env.d.ts",
+    "src",
+    "tailwind.config.ts",
+    "next.config.ts",
+    "playwright.config.ts",
+    "vitest.config.ts",
+    "e2e",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

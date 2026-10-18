@@ -1,0 +1,17 @@
+{
+  "name": "@hunarpramaan/audit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Evidence integrity: RFC 8785 canonical JSON, SHA-256 and the per-device hash chain",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.4.0"
+  }
+}

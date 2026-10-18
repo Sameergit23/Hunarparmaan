@@ -1,0 +1,51 @@
+# Local services for HunarPramaan (README "Full setup, with Docker"):
+#   docker compose -f infra/docker-compose.yml up -d --wait
+# Then set in .env (the Docker block in .env.example):
+#   DATABASE_URL=postgres://hp:hp@localhost:5432/hunarpramaan
+#   REDIS_URL=redis://localhost:6379
+#   S3_ENDPOINT=http://localhost:8333  S3_ACCESS_KEY=local  S3_SECRET_KEY=local
+# A port already used on your computer (say, by a local PostgreSQL) can be moved:
+#   HP_POSTGRES_PORT=5433 docker compose -f infra/docker-compose.yml up -d --wait
+# and then use that port in DATABASE_URL. HP_REDIS_PORT and HP_S3_PORT work the same.
+# These are development-only defaults; staging and production set their own.
+name: hunarpramaan
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg17
+    environment:
+      POSTGRES_USER: hp
+      POSTGRES_PASSWORD: hp
+      POSTGRES_DB: hunarpramaan
+    ports: ['${HP_POSTGRES_PORT:-5432}:5432']
+    volumes:
+      - 'postgres-data:/var/lib/postgresql/data'
+      # Creates hp_test for the API tests on PostgreSQL.
+      - './postgres-init:/docker-entrypoint-initdb.d:ro'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hp -d hunarpramaan']
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:8.8.3
+    command: ['redis-server', '--appendonly', 'yes']
+    ports: ['${HP_REDIS_PORT:-6379}:6379']
+    volumes: ['redis-data:/data']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      retries: 10
+
+  # S3-compatible store for evidence clips (ADR 005). With no identities
+  # configured, SeaweedFS's S3 gateway accepts any key: fine for local use only.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    command: ['server', '-dir=/data', '-s3', '-s3.port=8333', '-master.volumeSizeLimitMB=1024']
+    ports: ['${HP_S3_PORT:-8333}:8333']
+    volumes: ['seaweedfs-data:/data']
+
+volumes:
+  postgres-data:
+  redis-data:
+  seaweedfs-data:

@@ -6,10 +6,10 @@
 
 An offline-first, AI-assisted assessment tool for Recognition of Prior Learning (RPL), built for Smart India Hackathon 2026.
 
-[![SIH 2026](https://img.shields.io/badge/Smart%20India%20Hackathon-2026-0070C0)](https://www.sih.gov.in/)
-![Category](https://img.shields.io/badge/category-software-7030A0)
-![Status](https://img.shields.io/badge/status-sprint%200-ED7D31)
-![Pilot trade](https://img.shields.io/badge/pilot-Assistant%20Electrician%20%28NSQF%20L3%29-2F5597)
+[![SIH 2026](https://img.shields.io/badge/Smart%20India%20Hackathon-2026-000000)](https://www.sih.gov.in/)
+![Category](https://img.shields.io/badge/category-software-000000)
+![Status](https://img.shields.io/badge/status-sprint%200-000000)
+![Pilot trade](https://img.shields.io/badge/pilot-Assistant%20Electrician%20%28NSQF%20L3%29-000000)
 
 </div>
 
@@ -25,9 +25,9 @@ An offline-first, AI-assisted assessment tool for Recognition of Prior Learning 
 | Languages | Hindi and English, by voice or text |
 
 > [!NOTE]
-> **Status: Sprint 0 starts on 19 Oct 2026.** The design is done and the code starts now. We wrote this README first, so it is the contract we build to. Commands marked *planned* start working as Sprint 0 lands.
+> **Status: Sprint 0 (19–25 Oct 2026).** The API, the web dashboard and the shared packages run on your own computer, with tests; see [Getting started](#getting-started). The mobile app, the AI service and the admin panel ([design](docs/design/access-control.md)) come next. We wrote this README first, so it is the contract we build to. Commands marked *planned* start working as the sprints land.
 
-**Contents:** [Why](#why-this-exists) · [What it does](#what-it-does) · [How it works](#how-it-works) · [AI vs assessor](#ai-supports-the-assessor-decides) · [AI workflow](#ai-workflow) · [Architecture](#architecture) · [Stack](#tech-stack) · [Repo layout](#repository-layout) · [Getting started](#getting-started) · [Core logic](#core-logic) · [Data model](#data-model) · [API](#api-overview) · [Offline, integrity, privacy](#offline-integrity-and-privacy) · [**SDLC plan**](#development-lifecycle-sdlc) · [Testing](#testing-and-evaluation) · [Deployment](#deployment-and-release) · [Maintenance](#maintenance) · [Team](#team) · [Contributing](#contributing) · [References](#references)
+**Contents:** [Why](#why-this-exists) · [What it does](#what-it-does) · [How it works](#how-it-works) · [AI vs assessor](#ai-supports-the-assessor-decides) · [AI workflow](#ai-workflow) · [UI design](#ui-design) · [Architecture](#architecture) · [Stack](#tech-stack) · [Repo layout](#repository-layout) · [Getting started](#getting-started) · [Core logic](#core-logic) · [Data model](#data-model) · [API](#api-overview) · [Offline, integrity, privacy](#offline-integrity-and-privacy) · [**SDLC plan**](#development-lifecycle-sdlc) · [Testing](#testing-and-evaluation) · [Deployment](#deployment-and-release) · [Maintenance](#maintenance) · [Team](#team) · [Contributing](#contributing) · [References](#references)
 
 ---
 
@@ -57,6 +57,7 @@ Everything on the phone works with no network and syncs later.
 ## How it works
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#FAFAF7", "primaryBorderColor": "#8E918A", "primaryTextColor": "#000000", "clusterBkg": "#E4E5E0", "clusterBorder": "#8E918A", "titleColor": "#000000", "lineColor": "#8E918A"}}}%%
 flowchart TB
     subgraph A["Before the test · worker and mobiliser"]
         direction LR
@@ -71,13 +72,13 @@ flowchart TB
         s8["8 · Sync + checks<br/>hash chain, flags"] --> s9["9 · Blind re-score<br/>random 10%"] --> s10["10 · SSC approves<br/>QR certificate"]
     end
     A --> B --> C
-    classDef ai fill:#FBE5D6,stroke:#ED7D31,color:#262626
-    classDef human fill:#DEEBF7,stroke:#2F5597,color:#262626
+    classDef ai fill:#F2B600,stroke:#000000,stroke-width:2px,color:#000000
+    classDef human fill:#000000,stroke:#000000,color:#FAFAF7
     class s2,s3,s8 ai
-    class s7,s10 human
+    class s6,s7,s10 human
 ```
 
-Orange steps are AI or automated. Blue steps are decisions a person makes. AI never signs or approves.
+Yellow steps are AI or automated. Black steps are decisions a person makes. AI never scores, signs or approves.
 
 ## AI supports, the assessor decides
 
@@ -97,6 +98,7 @@ The PS asks where the tool supports assessor judgement and where it would replac
 The AI does four jobs in a row. After each job, a person checks the result before the next one starts.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#FAFAF7", "primaryBorderColor": "#8E918A", "primaryTextColor": "#000000", "clusterBkg": "#E4E5E0", "clusterBorder": "#8E918A", "titleColor": "#000000", "lineColor": "#8E918A"}}}%%
 flowchart TB
     subgraph r1["Step 1"]
         direction LR
@@ -115,13 +117,13 @@ flowchart TB
         a4["Consistency checks<br/>hash chain, kappa, outliers"] --> h4["Agency reviews<br/>flags, blind re-scores"]
     end
     r1 --> r2 --> r3 --> r4
-    classDef ai fill:#EEEDFE,stroke:#534AB7,color:#26215C
-    classDef human fill:#E1F5EE,stroke:#0F6E56,color:#04342C
+    classDef ai fill:#F2B600,stroke:#000000,stroke-width:2px,color:#000000
+    classDef human fill:#000000,stroke:#000000,color:#FAFAF7
     class a1,a2,a3,a4 ai
     class h1,h2,h3,h4 human
 ```
 
-Purple boxes are AI steps, which only suggest. Teal boxes are the people who check and decide.
+Yellow boxes are AI steps, which only suggest. Black boxes are the people who check and decide.
 
 | AI job | On the phone, offline | On the server or online |
 |---|---|---|
@@ -139,6 +141,20 @@ Purple boxes are AI steps, which only suggest. Teal boxes are the people who che
 - **Only transcripts go to outside AI services.** Names, phone numbers and eKYC references never leave our servers.
 
 **How it improves.** Every human correction is logged: transcript edits, QP overrides, and flags the assessor disagreed with. The AI/ML lead uses the log to grow the glossary, re-tune the match threshold and retrain the safety-gear detector. Three numbers show whether it is working: the transcript-correction rate, the mapping-override rate and the share of false flags.
+
+## UI design
+
+The screens use **Wire code**: the wiring colours Indian electricians already know, each with one job on screen. The rules are in [`docs/design/wire-code.md`](docs/design/wire-code.md), the values in [`tokens.json`](docs/design/tokens.json), and HTML references for five screens in [`docs/design/screens/`](docs/design/screens/).
+
+| Colour | Hex | Means |
+|---|---|---|
+| Yellow, a phase colour | `#F2B600` | An AI hint, which only suggests |
+| Black, the neutral colour | `#000000` | A person's action or decision: buttons, selections, scores, signatures |
+| Green, the earth colour | `#2E7D32` | Done, verified, passed or synced |
+| Red, a phase colour | `#C8102E` | Errors and the recording dot |
+| Blue, a phase colour | `#1F4E9C` | The brand stripe, and nothing else |
+
+The split between yellow and black puts [our decision table](#ai-supports-the-assessor-decides) on every screen: the AI's hint sits beside the person's choice and never takes its place. Headings use Rajdhani and text uses Hind; both cover Devanagari. Worker screens are Hindi first, with audio, picture choices and 54px buttons, so they work without reading (NFR-06).
 
 ## Architecture
 
@@ -195,7 +211,7 @@ sequenceDiagram
     P->>A: POST /v1/sync/push (events with hashes)
     A->>D: verify the device chain, insert events (idempotent by id)
     A-->>P: acks, server time, upload URLs
-    P->>O: upload clips in parts (resumable)
+    P->>O: upload clips (one PUT today, resumable parts planned)
     P->>A: POST /v1/evidence/:id/complete
     A->>W: queue jobs (re-hash, map, vision)
     W->>O: read the clip, re-hash, compare
@@ -233,34 +249,41 @@ sequenceDiagram
 
 ## Repository layout
 
+Folders marked *planned* do not exist yet; they arrive in the sprints named in the [sprint plan](#sprint-plan).
+
 ```text
 Hunarparmaan/
-├── CLAUDE.md              # rules and context for Claude Code
+├── CLAUDE.md                  # rules and context for Claude Code
 ├── apps/
-│   ├── mobile/            # React Native (Expo dev build): worker + assessor app, works offline
-│   └── web/               # Next.js dashboard: agency, awarding body, NCVET
+│   ├── web/                   # Next.js: public site, certificate check, dashboard for agencies, awarding bodies, NCVET
+│   │   ├── src/app/           # pages: landing, login, verify, and the signed-in (office) screens
+│   │   ├── src/components/    # Wire code components
+│   │   ├── src/lib/           # API client, session, i18n (en.ts, hi.ts), flag and blocker wording
+│   │   └── e2e/               # Playwright tests
+│   └── mobile/                # planned: React Native worker and assessor app, works offline
 ├── services/
-│   ├── api/               # Node.js + Express: auth, sync, evidence; the only database writer
-│   │   ├── migrations/
-│   │   └── src/worker/    # BullMQ worker: calls the AI service, stores the results
-│   └── ai/                # Python FastAPI: claim extraction, embeddings, vision, agreement stats
+│   ├── api/                   # Node.js + Express: auth, sync, evidence; the only database writer
+│   │   ├── src/routes/        # HTTP only
+│   │   ├── src/domain/        # rules and queries: sync, projections, results, recommendations
+│   │   ├── src/db/            # Drizzle schema, migrate, seed, PGlite lock
+│   │   ├── src/worker/        # BullMQ worker: re-hashes clips (AI jobs come with services/ai)
+│   │   ├── migrations/        # SQL migrations, including the append-only triggers
+│   │   ├── scripts/           # reset-local-db.ts (pnpm db:reset)
+│   │   └── test/              # integration tests, IT-01 to IT-03
+│   └── ai/                    # planned: Python FastAPI, claim extraction, embeddings, vision, agreement stats
 ├── packages/
-│   ├── contracts/         # zod schemas + OpenAPI spec shared by phone, API and web
-│   ├── scoring/           # pure TypeScript: coverage, routing, results (same code on phone and server)
-│   ├── audit/             # hash chain: canonical JSON (RFC 8785), SHA-256, verify
-│   └── trade-packs/       # QP data per trade: NOS, criteria, marks, rubrics, glossary
-├── evaluation/
-│   ├── rater-study/       # protocol, consent forms, rating sheets, analysis
-│   └── mapping-test/      # 40 labelled declarations + scorer
+│   ├── contracts/             # zod schemas shared by phone, API and web; AUTHORITY and READ_ACCESS tables
+│   ├── scoring/               # pure TypeScript: coverage, routing, results (same code on phone and server)
+│   ├── audit/                 # hash chain: canonical JSON (RFC 8785), SHA-256, verify
+│   └── trade-packs/           # QP data per trade: NOS, criteria, marks, rubrics, glossary
+├── evaluation/                # planned: rater study and mapping test
 ├── infra/
-│   ├── docker-compose.yml # PostgreSQL + pgvector, Redis, SeaweedFS
-│   └── caddy/             # HTTPS reverse proxy for staging
+│   ├── docker-compose.yml     # PostgreSQL + pgvector, Redis, SeaweedFS
+│   └── postgres-init/         # creates the hp_test database
 ├── docs/
-│   ├── problem-statement.md  # the official SIH PS text
-│   ├── requirements/      # SRS, user stories, traceability matrix
-│   ├── design/            # architecture, data model, sync protocol, threat model, wireframes
-│   ├── adr/               # architecture decision records
-│   └── sdlc/              # sprint reviews, retros, test reports, release notes
+│   ├── problem-statement.md   # the official SIH PS text
+│   ├── design/                # Wire code, tokens, screen references, data model, access control
+│   └── adr/                   # architecture decision records 001 to 011
 └── .github/
     ├── workflows/ci.yml
     └── pull_request_template.md
@@ -268,88 +291,205 @@ Hunarparmaan/
 
 ## Getting started
 
-> These commands describe the target setup (*planned*). They work once Sprint 0 is merged.
+Everything runs on your own computer, on Windows, macOS or Linux. You only need Git and Node.js. Docker is optional.
 
 ### Prerequisites
 
 | Tool | Version | Used for |
 |---|---|---|
-| Node.js | 22 or 24 (LTS) | API, dashboard, mobile tooling |
-| pnpm | 10 | Workspaces |
-| Python + [uv](https://docs.astral.sh/uv/) | 3.12 | AI service |
-| Docker + Compose v2 | Latest stable | PostgreSQL, Redis, S3 store |
-| Android Studio + JDK 17 | Latest stable | Building the Android dev build |
-| An Android phone | Android 9+, 3 GB RAM | The target device: test on it, not only on the emulator |
+| Git | Any recent version | Cloning the repo |
+| Node.js | 22.18 or later, or 24.11 or later. Node 25 and later are not supported yet | API, dashboard, tests |
+| pnpm | 10, the version pinned in `package.json` | Workspaces |
+| Docker Desktop, or Docker Engine with Compose v2 | Latest stable | Optional: PostgreSQL, Redis and the S3 store, as in production |
+| Python + [uv](https://docs.astral.sh/uv/) | 3.12 | AI service (*planned*) |
+| Android Studio + JDK 17 | Latest stable | The Android dev build (*planned*) |
+| An Android phone | Android 9+, 3 GB RAM | The target device (*planned*): test on it, not only on the emulator |
 
-### Run it locally
+### 1. Install Node.js and pnpm (once per computer)
+
+| OS | Node.js 24 |
+|---|---|
+| Windows | The Node.js 24 installer from [nodejs.org](https://nodejs.org/en/download), or `fnm install 24` with [fnm](https://github.com/Schniz/fnm) |
+| macOS | `brew install node@24`, or `nvm install 24` with [nvm](https://github.com/nvm-sh/nvm) |
+| Linux | `nvm install 24` with [nvm](https://github.com/nvm-sh/nvm), or your distribution's Node.js 24 package |
+
+`.nvmrc` names Node 24, so `nvm use` or `fnm use` in the repo picks it. Then turn on pnpm. Corepack ships with Node 22 and 24 and picks the pnpm version pinned in `package.json`:
 
 ```bash
-# 1. Clone and configure
-git clone https://github.com/Sameergit23/Hunarparmaan.git
-cd Hunarparmaan
-cp .env.example .env              # add the keys you have; everything else has a local default
-
-# 2. Start PostgreSQL + pgvector, Redis and the S3 store
-docker compose -f infra/docker-compose.yml up -d
-
-# 3. Install, migrate and seed (loads the Assistant Electrician trade pack and demo users)
-pnpm install
-pnpm db:migrate
-pnpm db:seed
-
-# 4. Terminal 1: the AI service
-cd services/ai && uv sync && uv run uvicorn app.main:app --reload --port 8000
-
-# 5. Terminal 2: the API, queue worker and dashboard
-pnpm dev
-
-# 6. Terminal 3: build and run the Android dev build on a phone connected by USB
-pnpm --filter @hunarpramaan/mobile android     # runs: npx expo run:android
+corepack enable
+node -v    # v22.18 or later, or v24.11 or later
+pnpm -v    # 10.28.0
 ```
 
-The phone has to reach the API, so set `EXPO_PUBLIC_API_URL` to your laptop's LAN address (for example `http://192.168.1.20:4000`), not `localhost`.
+On Windows, `corepack enable` fails with `EPERM` in a normal terminal. Run it once in an administrator terminal, or install pnpm directly with `npm install -g pnpm@10.28.0`.
+
+### 2. Clone and run, no Docker
+
+```bash
+git clone https://github.com/Sameergit23/Hunarparmaan.git
+cd Hunarparmaan
+pnpm install
+pnpm db:seed      # trade pack, demo accounts and a demo pilot (8 sessions)
+pnpm dev          # API on :4000, web on :3000; Ctrl+C stops both
+```
+
+The same commands work in PowerShell, Command Prompt, Git Bash and macOS or Linux terminals. You need no `.env` file. With no settings, the API:
+
+- runs [PGlite](https://pglite.dev), a real PostgreSQL inside Node, with its data in `services/api/.data/pglite`;
+- keeps clips in `services/api/.data/objects`;
+- runs background jobs in its own process, without Redis;
+- signs logins with a development-only key. It does this only in development with `PUBLIC_API_URL` on localhost; set `JWT_SECRET` as soon as you change `PUBLIC_API_URL` to a LAN address for a phone.
+
+Open `http://localhost:3000` and sign in with a demo account. The one-time code is shown on screen (OTP is mocked) and the PIN is `1234`.
+
+| Demo account | Mobile number | Sees |
+|---|---|---|
+| Assessment agency | `9000000006` | Dashboard, sessions, flags |
+| Awarding body | `9000000007` | Dashboard, approvals, sessions |
+| NCVET | `9000000008` | Dashboard (aggregates only) |
+| Mobiliser, assessors (3), master assessor | `9000000001`, `9000000002` to `9000000004`, `9000000005` | Phone roles: the API accepts them, and the web sign-in sends them to the phone app |
+
+The names, numbers and study figures in the demo are made up; the study rounds are marked as demo numbers.
+
+### 3. Check your setup
+
+```bash
+pnpm check        # lint, typecheck and test, the same checks as CI
+```
+
+Run it before every push. The first run takes about a minute, because the API tests build a migrated database once and cache it in `node_modules/.cache`. CI runs them on Linux (Node 22 and 24) and Windows (Node 24), and also runs `pnpm build`, the API tests on PostgreSQL, the browser tests, a secret scan (gitleaks) and `pnpm audit --audit-level high`; the sections below show how to run those locally. In VS Code, accept the recommended extensions (ESLint, Prettier, EditorConfig, Tailwind, Vitest, Playwright) so problems show while you type.
+
+### End-to-end tests in a browser
+
+The Playwright tests sign in and approve a real recommendation, so start them on fresh demo data; on a second run, the 2 approval tests are skipped.
+
+```bash
+pnpm e2e:install                 # once: downloads Chromium for Playwright
+pnpm db:reset && pnpm db:seed    # fresh demo data (stop pnpm dev first)
+pnpm dev                         # terminal 1
+pnpm e2e:web                     # terminal 2
+```
+
+On Linux, Chromium may also need system libraries: `pnpm --filter @hunarpramaan/web exec playwright install-deps chromium`. If you already have Chromium, set `PLAYWRIGHT_CHROMIUM_PATH` to it instead of running `pnpm e2e:install`.
+
+### Full setup, with Docker
+
+This runs the same services as production: PostgreSQL 17 with pgvector, Redis for the job queue and SeaweedFS as the S3 store.
+
+1. Copy the settings file and turn on the Docker block: `cp .env.example .env` (Command Prompt: `copy .env.example .env`), then uncomment the lines under "the Docker setup" in `.env`.
+2. Start the services and wait until they are healthy:
+
+   ```bash
+   docker compose -f infra/docker-compose.yml up -d --wait
+   ```
+
+3. Create the tables and load the demo, then start the apps:
+
+   ```bash
+   pnpm db:migrate
+   pnpm db:seed
+   pnpm dev
+   ```
+
+4. In a second terminal, start the queue worker (it needs `REDIS_URL`): `pnpm --filter @hunarpramaan/api dev:worker`.
+
+`docker compose -f infra/docker-compose.yml down` stops the services, and `down -v` also deletes their data. If PostgreSQL, Redis or another program already uses port 5432, 6379 or 8333 on your computer, stop it, or move the Docker port: for example `HP_POSTGRES_PORT=5433` before `docker compose` (PowerShell: `$env:HP_POSTGRES_PORT=5433`), with `localhost:5433` in `DATABASE_URL`. `HP_REDIS_PORT` and `HP_S3_PORT` work the same way.
+
+**API tests on PostgreSQL.** The Docker setup also creates an empty `hp_test` database when it first creates its data volume. With a volume from before, create it once: `docker compose -f infra/docker-compose.yml exec postgres createdb -U hp hp_test`. The tests delete everything in it, and refuse any database without "test" in its name.
+
+```bash
+# macOS, Linux, Git Bash
+TEST_DATABASE_URL=postgres://hp:hp@localhost:5432/hp_test pnpm --filter @hunarpramaan/api test
+# PowerShell
+$env:TEST_DATABASE_URL='postgres://hp:hp@localhost:5432/hp_test'; pnpm --filter @hunarpramaan/api test
+```
+
+**Secret scan and audit, as CI runs them.** With [gitleaks](https://github.com/gitleaks/gitleaks) installed: `gitleaks git .`. Then `pnpm audit --audit-level high`.
+
+**Planned: the AI service and the Android dev build.** These folders do not exist yet. When they land: `cd services/ai`, `uv sync`, `uv run uvicorn app.main:app --reload --port 8000`; and `pnpm --filter @hunarpramaan/mobile android` (which runs `npx expo run:android`). The phone has to reach the API, so set `EXPO_PUBLIC_API_URL` to your computer's LAN address (for example `http://192.168.1.20:4000`), not `localhost`.
 
 | Local service | Address |
 |---|---|
-| API (OpenAPI docs at `/docs`) | `http://localhost:4000` |
+| API | `http://localhost:4000` (OpenAPI docs at `/docs` are *planned*) |
 | Web dashboard | `http://localhost:3000` |
-| AI service (docs at `/docs`) | `http://localhost:8000` |
-| PostgreSQL | `localhost:5432` |
-| Redis | `localhost:6379` |
-| S3 store (SeaweedFS) | `http://localhost:8333` |
+| AI service | `http://localhost:8000` (*planned*) |
+| PostgreSQL | `localhost:5432` (Docker setup) |
+| Redis | `localhost:6379` (Docker setup) |
+| S3 store (SeaweedFS) | `http://localhost:8333` (Docker setup) |
 
 ### Configuration
 
+Settings are environment variables. Each app reads its own `.env` file, and none is needed for the quick start.
+
+| App | Reads | When a setting is in more than one place |
+|---|---|---|
+| API (`services/api`) | The repo root `.env` and `services/api/.env` | Your shell wins, then `services/api/.env`, then the root `.env` |
+| Web (`apps/web`) | `apps/web/.env` or `apps/web/.env.local` (Next.js) | Your shell wins. It does not read the root `.env` |
+
+A setting typed in the shell, such as `PORT=4001 pnpm dev`, reaches the apps too: `turbo.json` passes the API and web settings through.
+
+`.env.example` lists every variable with a comment. The main ones:
+
 | Variable | Example | Used by |
 |---|---|---|
-| `DATABASE_URL` | `postgres://hp:hp@localhost:5432/hunarpramaan` | api |
-| `REDIS_URL` | `redis://localhost:6379` | api |
-| `S3_ENDPOINT` · `S3_BUCKET` · `S3_ACCESS_KEY` · `S3_SECRET_KEY` | `http://localhost:8333` · `evidence` · … | api |
-| `JWT_SECRET` | a long random string | api |
-| `AI_SERVICE_URL` | `http://localhost:8000` | api worker |
-| `LLM_BASE_URL` · `LLM_API_KEY` · `LLM_MODEL` | any OpenAI-compatible endpoint, preferably hosted in India | ai |
-| `BHASHINI_USER_ID` · `BHASHINI_API_KEY` | from the Bhashini portal | ai |
-| `SARVAM_API_KEY` | backup speech provider | ai |
-| `MOCK_INTEGRATIONS` | `true` (SIDH, eKYC, OTP, NQR) | api |
-| `ROUTING_THRESHOLD` | `0.70` (NCVET rule; sent to phones in the trade pack) | api |
-| `RESCORE_SAMPLE_RATE` | `0.10` | api |
-| `GEOFENCE_RADIUS_M` | `200` | api |
-| `EXPO_PUBLIC_API_URL` | `http://192.168.1.20:4000` | mobile |
+| `DATABASE_URL` | `postgres://hp:hp@localhost:5432/hunarpramaan`; default `pglite:./.data/pglite` | api |
+| `REDIS_URL` | `redis://localhost:6379`; without it, jobs run in the API process | api |
+| `S3_ENDPOINT` · `S3_BUCKET` · `S3_ACCESS_KEY` · `S3_SECRET_KEY` | `http://localhost:8333` · `evidence` · …; without them, clips go to `LOCAL_OBJECT_DIR` | api |
+| `JWT_SECRET` | A random string of 32 or more characters. Optional only in development with `PUBLIC_API_URL` on localhost | api |
+| `PORT` | `4000` | api |
+| `MOCK_INTEGRATIONS` | `true` (SIDH, eKYC, OTP, NQR); on by default outside production | api |
+| `PUBLIC_API_URL` | `http://localhost:4000`: where phones upload clips when there is no S3 store | api |
+| `PUBLIC_WEB_URL` | `http://localhost:3000`: the QR target on certificates (*planned*, S4) | api |
+| `RESCORE_SAMPLE_RATE` · `GEOFENCE_RADIUS_M` · `CLOCK_DRIFT_LIMIT_S` · `JWT_TTL_HOURS` | `0.10` · `200` · `300` · `12` | api |
+| `TEST_DATABASE_URL` | `postgres://hp:hp@localhost:5432/hp_test`: API tests on PostgreSQL; the name must contain "test" | api tests |
+| `API_URL` | `http://localhost:4000` (the default) | web |
+| `AI_SERVICE_URL` | `http://localhost:8000` | api worker (*planned*) |
+| `LLM_BASE_URL` · `LLM_API_KEY` · `LLM_MODEL` | Any OpenAI-compatible endpoint, preferably hosted in India | ai (*planned*) |
+| `BHASHINI_USER_ID` · `BHASHINI_API_KEY` · `SARVAM_API_KEY` | From the Bhashini portal; Sarvam is the backup | ai (*planned*) |
+| `EXPO_PUBLIC_API_URL` | `http://192.168.1.20:4000` | mobile (*planned*) |
+
+To make a `JWT_SECRET` on any OS: `node -e "console.log(require('node:crypto').randomBytes(48).toString('base64'))"`.
 
 > [!CAUTION]
-> Never commit `.env`, API keys, real worker recordings, names, phone numbers or Aadhaar data. Use the seeded fixtures. CI scans every PR for secrets.
+> Never commit `.env`, API keys, real worker recordings, names, phone numbers or Aadhaar data. Use the seeded fixtures. `.gitignore` already leaves out `.env` files, media and `services/api/.data/`, and CI scans every PR for secrets.
 
 ### Useful scripts
 
-| Command | What it does |
+Run them from the repo root.
+
+| Command | What it does | Works now |
+|---|---|---|
+| `pnpm dev` | API and web in watch mode | ✅ |
+| `pnpm check` | Lint, typecheck and test: run it before every push | ✅ |
+| `pnpm db:seed` | Load the trade pack, demo accounts and demo pilot; running it again adds nothing | ✅ |
+| `pnpm db:reset` | Delete the local PGlite database and clips, to start the demo again (stop `pnpm dev` first) | ✅ |
+| `pnpm db:migrate` | Apply database migrations (the API also does this itself on PGlite) | ✅ |
+| `pnpm test` | Unit and integration tests in every workspace | ✅ TypeScript; Python with the AI service |
+| `pnpm lint` · `pnpm typecheck` · `pnpm build` | ESLint and Prettier, TypeScript, production builds | ✅ |
+| `pnpm format` | Rewrite files in Prettier style | ✅ |
+| `pnpm pack:build electrician` | Validate and package a trade pack for phones | ✅ |
+| `pnpm e2e:install` · `pnpm e2e:web` | Download Chromium once · run the Playwright flows (needs `pnpm dev` and fresh demo data) | ✅ |
+| `pnpm --filter @hunarpramaan/<pkg> test` | Tests for one workspace only | ✅ |
+| `pnpm e2e:mobile` | Maestro end-to-end flows on the phone | planned |
+| `pnpm eval:study` · `pnpm eval:mapping` | Rater-study and mapping-test analysis | planned |
+
+### Troubleshooting
+
+| Problem | What to do |
 |---|---|
-| `pnpm dev` | API, queue worker and dashboard in watch mode |
-| `pnpm test` | All unit and integration tests (TypeScript and Python) |
-| `pnpm lint` · `pnpm typecheck` | ESLint/Prettier and TypeScript checks |
-| `pnpm db:migrate` · `pnpm db:seed` | Database schema and demo data |
-| `pnpm pack:build electrician` | Validate and package a trade pack for phones |
-| `pnpm e2e:mobile` · `pnpm e2e:web` | Maestro and Playwright end-to-end flows |
-| `pnpm eval:study` · `pnpm eval:mapping` | Rater-study and mapping-test analysis |
+| `The local database .data/pglite is open in another process` | Only one process can open the local database. Stop `pnpm dev` with Ctrl+C, then run the command again. If nothing is running, delete the `.lock` file the message names |
+| Every demo sign-in fails | The database has no demo data yet: run `pnpm db:seed` |
+| Odd database errors, or you want the demo from the start | Stop `pnpm dev`, then run `pnpm db:reset && pnpm db:seed`. With Docker, run `docker compose -f infra/docker-compose.yml down -v`, start it again, then `pnpm db:migrate && pnpm db:seed` |
+| Port 3000 or 4000 is already in use | Stop the other program. To find it, run `netstat -ano \| findstr :4000` and then `taskkill /PID <pid> /F` on Windows, or `lsof -i :4000` on macOS and Linux. Or move the API: put `PORT=4001` and `PUBLIC_API_URL=http://localhost:4001` in `services/api/.env`, and `API_URL=http://localhost:4001` in `apps/web/.env` |
+| `pnpm lint` reports every file on Windows | The files were checked out with CRLF line endings. The repo's `.gitattributes` keeps LF; a clone made before it existed needs a fresh clone, or (after committing your work) `git rm -r --cached -q . && git reset --hard` |
+| `corepack enable` fails with `EPERM` | Run it in an administrator terminal, or `npm install -g pnpm@10.28.0` |
+| `corepack: command not found`, or `pnpm install` warns about your Node version | Use Node 22.18+ or 24.11+; Node 25 and later ship without Corepack |
+| `pnpm e2e:web` says Chromium's executable doesn't exist | Run `pnpm e2e:install` once |
+| `pnpm e2e:web` skips 2 tests | An earlier run approved the demo's clean recommendation. Stop `pnpm dev`, run `pnpm db:reset && pnpm db:seed`, and start again |
+| The sign-in page says the server cannot be reached | The web app cannot reach the API. The `pnpm dev` terminal prints the address it tried: check that the API started and that `API_URL` in `apps/web/.env` matches its port |
+| `API_URL` or `PORT` is ignored | Put API settings in the root `.env` or `services/api/.env`, and `API_URL` in `apps/web/.env`; the web app never reads the root `.env` |
+| `pnpm build` fails with a font download error | The web build downloads the Rajdhani and Hind fonts from Google Fonts, so it needs internet. `pnpm dev` falls back to system fonts when offline |
+| `&&` is an error in PowerShell | Windows PowerShell 5.1 has no `&&`. Run the commands one at a time, or use PowerShell 7 or Command Prompt |
 
 ## Core logic
 
@@ -389,34 +529,35 @@ The worker passes when the result meets the QP's pass rule, which is copied from
 
 ### Trade pack
 
-Each trade has one versioned pack that carries everything the phone needs offline: about 70 MB including the models. Codes and texts come from the QP files on NQR. The values below are only illustrative.
+Each trade has one versioned pack that carries everything the phone needs offline: about 70 MB including the models. Codes and texts come from the QP files on NQR. The schema is `TradePack` in [`packages/contracts`](packages/contracts/src/trade-pack.ts), and the draft electrician pack is in [`packages/trade-packs/packs/electrician`](packages/trade-packs/packs/electrician). The values below are only illustrative.
 
 ```json
 {
   "schemaVersion": "1.0",
-  "pack": { "id": "csdci-electrician", "version": "2026.11.0", "languages": ["hi", "en"] },
+  "pack": { "id": "csdci-electrician", "version": "2026.11.0", "status": "released", "languages": ["hi", "en"] },
+  "policy": { "routingThreshold": 0.7, "reviewBand": { "low": 0.65, "high": 0.75 } },
   "qualifications": [
     {
       "nqrCode": "QG-03-CO-03951-2025-V2-CSDCI",
-      "title": "Assistant Electrician",
+      "title": { "en": "Assistant Electrician", "hi": "सहायक इलेक्ट्रीशियन" },
       "nsqfLevel": 3,
       "awardingBody": "CSDCI",
       "passRule": { "aggregatePercent": 70 },
       "nos": [
         {
           "code": "<NOS code from the QP file>",
-          "title": "<NOS title>",
+          "title": { "en": "<NOS title>", "hi": "<Hindi title>" },
           "weight": 0.3,
           "criteria": [
             {
-              "id": "PC4",
+              "id": "<NOS code>.PC4",
               "text": { "en": "Measure earth resistance and leakage", "hi": "<Hindi text>" },
               "marks": 10,
               "glossary": ["earthing dena", "earth pit", "megger"],
               "rubric": {
-                "0": "Cannot use the tester or misreads it",
-                "1": "Takes a reading but skips a safety step or cannot say if the value is acceptable",
-                "2": "Takes a correct reading safely and judges it against the limit"
+                "0": { "en": "Cannot use the tester or misreads it", "hi": "<Hindi>" },
+                "1": { "en": "Takes a reading but skips a safety step or cannot say if the value is acceptable", "hi": "<Hindi>" },
+                "2": { "en": "Takes a correct reading safely and judges it against the limit", "hi": "<Hindi>" }
               },
               "evidence": { "type": "video", "minSeconds": 30, "maxSeconds": 60 },
               "aiChecks": ["ppe.gloves", "meter.reading"]
@@ -426,28 +567,40 @@ Each trade has one versioned pack that carries everything the phone needs offlin
       ]
     }
   ],
-  "calibrationClips": ["calib-01", "calib-02", "calib-03"],
+  "calibrationClips": [
+    { "id": "calib-01", "nqrCode": "QG-03-CO-03951-2025-V2-CSDCI", "criterionId": "<NOS code>.PC4", "masterScore": 1, "sha256": "<hash of the clip file>" }
+  ],
   "models": { "asr": "vosk-model-small-hi-0.22", "ppe": "ppe-detector-v1" }
 }
 ```
 
+The schema also checks that:
+
+- NOS weights in each QP sum to 1;
+- criterion ids are unique within a QP (PC numbers restart in each NOS, so ids carry the NOS code);
+- every title, criterion and rubric anchor has Hindi and English text;
+- each calibration clip points at a real criterion.
+
+A `released` pack also needs real NOS codes and at least 3 calibration clips; `pnpm pack:build` refuses it otherwise.
+
 ## Data model
 
-Ten tables. Scores, evidence and audit entries are append-only. Each session stores the trade-pack version it used, so results stay valid after a QP is revised.
+The core entities are below. The full schema has 27 tables, adding accounts, devices, calibration, evidence checks, flags and re-scoring; [`docs/design/data-model.md`](docs/design/data-model.md) describes every one. Scores, evidence and audit entries are append-only, enforced by a database trigger. Each session stores the trade-pack version it used, so results stay valid after a QP is revised.
 
 ```mermaid
 erDiagram
+    WORKER ||--o{ CONSENT : gives
     WORKER ||--o{ DECLARATION : gives
-    WORKER ||--o{ SESSION : "is assessed in"
+    DECLARATION ||--o{ MAPPING_RESULT : "AI suggests"
+    DECLARATION ||--o{ ROUTE_DECISION : "mobiliser decides"
+    WORKER ||..o{ SESSION : "is assessed in (no FK)"
     QUALIFICATION ||--|{ NOS : contains
     NOS ||--|{ CRITERION : contains
-    QUALIFICATION ||--o{ SESSION : "assessed against"
     SESSION ||--|{ EVIDENCE : collects
-    CRITERION ||--o{ EVIDENCE : "proved by"
     SESSION ||--|{ SCORE : records
-    CRITERION ||--o{ SCORE : "rated in"
-    SESSION ||--o| RECOMMENDATION : produces
-    SESSION ||--|{ AUDIT_ENTRY : logs
+    SESSION ||--o{ RECOMMENDATION : "assessor signs"
+    RECOMMENDATION ||--o| APPROVAL : "awarding body decides"
+    RECOMMENDATION ||--o| CERTIFICATE : issues
 
     WORKER {
         uuid id PK
@@ -455,118 +608,139 @@ erDiagram
         string phone
         string language
         string ekyc_ref "reference only, never the Aadhaar number"
-        uuid consent_id
     }
     QUALIFICATION {
         string nqr_code PK
-        string title
+        string pack_version
         int nsqf_level
-        float pass_mark
-        string version
+        json pass_rule
     }
     NOS {
+        string nqr_code PK
         string code PK
-        string nqr_code FK
-        string title
         float weight
     }
     CRITERION {
+        string nqr_code PK
         string id PK
-        string nos_code FK
-        string text
+        string nos_code
         int marks
-        json rubric "0/1/2 anchors with example photos"
-        json glossary
+        json rubric "0/1/2 anchors"
     }
     DECLARATION {
         uuid id PK
         uuid worker_id FK
         text transcript
-        json claims
-        json coverage "per qualification"
+    }
+    MAPPING_RESULT {
+        uuid id PK
+        uuid declaration_id FK
+        json results "coverage per QP"
+        string suggested_route
+    }
+    ROUTE_DECISION {
+        uuid id PK
+        uuid declaration_id FK
         string route
+        string reason "required when it differs from the AI"
     }
     SESSION {
         uuid id PK
-        uuid worker_id FK
+        uuid worker_id "no FK: phones sync in any order"
         uuid assessor_id FK
-        string nqr_code FK
+        string nqr_code
         string pack_version
-        json geofence
-        timestamp started_at
+        string ekyc_ref
+        json gps
         string device_id
     }
     EVIDENCE {
         uuid id PK
         uuid session_id FK
-        string criterion_id FK
+        string criterion_id
         string sha256
-        timestamp captured_at
         json gps
     }
     SCORE {
         uuid id PK
         uuid session_id FK
-        string criterion_id FK
+        string criterion_id
         int value "0, 1 or 2"
         json ai_flags
-        string override_reason
-    }
-    AUDIT_ENTRY {
-        string device_id PK
-        bigint seq PK
-        uuid session_id FK
-        string event
-        string actor
-        string prev_hash
-        string hash
+        string conflict_reason
+        uuid supersedes "a correction is a new score"
     }
     RECOMMENDATION {
         uuid id PK
         uuid session_id FK
+        string outcome "pass or fail"
         json nos_totals
-        string result
-        string assessor_signature
-        string approval_status
+        uuid signed_by FK
+    }
+    APPROVAL {
+        uuid id PK
+        uuid recommendation_id FK
+        string decision "approved or returned"
+        uuid decided_by FK
+    }
+    CERTIFICATE {
+        string id PK "the QR code"
+        uuid recommendation_id FK
     }
 ```
+
+Every event a phone sends is stored as an `AUDIT_ENTRY` in that device's hash chain (`device_id`, `seq`, `type`, `actor`, `prev_hash`, `hash`), and the API projects it into the tables above. Decisions made on the web, such as approvals, flag reviews and route overrides, are written by the API as rows in the same append-only tables. Flags carry a code plus values (`flags.params`), which the web app words in Hindi and English.
 
 ## API overview
 
 <details>
 <summary><b>Main endpoints (v1)</b></summary>
 
+Callers are checked against `AUTHORITY` (actions) and `READ_ACCESS` (reads) in `packages/contracts/src/authority.ts`.
+
 | Method | Path | Who calls it | What it does |
 |---|---|---|---|
-| POST | `/v1/auth/otp` · `/v1/auth/login` | All signed-in roles | OTP (mocked) + PIN login; returns a JWT |
-| POST | `/v1/devices` | Assessor | Registers and binds a device |
-| GET | `/v1/trade-packs/:id` | Phones | Downloads a versioned trade pack |
-| POST | `/v1/sync/push` | Phones | Uploads a batch of events (idempotent by event id); returns acks, server time and upload URLs |
-| GET | `/v1/sync/pull?cursor=` | Phones | Returns new packs, assignments, re-score tasks and results |
-| POST | `/v1/evidence/:id/complete` | Phones | Confirms a clip upload; queues the hash re-check and vision jobs |
-| POST | `/v1/declarations/:id/override` | Mobiliser | Changes the route or QP, with a reason |
-| POST | `/v1/sessions/:id/sign` | Assessor | Signs the recommendation |
-| POST | `/v1/recommendations/:id/approve` | Awarding body | Approves the recommendation and issues the certificate |
-| GET | `/v1/audit/sessions/:id/verify` | Agency | Verifies the hash chain |
-| GET | `/v1/dashboard/agreement` | Agency, NCVET | Returns agreement metrics and outliers |
+| GET | `/healthz` | Anyone | Liveness check (CI and Docker use it) |
+| POST | `/v1/auth/otp` · `/v1/auth/login` | Anyone with an account | OTP (mocked) + PIN login; returns a JWT |
+| POST | `/v1/devices` | Mobiliser, assessor, master assessor | Registers a phone and binds it to the account |
+| GET | `/v1/trade-packs/:id` | Every signed-in role | Downloads a versioned trade pack |
+| POST | `/v1/sync/push` | Phone roles: worker, mobiliser, assessor, master assessor | Uploads a batch of events (idempotent by event id); returns acks, server time and upload URLs |
+| GET | `/v1/sync/pull?cursor=` | Phone roles | New trade packs, the server's checks of your clips, and (master assessors) re-score tasks |
+| PUT | `/v1/evidence/:id/content` | Assessor, master assessor | Uploads a clip through the API when there is no S3 store; a file that does not match its hash is refused |
+| POST | `/v1/evidence/:id/complete` | Assessor, master assessor | Confirms a clip upload and queues the server re-hash (vision jobs come with the AI service) |
+| POST | `/v1/declarations/:id/override` | Mobiliser | Changes the route or QP online, with a reason |
+| GET | `/v1/sessions` · `/v1/sessions/:id` | Agency, awarding body | Sessions with evidence checks, scores, flags and the recommendation |
+| POST | `/v1/sessions/:id/sign` | Assessor, master assessor | Signs the recommendation online; refused if the result does not match the scores |
+| GET | `/v1/recommendations` | Agency, awarding body | Signed recommendations waiting for a decision, with what blocks them |
+| POST | `/v1/recommendations/:id/approve` | Awarding body | Approves (and issues the certificate) or returns the recommendation |
+| GET | `/v1/audit/sessions/:id/verify` | Agency, awarding body | Verifies the hash chain |
+| GET | `/v1/flags` · POST `/v1/flags/:id/review` | Agency | Integrity flags and the agency's review notes |
+| GET | `/v1/dashboard/summary` | Agency, awarding body, NCVET | Key numbers |
+| GET | `/v1/dashboard/agreement` | Agency, awarding body, NCVET | Agreement metrics and outlier assessors (NCVET gets no per-assessor rows) |
 | GET · POST | `/v1/rescoring` | Master assessor | Blind re-score queue and submissions |
-| GET | `/v1/certificates/:id/verify` | Public | QR verification page |
+| GET | `/v1/certificates/:id/verify` | Public | Certificate status as JSON, for the web app's `/verify/:id` page that the QR code opens |
+| GET | `/v1/public/study` | Public | Rater-study results for the website |
 | POST | `/v1/exports/sidh` | Awarding body | Mock SIDH export |
 
-The AI service is internal and only the queue worker calls it: `POST /extract`, `/embed`, `/map`, `/vision/ppe`, `/phash` and `/stats/agreement`.
+The AI service (*planned*) is internal and only the queue worker will call it: `POST /extract`, `/embed`, `/map`, `/vision/ppe`, `/phash` and `/stats/agreement`.
 
 </details>
 
-**Roles and permissions.** The API checks the role in each JWT before every action.
+**Roles and permissions.** The API checks the role in each JWT before every action, against the `AUTHORITY` and `READ_ACCESS` tables in [`packages/contracts/src/authority.ts`](packages/contracts/src/authority.ts). The full design, with what is built and what is planned, is in [docs/design/access-control.md](docs/design/access-control.md).
 
-| Role | App | What the role can do |
-|---|---|---|
-| Worker | Mobile, usually with a mobiliser | Give consent and a declaration; see their own profile |
-| Mobiliser | Mobile | Register workers; review mapping; override the route with a reason |
-| Assessor | Mobile | Calibrate, capture evidence, score and sign. Master assessors also re-score blind |
-| Agency | Web | Monitor sessions and assessors; investigate flags; run re-scoring |
-| Awarding body (SSC) | Web | Approve recommendations and issue certificates |
-| NCVET | Web | See aggregates only |
+| Role | App | What the role can do | Status |
+|---|---|---|---|
+| Worker | Mobile, usually with a mobiliser | Give consent and a declaration; later, see their own profile | API built; phone app and profile planned |
+| Mobiliser | Mobile | Register workers; review mapping; override the route with a reason | API built; phone app planned |
+| Assessor | Mobile | Calibrate, capture evidence, score and sign | API built; phone app planned |
+| Master assessor | Mobile | Re-score a sampled clip blind, for the awarding body | API built; phone app planned |
+| Agency | Web | Monitor sessions and assessors; investigate flags; see agreement and outlier assessors | Built |
+| Awarding body (SSC) | Web | Approve recommendations and issue certificates | Built |
+| NCVET | Web | See aggregates only | Built |
+| Platform admin | Web admin | Create and suspend organisations; invite each one's first admin; upload trade packs | Planned: accounts in S1, screens in S3–S4 |
+| Agency, training-partner and awarding-body admins | Web admin | Invite, deactivate and unlock their own staff; revoke lost phones; the awarding-body admin also releases trade packs and accredits assessors | Planned: accounts in S1, screens in S3–S5 |
+
+**Admins never decide.** Admin roles manage people, organisations and phones. They never score, sign, approve, review a flag or edit a record, and nobody who decides can administer ([ADR 010](docs/adr/010-organisations-admin-roles-access-control.md)). Every account belongs to one organisation, and from Sprint 2 each sees only its own organisation's records. Personal data such as names and phone numbers moves out of the hash chain early in Sprint 1, so it can be erased without breaking the chain ([ADR 011](docs/adr/011-personal-data-outside-the-hash-chain.md)).
 
 ## Offline, integrity and privacy
 
@@ -592,7 +766,8 @@ The AI service is internal and only the queue worker calls it: `POST /extract`, 
 - **DPDP Rules 2025:** [notified on 13 Nov 2025](https://www.hlc.com/en/publications/indias-digital-personal-data-protection-act-2023-brought-into-force-). Their notice, consent and security duties apply from 13 May 2027, and we build to them now.
 - **Consent:** before any recording, the worker hears a standalone consent notice in their language. Withdrawing consent is as easy as giving it.
 - **Encryption:** no Aadhaar number is stored, only the eKYC reference. Data is encrypted on the device (SQLCipher), in transit (TLS) and at rest.
-- **Access by role:** assessors see their own sessions, agencies their own centres, and NCVET only aggregates.
+- **Access by role:** each role sees only what it needs, and NCVET only aggregates. Scoping by organisation (an agency sees only its own sessions) lands in Sprint 2; today every agency and awarding-body account sees every session.
+- **Logs:** request logs redact tokens and cookies and never include request bodies, so no phone number, OTP or PIN reaches them (`services/api/src/logger.ts`).
 - **Training data and retention:** faces are blurred in any clip used to improve the models, and data is deleted when the audit period ends.
 - **Breaches** are reported to the Data Protection Board without delay, with the follow-up report within 72 hours.
 - **Hosting:** everything is hosted in India.
@@ -841,12 +1016,12 @@ Rotate sleep so that nobody codes exhausted.
 
 | Level | Tools | What it covers | When it runs |
 |---|---|---|---|
-| Unit | Vitest, jest-expo, pytest | Coverage and result formulas; the routing edge case (0.699 vs 0.700); hash chain; rubric rules; kappa and alpha against a published worked example | Every PR |
-| Contract | zod schemas, OpenAPI | Phone ↔ API payloads; trade-pack schema | Every PR |
-| Integration | Supertest with PostgreSQL and Redis in Docker; FastAPI TestClient | Idempotent sync; chain verification; queue → AI → database; role checks | Every PR |
-| End-to-end | [Maestro](https://maestro.mobile.dev/) (Android), Playwright (web) | The full flow; the airplane-mode drill; the dashboard updating after sync | Before every review |
-| Performance | k6; Android Studio profiler on the 3 GB phone | 50 phones syncing at once; app memory; time to transcript | S5–S6 |
-| Security | gitleaks, npm audit, pip-audit, tamper tests | Secrets; vulnerable packages; an edited clip rejected; the wrong role blocked | Every PR, and in S6 |
+| Unit | Vitest; jest-expo and pytest *planned* | Coverage and result formulas; the routing edge case (0.699 vs 0.700); hash chain; rubric rules; kappa and alpha against a published worked example | Every PR |
+| Contract | zod schemas (OpenAPI *planned*) | Phone ↔ API payloads; trade-pack schema | Every PR |
+| Integration | Supertest on in-process PGlite, or PostgreSQL 17 with `TEST_DATABASE_URL` (CI); jobs run inline. FastAPI TestClient *planned* | Idempotent sync; chain verification; queue → AI → database; role checks | Every PR |
+| End-to-end | Playwright (web); [Maestro](https://maestro.mobile.dev/) (Android) *planned* | The full flow; the airplane-mode drill; the dashboard updating after sync | Before every review |
+| Performance | k6 and the Android Studio profiler on the 3 GB phone (*planned*) | 50 phones syncing at once; app memory; time to transcript | S5–S6 |
+| Security | gitleaks, `pnpm audit`, tamper tests; pip-audit *planned* | Secrets; vulnerable packages; an edited clip rejected; the wrong role blocked | Every PR, and in S6 |
 | Usability | SUS questionnaire, think-aloud sessions | 5 workers and 3 assessors | S2 and S4 |
 | Acceptance | UAT with the mentor, evaluation studies | Whether the PS outcomes are met | S5–S6 |
 
@@ -859,9 +1034,11 @@ Rotate sleep so that nobody codes exhausted.
 - **IT-01 Idempotency:** pushing the same batch twice stores it once.
 - **IT-02 Tampering:** a clip whose bytes don't match its captured hash is rejected and flagged. Editing one audit row makes verification fail at that row.
 - **IT-03 Authority:**
-  - only an assessor token can sign;
-  - only an awarding-body token can approve;
+  - only an assessor account can sign;
+  - only an awarding-body account can approve;
   - no AI job can write a score.
+- **IT-04 Admins never decide** (*planned*, with the admin roles): no admin token can score, sign, approve, review a flag or re-score.
+- **IT-05 Scoping** (*planned*, Sprint 2): an account outside the record's organisation gets "not found".
 
 ### Evaluation: the evidence the PS asks for
 
@@ -903,7 +1080,7 @@ R2,C01,PC3,2,38
 
 | Environment | Where | What runs | Updated |
 |---|---|---|---|
-| Local | Each laptop | Docker Compose + `pnpm dev` + the AI service | Continuously |
+| Local | Each laptop: Windows, macOS or Linux | `pnpm dev` on PGlite, or Docker Compose for the full stack; the AI service when it exists | Continuously |
 | Staging | One VM in an Indian cloud region | The same Compose file behind Caddy (HTTPS) | On every merge to `main` |
 | Demo-in-a-box | The team laptop, 2 phones and 1 spare | The full stack on the laptop's hotspot, seeded demo data and the release APK | Frozen at `v1.0.0` |
 | Production (after SIH) | MeghRaj / NIC cloud | Managed PostgreSQL, object storage, monitoring and backups | Through the release process |
@@ -950,9 +1127,10 @@ Mentors: `[faculty mentor]` and `[ITI electrician instructor or certified assess
 ## Contributing
 
 1. Pick an issue in **Ready** on the board and assign it to yourself.
-2. Create a branch from `main`: `feat/<module>-<short-name>`.
-3. Write the test with the code, and keep the PR small.
-4. Open the PR with the template, get one review, and squash-merge when CI is green.
+2. Update `main` (`git pull`) and create a branch from it: `feat/<module>-<short-name>`, `fix/<short-name>` or `docs/<short-name>`.
+3. Write the test with the code, and keep the PR small. Commit messages follow Conventional Commits, for example `feat(web): show the blocker list`.
+4. Run `pnpm check` before you push.
+5. Open the PR with the template, get one review, and squash-merge when CI is green.
 
 ## References
 
