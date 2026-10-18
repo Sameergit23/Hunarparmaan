@@ -89,6 +89,7 @@ Still planned: `pnpm e2e:mobile`, `pnpm eval:*`. Add them here when they exist.
 
 - Shared packages export TypeScript source (`"exports": "./src/index.ts"`); there is no build step (ADR 001).
 - Settings: the API reads the root `.env` and `services/api/.env` (`src/config.ts`, validated by zod); the web app reads only `apps/web/.env`. Turborepo strips shell variables it does not know, so add every new API or web setting to `globalPassThroughEnv` in `turbo.json`, and to `.env.example`.
+- In `turbo.json`, `typecheck` and `test` depend on `^transit`, a task no package defines: it puts the sources of every internal dependency into the cache key, so a change to a shared package re-runs its consumers' checks (`^build` can't, because the packages have no build). Give any new task that reads workspace source the same `dependsOn`, and add root config files that tasks read to `globalDependencies`.
 - PGlite allows one process per data folder: the API holds `services/api/.data/pglite.lock` (`src/db/pglite-lock.ts`), and seed, migrate and reset stop while `pnpm dev` runs.
 - `@hunarpramaan/audit` hashes events as RFC 8785 canonical JSON. Don't hash `JSON.stringify` output anywhere else.
 - Who may create which event or action is the `AUTHORITY` table in `packages/contracts/src/authority.ts` (ADR 006), and reads are `READ_ACCESS`. Check them there; don't hard-code roles in handlers. New admin actions follow the same tables (ADR 010 and `docs/design/access-control.md`).
