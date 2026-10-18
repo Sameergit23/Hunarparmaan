@@ -24,6 +24,7 @@
     "@hunarpramaan/scoring": "workspace:*",
     "@hunarpramaan/trade-packs": "workspace:*",
     "bullmq": "^6.3.16",
+    "cors": "^2.8.6",
     "drizzle-orm": "^0.45.4",
     "express": "^5.3.0",
     "helmet": "^8.3.0",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.10",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/pg": "^8.23.1",
     "@types/supertest": "^7.2.1",

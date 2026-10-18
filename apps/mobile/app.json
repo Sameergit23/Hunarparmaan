@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "HunarPramaan",
+    "slug": "hunarpramaan",
+    "scheme": "hunarpramaan",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "android": { "package": "in.hunarpramaan.app" },
+    "web": { "bundler": "metro", "output": "single" },
+    "plugins": ["expo-router"],
+    "experiments": { "typedRoutes": false }
+  }
+}

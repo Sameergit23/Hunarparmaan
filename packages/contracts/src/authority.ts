@@ -37,9 +37,26 @@ export const SERVER_ACTION_TYPES = [
 ] as const;
 export type ServerActionType = (typeof SERVER_ACTION_TYPES)[number];
 
-export type Action = DeviceEventType | ServerActionType;
+/**
+ * Admin actions (ADR 010), recorded in the hash-chained admin log. None of
+ * them is a decision about a worker, and no deciding role may perform one.
+ */
+export const ADMIN_ACTION_TYPES = [
+  'organisation.created',
+  'organisation.suspended',
+  'organisation.reactivated',
+  'account.invited',
+  'account.deactivated',
+  'account.reactivated',
+  'account.unlocked',
+  'device.revoked',
+] as const;
+export type AdminActionType = (typeof ADMIN_ACTION_TYPES)[number];
+
+export type Action = DeviceEventType | ServerActionType | AdminActionType;
 
 const ASSESSORS = ['assessor', 'master_assessor'] as const;
+const ADMINS = ['platform_admin', 'tp_admin', 'agency_admin', 'ab_admin'] as const;
 
 export const AUTHORITY = {
   'consent.given': ['worker', 'mobiliser'],
@@ -61,6 +78,15 @@ export const AUTHORITY = {
   'rescore.recorded': ['master_assessor'],
   'recommendation.approved': ['awarding_body'],
   'sidh.exported': ['awarding_body'],
+  // Admin actions: people, organisations and phones, never a decision.
+  'organisation.created': ['platform_admin'],
+  'organisation.suspended': ['platform_admin'],
+  'organisation.reactivated': ['platform_admin'],
+  'account.invited': ADMINS,
+  'account.deactivated': ADMINS,
+  'account.reactivated': ADMINS,
+  'account.unlocked': ADMINS,
+  'device.revoked': ADMINS,
 } as const satisfies Record<Action, readonly Principal[]>;
 
 /**
@@ -74,6 +100,17 @@ export const HUMAN_DECISIONS = [
   'recommendation.signed',
   'rescore.recorded',
   'recommendation.approved',
+] as const satisfies readonly Action[];
+
+/**
+ * Every decision about a worker or their evidence (ADR 010 "Never allowed"):
+ * no admin role and no automated component may hold any of these, and no role
+ * that holds one may hold an admin action. Tests and IT-04 check both.
+ */
+export const DECISION_ACTIONS = [
+  ...HUMAN_DECISIONS,
+  'flag.reviewed',
+  'sidh.exported',
 ] as const satisfies readonly Action[];
 
 /**
@@ -96,6 +133,12 @@ export const READ_ACCESS = {
   'recommendations.read': ['agency', 'awarding_body'],
   'audit.verify': ['agency', 'awarding_body'],
   'rescoring.read': ['master_assessor'],
+  // Admin panel (ADR 010): each admin sees their own organisation; the platform
+  // admin sees every organisation's accounts, phones masked, and no case data.
+  'admin.organisations.read': ADMINS,
+  'admin.people.read': ADMINS,
+  'admin.devices.read': ADMINS,
+  'admin.log.read': ADMINS,
 } as const satisfies Record<string, readonly Role[]>;
 export type ReadScope = keyof typeof READ_ACCESS;
 

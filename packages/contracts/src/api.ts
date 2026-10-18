@@ -55,7 +55,16 @@ export const LoginRequest = z.strictObject({
 });
 export type LoginRequest = z.infer<typeof LoginRequest>;
 
-export const SessionUser = z.strictObject({ id: EntityId, name: z.string(), role: Role });
+/**
+ * The signed-in account. `orgId` is the organisation it belongs to for good
+ * (ADR 010); scope is always derived from it on the server, never from the phone.
+ */
+export const SessionUser = z.strictObject({
+  id: EntityId,
+  name: z.string(),
+  role: Role,
+  orgId: EntityId,
+});
 export type SessionUser = z.infer<typeof SessionUser>;
 
 export const LoginResponse = z.strictObject({
@@ -177,6 +186,12 @@ export const FlagKind = z.enum([
   'vision_conflict',
   /** Perceptual hash: nearly the same picture as a clip in another session (FR-15). */
   'similar_clip',
+  /** Events synced by an account that was deactivated while offline work was waiting (ADR 010). */
+  'account_draining',
+  /** Events synced from a phone that was retired or replaced. */
+  'device_draining',
+  /** Events recorded on a phone after it was reported lost: refused; the session needs re-assessment. */
+  'device_lost',
 ]);
 export type FlagKind = z.infer<typeof FlagKind>;
 

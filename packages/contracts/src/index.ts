@@ -7,3 +7,4 @@ export * from './events';
 export * from './api';
 export * from './vision';
 export * from './ai-service';
+export * from './admin';
