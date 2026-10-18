@@ -47,7 +47,12 @@ describe('read access', () => {
   it('lets NCVET see aggregates only', () => {
     expect(canRead('ncvet', 'dashboard.read')).toBe(true);
     expect(canRead('ncvet', 'sessions.read')).toBe(false);
+    expect(canRead('ncvet', 'declarations.read')).toBe(false);
     expect(canRead('ncvet', 'flags.read')).toBe(false);
+  });
+
+  it('shows declarations to the agency and the awarding body only', () => {
+    expect(READ_ACCESS['declarations.read']).toEqual(['agency', 'awarding_body']);
   });
 
   it('keeps blind re-score tasks to master assessors', () => {

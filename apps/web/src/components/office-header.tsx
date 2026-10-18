@@ -7,12 +7,12 @@ import { Icon } from './icon';
 import { LanguageSwitch } from './language-switch';
 import { BrandStripe, LogoTile, cx } from './wire';
 
-type NavKey = 'dashboard' | 'sessions' | 'approvals' | 'flags';
+export type NavKey = 'dashboard' | 'declarations' | 'sessions' | 'approvals' | 'flags';
 
 /** Which pages each office role sees, matching READ_ACCESS in the contracts. */
 export const NAV_BY_ROLE: Record<string, NavKey[]> = {
-  agency: ['dashboard', 'sessions', 'flags'],
-  awarding_body: ['dashboard', 'approvals', 'sessions'],
+  agency: ['dashboard', 'declarations', 'sessions', 'flags'],
+  awarding_body: ['dashboard', 'approvals', 'declarations', 'sessions'],
   ncvet: ['dashboard'],
 };
 

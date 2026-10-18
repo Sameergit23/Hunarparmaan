@@ -7,6 +7,7 @@ import { z } from 'zod';
 import {
   EntityId,
   EventId,
+  Language,
   LocalizedText,
   NqrCode,
   Reason,
@@ -15,7 +16,7 @@ import {
   Sha256Hex,
   Timestamp,
 } from './common';
-import { AiFlag, DeviceId, EventPayloads } from './events';
+import { AiFlag, DeclarationSource, DeviceId, EventPayloads, MappingEngine } from './events';
 import { Role } from './roles';
 
 /** Indian mobile numbers, with or without +91. */
@@ -200,6 +201,56 @@ export const FlagView = z.strictObject({
   review: z.strictObject({ note: z.string(), by: z.string(), at: Timestamp }).nullable(),
 });
 export type FlagView = z.infer<typeof FlagView>;
+
+// --- Declarations -----------------------------------------------------------
+
+/** A QP by code, named as the current trade pack names it; null title and level if it has no such QP. */
+export const QpLabel = z.strictObject({
+  nqrCode: NqrCode,
+  title: LocalizedText.nullable(),
+  nsqfLevel: z.int().nullable(),
+});
+export type QpLabel = z.infer<typeof QpLabel>;
+
+/** The newest AI mapping of a declaration: a suggestion only (rule 1). */
+export const MappingSuggestionView = z.strictObject({
+  engine: MappingEngine,
+  packVersion: z.string(),
+  /** The pack's routing threshold (the 70% rule), for the tick on each bar; null if the pack is not stored. */
+  routingThreshold: z.number().nullable(),
+  coverage: z.array(QpLabel.extend({ coverage: z.number() })),
+  suggestedQp: QpLabel.nullable(),
+  suggestedRoute: Route,
+  needsReview: z.boolean(),
+  suggestedAt: Timestamp,
+});
+export type MappingSuggestionView = z.infer<typeof MappingSuggestionView>;
+
+/** The mobiliser's newest route decision for a declaration: this one stands. */
+export const RouteDecisionView = z.strictObject({
+  qp: QpLabel,
+  route: Route,
+  reason: z.string().nullable(),
+  /** True when the mobiliser chose another QP or route than the suggestion they were shown. */
+  overridden: z.boolean(),
+  decidedBy: z.string(),
+  decidedAt: Timestamp,
+  origin: z.enum(['device', 'web']),
+});
+export type RouteDecisionView = z.infer<typeof RouteDecisionView>;
+
+export const DeclarationListItem = z.strictObject({
+  id: EntityId,
+  workerName: z.string(),
+  language: Language,
+  source: DeclarationSource,
+  /** The transcript the worker confirmed or corrected (FR-02). */
+  transcript: z.string(),
+  recordedAt: Timestamp,
+  suggestion: MappingSuggestionView.nullable(),
+  decision: RouteDecisionView.nullable(),
+});
+export type DeclarationListItem = z.infer<typeof DeclarationListItem>;
 
 // --- Sessions ---------------------------------------------------------------
 

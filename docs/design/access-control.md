@@ -31,9 +31,9 @@ Workers usually have no login; the mobiliser's phone acts with them.
 | mobiliser | Workers they registered | Sessions, scores, results |
 | assessor | Their own sessions | Other assessors' sessions |
 | master_assessor | Blind re-score tasks for the awarding body's QPs | The original score, or the assessor's name; their own sessions |
-| agency | Their agency's sessions, flags and assessors | Other agencies' data |
-| awarding_body | Sessions and approvals for the QPs it owns | Other awarding bodies' QPs |
-| ncvet | National totals and rates | Any single worker, session or assessor |
+| agency | Their agency's declarations, sessions, flags and assessors | Other agencies' data |
+| awarding_body | Declarations, sessions and approvals for the QPs it owns | Other awarding bodies' QPs |
+| ncvet | National totals and rates | Any single worker, declaration, session or assessor |
 | platform_admin *planned* | Organisations, accounts (phones masked), devices, the admin log | Worker data, transcripts, clips, scores |
 | agency_admin, tp_admin, ab_admin *planned* | Their organisation's accounts, devices and admin log | Case data |
 

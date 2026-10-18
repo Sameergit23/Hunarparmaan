@@ -344,8 +344,8 @@ Open `http://localhost:3000` and sign in with a demo account. The one-time code 
 
 | Demo account | Mobile number | Sees |
 |---|---|---|
-| Assessment agency | `9000000006` | Dashboard, sessions, flags |
-| Awarding body | `9000000007` | Dashboard, approvals, sessions |
+| Assessment agency | `9000000006` | Dashboard, declarations, sessions, flags |
+| Awarding body | `9000000007` | Dashboard, approvals, declarations, sessions |
 | NCVET | `9000000008` | Dashboard (aggregates only) |
 | Mobiliser, assessors (3), master assessor | `9000000001`, `9000000002` to `9000000004`, `9000000005` | Phone roles: the API accepts them, and the web sign-in sends them to the phone app |
 
@@ -708,6 +708,7 @@ Callers are checked against `AUTHORITY` (actions) and `READ_ACCESS` (reads) in `
 | GET | `/v1/sync/pull?cursor=` | Phone roles | New trade packs, the server's checks of your clips, and (master assessors) re-score tasks |
 | PUT | `/v1/evidence/:id/content` | Assessor, master assessor | Uploads a clip through the API when there is no S3 store; a file that does not match its hash is refused |
 | POST | `/v1/evidence/:id/complete` | Assessor, master assessor | Confirms a clip upload and queues the server re-hash (vision jobs come with the AI service) |
+| GET | `/v1/declarations` | Agency, awarding body | Declarations synced from the phones, newest first, with the newest AI mapping (coverage per QP, suggested route) and the mobiliser's route decision |
 | POST | `/v1/declarations/:id/override` | Mobiliser | Changes the route or QP online, with a reason |
 | GET | `/v1/sessions` · `/v1/sessions/:id` | Agency, awarding body | Sessions with evidence checks, scores, flags and the recommendation |
 | POST | `/v1/sessions/:id/sign` | Assessor, master assessor | Signs the recommendation online; refused if the result does not match the scores |

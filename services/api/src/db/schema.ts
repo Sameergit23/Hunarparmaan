@@ -24,11 +24,16 @@ import {
 import type {
   Actor,
   AiFlag,
+  DeclarationSource,
+  EventPayload,
   GeoPoint,
+  Language,
   LocalizedText,
+  MappingEngine,
   MessageParams,
   PassRule,
   Role,
+  Route,
   TradePack,
 } from '@hunarpramaan/contracts';
 
@@ -196,8 +201,8 @@ export const declarations = pgTable('declarations', {
   workerId: uuid('worker_id')
     .notNull()
     .references(() => workers.id),
-  language: text('language').notNull(),
-  source: text('source').notNull(),
+  language: text('language').$type<Language>().notNull(),
+  source: text('source').$type<DeclarationSource>().notNull(),
   asrTranscript: text('asr_transcript').notNull(),
   transcript: text('transcript').notNull(),
   recordedAt: at('recorded_at').notNull(),
@@ -209,11 +214,11 @@ export const mappingResults = pgTable('mapping_results', {
   declarationId: uuid('declaration_id')
     .notNull()
     .references(() => declarations.id),
-  engine: text('engine').notNull(),
+  engine: text('engine').$type<MappingEngine>().notNull(),
   packVersion: text('pack_version').notNull(),
-  results: jsonb('results').notNull(),
+  results: jsonb('results').$type<EventPayload<'mapping.suggested'>['results']>().notNull(),
   suggestedNqrCode: text('suggested_nqr_code'),
-  suggestedRoute: text('suggested_route').notNull(),
+  suggestedRoute: text('suggested_route').$type<Route>().notNull(),
   needsReview: boolean('needs_review').notNull(),
   createdAt: at('created_at').notNull(),
 });
@@ -225,8 +230,9 @@ export const routeDecisions = pgTable('route_decisions', {
     .notNull()
     .references(() => declarations.id),
   nqrCode: text('nqr_code').notNull(),
-  route: text('route').notNull(),
-  suggested: jsonb('suggested'),
+  route: text('route').$type<Route>().notNull(),
+  /** What the mobiliser was shown; null for an online override made before any suggestion. */
+  suggested: jsonb('suggested').$type<{ nqrCode: string | null; route: Route }>(),
   reason: text('reason'),
   decidedBy: uuid('decided_by')
     .notNull()

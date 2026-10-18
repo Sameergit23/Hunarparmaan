@@ -3,9 +3,7 @@ import { ShieldAlert } from 'lucide-react';
 import { getMessages, type Lang, type Messages } from '@/lib/i18n';
 import { OFFICE_ROLES, requireUser } from '@/lib/session';
 import { Icon } from './icon';
-import { NAV_BY_ROLE, OfficeHeader } from './office-header';
-
-type NavKey = 'dashboard' | 'sessions' | 'approvals' | 'flags';
+import { NAV_BY_ROLE, OfficeHeader, type NavKey } from './office-header';
 
 /**
  * Frame for every signed-in page: header, nav, and a role check. The API

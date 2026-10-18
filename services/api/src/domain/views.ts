@@ -10,10 +10,12 @@ import type {
   ChainVerification,
   CriterionResult,
   DashboardSummary,
+  DeclarationListItem,
   EvidenceView,
   FlagKind,
   FlagView,
   PendingRecommendation,
+  QpLabel,
   RescoreTask,
   ScoreValue,
   SessionDetail,
@@ -21,23 +23,28 @@ import type {
   SessionStatus,
   SidhExport,
   StudyRound,
+  TradePack,
 } from '@hunarpramaan/contracts';
 import type { Db } from '../db/client';
 import {
   approvals,
   certificates,
   criteria,
+  declarations,
   evidence,
   evidenceChecks,
   flagReviews,
   flags,
+  mappingResults,
   qualifications,
   recommendations,
   rescoreTasks,
   rescores,
+  routeDecisions,
   scores,
   sessions,
   studyRounds,
+  tradePacks,
   users,
   workers,
 } from '../db/schema';
@@ -162,6 +169,108 @@ export async function listSessions(db: Db): Promise<SessionListItem[]> {
       openFlags: flagCounts.get(session.id) ?? 0,
       status: statusOf(rec),
       outcome: rec?.rec.outcome ?? null,
+    };
+  });
+}
+
+/** The routing threshold of the stored pack a suggestion was made with, found by version and QP. */
+function routingThreshold(
+  packs: { version: string; content: TradePack }[],
+  version: string,
+  nqrCodes: string[],
+): number | null {
+  const pack = packs.find(
+    (p) =>
+      p.version === version && p.content.qualifications.some((q) => nqrCodes.includes(q.nqrCode)),
+  );
+  return pack?.content.policy.routingThreshold ?? null;
+}
+
+/**
+ * Declarations synced from the mobilisers' phones, newest first, each with
+ * the newest AI mapping (a suggestion) and the mobiliser's standing route
+ * decision (FR-03, FR-04).
+ */
+export async function listDeclarations(db: Db): Promise<DeclarationListItem[]> {
+  const rows = await db
+    .select({ declaration: declarations, workerName: workers.name })
+    .from(declarations)
+    .innerJoin(workers, eq(workers.id, declarations.workerId))
+    .orderBy(desc(declarations.recordedAt), desc(declarations.id));
+  const ids = rows.map((r) => r.declaration.id);
+  if (ids.length === 0) return [];
+
+  const [mappings, decisions, qps] = await Promise.all([
+    db
+      .select()
+      .from(mappingResults)
+      .where(inArray(mappingResults.declarationId, ids))
+      .orderBy(asc(mappingResults.createdAt), asc(mappingResults.id)),
+    db
+      .select({ decision: routeDecisions, decidedBy: users.name })
+      .from(routeDecisions)
+      .innerJoin(users, eq(users.id, routeDecisions.decidedBy))
+      .where(inArray(routeDecisions.declarationId, ids))
+      .orderBy(asc(routeDecisions.decidedAt), asc(routeDecisions.id)),
+    db.select().from(qualifications),
+  ]);
+  const versions = [...new Set(mappings.map((m) => m.packVersion))];
+  const packs = versions.length
+    ? await db
+        .select({ version: tradePacks.version, content: tradePacks.content })
+        .from(tradePacks)
+        .where(inArray(tradePacks.version, versions))
+    : [];
+
+  // Both lists are oldest first, so the last row per declaration is the newest.
+  const latestMapping = new Map(mappings.map((m) => [m.declarationId, m]));
+  const latestDecision = new Map(decisions.map((d) => [d.decision.declarationId, d]));
+  const qpByCode = new Map(qps.map((q) => [q.nqrCode, q]));
+  const label = (nqrCode: string): QpLabel => {
+    const q = qpByCode.get(nqrCode);
+    return { nqrCode, title: q?.title ?? null, nsqfLevel: q?.nsqfLevel ?? null };
+  };
+
+  return rows.map(({ declaration, workerName }) => {
+    const mapping = latestMapping.get(declaration.id);
+    const row = latestDecision.get(declaration.id);
+    const shown = row?.decision.suggested;
+    return {
+      id: declaration.id,
+      workerName,
+      language: declaration.language,
+      source: declaration.source,
+      transcript: declaration.transcript,
+      recordedAt: iso(declaration.recordedAt),
+      suggestion: mapping
+        ? {
+            engine: mapping.engine,
+            packVersion: mapping.packVersion,
+            routingThreshold: routingThreshold(
+              packs,
+              mapping.packVersion,
+              mapping.results.map((r) => r.nqrCode),
+            ),
+            coverage: mapping.results.map((r) => ({ ...label(r.nqrCode), coverage: r.coverage })),
+            suggestedQp: mapping.suggestedNqrCode ? label(mapping.suggestedNqrCode) : null,
+            suggestedRoute: mapping.suggestedRoute,
+            needsReview: mapping.needsReview,
+            suggestedAt: iso(mapping.createdAt),
+          }
+        : null,
+      decision: row
+        ? {
+            qp: label(row.decision.nqrCode),
+            route: row.decision.route,
+            reason: row.decision.reason,
+            overridden:
+              !!shown &&
+              (shown.nqrCode !== row.decision.nqrCode || shown.route !== row.decision.route),
+            decidedBy: row.decidedBy,
+            decidedAt: iso(row.decision.decidedAt),
+            origin: row.decision.origin,
+          }
+        : null,
     };
   });
 }

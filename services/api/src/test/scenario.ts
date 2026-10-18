@@ -4,6 +4,7 @@ import { expect } from 'vitest';
 import type {
   EventPayload,
   GeoPoint,
+  Route,
   ScoreValue,
   SyncEventOf,
   DeviceEventType,
@@ -63,6 +64,72 @@ export async function registerWorker(
     }),
   ]);
   return workerId;
+}
+
+export const L4 = PACK.qualifications[1]!.nqrCode;
+const L4_CRITERIA = PACK.qualifications[1]!.nos.flatMap((n) => n.criteria.map((c) => c.id));
+
+/** What the phone's keyword mapper suggests in `buildDeclaration`: L3 at 78%, a direct assessment. */
+export const SUGGESTED = { nqrCode: L3, route: 'direct_assessment' } as const;
+
+/**
+ * Build (but don't push) a declaration as the mobiliser's phone records it:
+ * the confirmed transcript, the phone's keyword mapping (a system suggestion)
+ * and the mobiliser's route decision, which by default accepts the suggestion.
+ * `mapped: false` stops after the transcript; `decision: null` before the decision.
+ */
+export function buildDeclaration(
+  phone: SimulatedPhone,
+  workerId: string,
+  options: {
+    mapped?: boolean;
+    decision?: { nqrCode: string; route: Route; reason: string } | null;
+  } = {},
+) {
+  const declarationId = uuidv4();
+  const events: SyncEventOf<DeviceEventType>[] = [
+    phone.event('declaration.recorded', {
+      declarationId,
+      workerId,
+      language: 'hi',
+      source: 'vosk',
+      asrTranscript: 'das saal se ghar ki wiring karta hoon mcb lagata hoon',
+      transcript: '10 saal se ghar ki wiring karta hoon, MCB lagata hoon',
+    }),
+  ];
+  if (options.mapped === false) return { declarationId, events };
+  events.push(
+    phone.event(
+      'mapping.suggested',
+      {
+        declarationId,
+        packVersion: PACK.pack.version,
+        engine: 'device_keyword',
+        results: [
+          {
+            nqrCode: L3,
+            coverage: 0.78,
+            coveredCriteria: L3_CRITERIA.slice(1),
+            confidence: 0.7,
+          },
+          { nqrCode: L4, coverage: 0.52, coveredCriteria: L4_CRITERIA.slice(4), confidence: 0.6 },
+        ],
+        suggestedNqrCode: SUGGESTED.nqrCode,
+        suggestedRoute: SUGGESTED.route,
+        needsReview: false,
+      },
+      { actor: { kind: 'system', service: 'device-mapper' } },
+    ),
+  );
+  if (options.decision === null) return { declarationId, events };
+  events.push(
+    phone.event('route.decided', {
+      declarationId,
+      ...(options.decision ?? SUGGESTED),
+      suggested: SUGGESTED,
+    }),
+  );
+  return { declarationId, events };
 }
 
 export interface Assessment {

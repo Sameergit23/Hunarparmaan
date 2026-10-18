@@ -91,6 +91,8 @@ export const READ_ACCESS = {
     'ncvet',
   ],
   'dashboard.read': ['agency', 'awarding_body', 'ncvet'],
+  // What one worker said, with their name: never NCVET.
+  'declarations.read': ['agency', 'awarding_body'],
   'sessions.read': ['agency', 'awarding_body'],
   'flags.read': ['agency'],
   'recommendations.read': ['agency', 'awarding_body'],

@@ -17,8 +17,8 @@ language, work on a phone, and show every string in Hindi and English.
 - **The browser never holds the API token.** Sign-in stores the JWT in an `httpOnly`, `SameSite=Lax`
   cookie, and the Next.js server calls the API with it. Responses are parsed with the shared
   zod contracts, so drift between the API and the web app fails loudly.
-- **Roles:** agency (dashboard, sessions, flags), awarding body (dashboard, approvals,
-  sessions) and NCVET (dashboard only, with aggregates only). Field roles are sent to the phone
+- **Roles:** agency (dashboard, declarations, sessions, flags), awarding body (dashboard,
+  approvals, declarations, sessions) and NCVET (dashboard only, with aggregates only). Field roles are sent to the phone
   app. The API enforces the same rules; the web app only hides pages that would fail.
 - **Wire code:** Tailwind's colour palette is replaced, not extended, by `docs/design/tokens.json`,
   so off-palette classes do not exist. The root layout also sets the tokens as `--color-*`

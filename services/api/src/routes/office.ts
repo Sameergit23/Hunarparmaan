@@ -21,6 +21,7 @@ import { recordRescore } from '../domain/rescores';
 import {
   agreementReport,
   dashboardSummary,
+  listDeclarations,
   listFlags,
   listSessions,
   pendingRecommendations,
@@ -38,6 +39,11 @@ import { parse } from '../http/validate';
 export function officeRoutes(deps: Deps) {
   const router = Router();
   const { db } = deps;
+
+  // --- Declarations: the AI's match and the mobiliser's route (FR-03, FR-04) --
+  router.get('/v1/declarations', requireRead('declarations.read'), async (_req, res) => {
+    res.json(await listDeclarations(db));
+  });
 
   // --- Mobiliser: change the route or QP online, with a reason (FR-04) -------
   router.post('/v1/declarations/:id/override', requireAction('route.decided'), async (req, res) => {

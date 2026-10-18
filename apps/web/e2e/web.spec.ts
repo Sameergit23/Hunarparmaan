@@ -60,6 +60,23 @@ test('the agency sees agreement, flags and sessions, and can re-check a hash cha
   await noSidewaysScroll(page);
 });
 
+test('the agency sees a declaration synced from the phone, the AI hint beside the decision', async ({
+  page,
+}) => {
+  await signIn(page, AGENCY);
+  await page.getByRole('navigation').getByRole('link', { name: 'Declarations' }).click();
+  await expect(page.getByRole('heading', { name: 'Declarations', level: 1 })).toBeVisible();
+
+  const declaration = page.getByRole('region', { name: 'Ramesh Kumar' });
+  await expect(declaration.getByText(/^AI hint: Direct assessment for Assistant/)).toBeVisible();
+  await expect(
+    declaration.getByRole('img', { name: /^Assistant Electrician, NSQF level 3: \d+% covered$/ }),
+  ).toBeVisible();
+  await expect(declaration.getByRole('heading', { name: "Mobiliser's decision" })).toBeVisible();
+  await expect(declaration.getByText('Same as the AI suggestion')).toBeVisible();
+  await noSidewaysScroll(page);
+});
+
 test('the awarding body approves a clean recommendation and the certificate verifies', async ({
   page,
 }) => {

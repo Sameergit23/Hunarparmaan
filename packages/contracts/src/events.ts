@@ -50,6 +50,14 @@ export const AiFlag = z.strictObject({
 });
 export type AiFlag = z.infer<typeof AiFlag>;
 
+/** How a declaration's transcript was made: offline speech recognition, Bhashini, or typed. */
+export const DeclarationSource = z.enum(['vosk', 'bhashini', 'typed']);
+export type DeclarationSource = z.infer<typeof DeclarationSource>;
+
+/** The keyword match on the phone (offline), or the full engine after sync. */
+export const MappingEngine = z.enum(['device_keyword', 'server_full']);
+export type MappingEngine = z.infer<typeof MappingEngine>;
+
 /** Payload schema for each phone event type. */
 export const EventPayloads = {
   'consent.given': z.strictObject({
@@ -75,7 +83,7 @@ export const EventPayloads = {
     declarationId: EntityId,
     workerId: EntityId,
     language: Language,
-    source: z.enum(['vosk', 'bhashini', 'typed']),
+    source: DeclarationSource,
     /** What speech recognition heard; kept so transcript corrections can be measured. */
     asrTranscript: z.string(),
     /** The transcript after the worker confirmed or corrected it (FR-02). */
@@ -86,7 +94,7 @@ export const EventPayloads = {
   'mapping.suggested': z.strictObject({
     declarationId: EntityId,
     packVersion: PackVersion,
-    engine: z.enum(['device_keyword', 'server_full']),
+    engine: MappingEngine,
     results: z.array(
       z.strictObject({
         nqrCode: NqrCode,
