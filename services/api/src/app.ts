@@ -33,7 +33,7 @@ export function createApp(deps: AppDeps) {
   app.use(publicRoutes(deps));
 
   // Everything below needs a valid token, of the account's current version.
-  app.use('/v1', authenticate(deps.tokens, deps.db));
+  app.use('/v1', authenticate(deps.tokens, deps));
   app.use(accountRoutes(deps, deps.tokens));
   app.use(adminRoutes(deps));
   app.use(fieldRoutes(deps));

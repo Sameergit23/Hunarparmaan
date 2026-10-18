@@ -3,7 +3,7 @@
 How HunarPramaan decides who may see and do what. The decisions are in [ADR 006](../adr/006-ai-output-is-a-suggestion.md) (AI only suggests), [ADR 010](../adr/010-organisations-admin-roles-access-control.md) (organisations and admin roles) and [ADR 011](../adr/011-personal-data-outside-the-hash-chain.md) (personal data). The code is the source of truth: `AUTHORITY`, `READ_ACCESS`, `ROLES_BY_ORG_KIND`, `GRANTABLE_ROLES` and `SCOPE_BY_ROLE` in [`packages/contracts/src/authority.ts`](../../packages/contracts/src/authority.ts), the roles and organisation kinds in [`roles.ts`](../../packages/contracts/src/roles.ts), and the admin error codes in [`api.ts`](../../packages/contracts/src/api.ts).
 
 > [!NOTE]
-> **Built today:** the seven working roles, with every write checked against `AUTHORITY` and every read against `READ_ACCESS`. In contracts: the four admin roles, the five organisation kinds, admin actions with their reason codes, grant rules, scope levels, the organisation id in the session user and the token, and admin error codes. In the API: real organisations (`organisations`, `qp_owners` and `users.organisation_id`; migration 0008 makes the pilot's five and places existing accounts by role), the bootstrap command for the first platform admin, admin accounts, and staff invites into an organisation whose kind holds the role, recorded in the hash-chained admin log. **Planned (ADR 010):** account and phone status, scoping by organisation, and the admin panel ([docs/design/admin-panel](admin-panel/)). Rows marked *contracts* exist only as contract tables; rows marked *planned* don't exist yet.
+> **Built today:** the seven working roles, with every write checked against `AUTHORITY` and every read against `READ_ACCESS`. In contracts: the four admin roles, the five organisation kinds, admin actions with their reason codes, grant rules, scope levels, the organisation id in the session user and the token, and admin error codes. In the API: real organisations (`organisations`, `qp_owners` and `users.organisation_id`; migration 0008 makes the pilot's five and places existing accounts by role), the bootstrap command for the first platform admin, admin accounts, and staff invites into an organisation whose kind holds the role, recorded in the hash-chained admin log. Account and phone status, checked on every request and on sync (below). **Planned (ADR 010):** scoping by organisation, and the admin panel ([docs/design/admin-panel](admin-panel/)). Rows marked *contracts* exist only as contract tables; rows marked *planned* don't exist yet.
 
 ## The one rule
 
@@ -102,10 +102,12 @@ Admin screens follow Wire code: English first, every string also in Hindi, destr
 
 ## Phones that were offline
 
-Phones sync days later, so admin actions must not destroy offline work:
+Phones sync days later, so admin actions must not destroy offline work. **Built** (IT-09):
 
-- A **deactivated** account or a **retired** phone drains: recorded work still syncs and is flagged for review, and nothing new starts.
-- A phone reported **lost** is refused from the time it was lost, and the sessions affected are listed for re-assessment.
+- A **deactivated** account or a **retired** phone drains: recorded work still syncs and is flagged `drained_work` for review, and nothing new starts. A deactivated account's token works only for sync (push, pull and clip uploads), and its phones keep renewing with their renewal keys; it can't sign in. A session started after the cut-off, by the phone's clock, is stored, flagged and blocked at approval (`started_after_deactivation`).
+- A draining account is read as **closed** 30 days after the last sync from its phones, or at once if it has none (no scheduler). A closed account's number can be invited again, as a new account.
+- A phone reported **lost** is refused on every push after the report, whatever its events' times say (the phone's clock can't be trusted once someone else holds it), its renewal keys stop working, and it can't be registered again. The sessions affected are listed for re-assessment (with the admin panel).
+- An organisation that is suspended can't sign in or make any request.
 - Checks that depend on other phones (worker synced, consent, accreditation) run at approval time, so the order phones sync in never matters. This already applies to the worker: approval waits with the blocker `worker_unknown`.
 
 ## Plan
@@ -114,7 +116,7 @@ Phones sync days later, so admin actions must not destroy offline work:
 |---|---|
 | Before G1 (25 Oct) | **Built** in contracts 1.0.0-draft.5: admin roles, organisation kinds, the organisation id in the session user and the token, admin actions, grant rules, scope levels, error codes, and the unit half of IT-04. Still to do: confirm with CSDCI where master assessors belong. |
 | Sprint 1 | **Built:** organisations, fixed accounts, the bootstrap command, and the seed with two agencies, a training partner, CSDCI and NCVET, with two admins each. Still to do: personal data outside the hash chain (ADR 011). |
-| Sprint 2 | Scoping on every endpoint (IT-05). Account status checked on every request. SIDH exports recorded. |
+| Sprint 2 | **Built:** account status and token version checked on every request; draining and lost phones on sync (IT-09). Still to do: scoping on every endpoint (IT-05), SIDH exports recorded. |
 | Sprint 3–4 | People, Devices and Audit log screens. Sign-in limits and lockout. Device revocation with draining. Invites. Trade-pack upload and release. Venues and accreditation, seeded. |
 | Sprint 5 | Accreditation and venue screens if time; read-only settings; NCVET governance log. |
 | After SIH | Agency empanelment, batches, editable settings, data-rights requests and erasure, break-glass access. |

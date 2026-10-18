@@ -1059,7 +1059,8 @@ Rotate sleep so that nobody codes exhausted.
 - **IT-04 Admins never decide:** no admin token can score, sign, approve, review a flag or re-score. Both halves are built: the unit half in `packages/contracts/src/authority.test.ts`, and the API half in `services/api/test/invites.test.ts`, where every admin role gets 403 for every decision.
 - **IT-05 Scoping** (*planned*, Sprint 2): an account outside the record's organisation gets "not found".
 - **IT-06 Sign-in limits:** codes are limited per number and per IP address, and 5 wrong PINs lock the account for 15 minutes, doubling up to an hour (`services/api/test/signin.test.ts`).
-- **IT-07 Renewal keys:** a phone's renewal key is replaced at each use; reusing an old one, a PIN change, a revoked phone or 30 days unused ends it (`services/api/test/pin-renewal.test.ts`).
+- **IT-07 Renewal keys:** a phone's renewal key is replaced at each use; reusing an old one, a PIN change, a phone reported lost or 30 days unused ends it (`services/api/test/pin-renewal.test.ts`).
+- **IT-09 Draining:** a deactivated account's phone and a retired phone still sync what they recorded, flagged `drained_work`; a session started after the cut-off can't be approved; a lost phone is refused on every push and renewal; a draining account closes 30 days after its last sync (`services/api/test/draining.test.ts`).
 
 ### Evaluation: the evidence the PS asks for
 

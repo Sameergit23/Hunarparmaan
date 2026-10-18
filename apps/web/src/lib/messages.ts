@@ -29,6 +29,10 @@ function mismatchText(params: MessageParams, m: Messages, lang: Lang): string {
   }
 }
 
+/** A session started after its account was deactivated or its phone retired. */
+const startedLateText = (params: MessageParams, m: Messages) =>
+  params.by === 'phone' ? m.detail.started_after_retirement : m.detail.started_after_deactivation;
+
 export function flagText(
   flag: { kind: FlagKind; params: MessageParams },
   m: Messages,
@@ -36,6 +40,9 @@ export function flagText(
 ): string {
   const p = flag.params;
   switch (flag.kind) {
+    case 'drained_work':
+      if (p.when === 'after') return startedLateText(p, m);
+      return fill(p.by === 'phone' ? m.detail.drained_work_phone : m.detail.drained_work, p);
     case 'mock_gps':
       return p.criterionId ? fill(m.detail.mock_gps_clip, p) : m.detail.mock_gps_start;
     case 'reused_clip':
@@ -54,6 +61,8 @@ export function blockerText(blocker: Blocker, m: Messages, lang: Lang): string {
       return flagText({ kind: blocker.code, params: blocker.params }, m, lang);
     case 'result_mismatch':
       return mismatchText(blocker.params, m, lang);
+    case 'started_after_deactivation':
+      return startedLateText(blocker.params, m);
     default:
       return fill(m.detail[blocker.code], blocker.params);
   }

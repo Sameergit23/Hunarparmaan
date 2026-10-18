@@ -112,11 +112,14 @@ describe('IT-07: staying signed in on a phone', () => {
     expect((await refresh(deviceId, renewalKey)).status).toBe(401);
   });
 
-  it('ends keys when the PIN changes or the phone is revoked', async () => {
+  it('ends keys when the PIN changes or the phone is reported lost', async () => {
     const assessor = await h.user('assessor');
     const one = await phoneWithKey(assessor);
     const two = await phoneWithKey(assessor);
-    await h.db.update(devices).set({ revokedAt: h.deps.now() }).where(eq(devices.id, two.deviceId));
+    await h.db
+      .update(devices)
+      .set({ status: 'lost', revokedAt: h.deps.now() })
+      .where(eq(devices.id, two.deviceId));
     expect((await refresh(two.deviceId, two.renewalKey)).status).toBe(401);
 
     expect((await changePin(assessor, PIN, '305718')).status).toBe(200);

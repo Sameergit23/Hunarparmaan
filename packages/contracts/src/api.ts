@@ -349,6 +349,12 @@ export const FlagKind = z.enum([
   'reused_clip',
   'result_mismatch',
   'invalid_event',
+  /**
+   * Synced from a deactivated account or a retired phone (ADR 010 point 8): for
+   * the agency to review, never a block on its own. `params.by` is `account` or
+   * `phone`; `params.when` is `after` for a session started after the cut-off.
+   */
+  'drained_work',
 ]);
 export type FlagKind = z.infer<typeof FlagKind>;
 
@@ -446,6 +452,8 @@ export const BlockerCode = z.enum([
   'invalid_event',
   'result_mismatch',
   'missing_data',
+  /** Started after its account was deactivated or its phone retired: nothing new may start. */
+  'started_after_deactivation',
 ]);
 export type BlockerCode = z.infer<typeof BlockerCode>;
 

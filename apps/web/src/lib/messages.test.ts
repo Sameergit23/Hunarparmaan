@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BlockerCode, FlagKind, type MessageParams } from '@hunarpramaan/contracts';
+import { fill } from './i18n/fill';
 import { en } from './i18n/en';
 import { hi } from './i18n/hi';
 import { blockerText, flagText, signInErrorText } from './messages';
@@ -63,6 +64,17 @@ describe.each([
     expect(blockerText({ code: 'result_mismatch', params }, m, lang)).toContain(
       m.sessions.outcome.pass,
     );
+  });
+
+  it('says whether drained work came from a deactivated account or a retired phone', () => {
+    const drained = (extra: MessageParams) =>
+      flagText({ kind: 'drained_work', params: { ...params, ...extra } }, m, lang);
+    expect(drained({ by: 'account' })).toBe(fill(m.detail.drained_work, params));
+    expect(drained({ by: 'phone' })).toBe(fill(m.detail.drained_work_phone, params));
+    expect(drained({ by: 'phone', when: 'after' })).toBe(m.detail.started_after_retirement);
+    expect(
+      blockerText({ code: 'started_after_deactivation', params: { by: 'account' } }, m, lang),
+    ).toBe(m.detail.started_after_deactivation);
   });
 });
 

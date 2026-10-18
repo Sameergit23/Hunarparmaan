@@ -26,6 +26,7 @@ import { hashSecret } from '../auth/secrets';
 import type { Db, Tx } from '../db/client';
 import { accountInvites, adminEvents, organisations, users } from '../db/schema';
 import { HttpError, notFound } from '../http/errors';
+import { openAccountByPhone } from './accounts';
 import { normalisePhone, phoneInUse } from './auth';
 import type { Deps } from './context';
 import { PILOT_ORGANISATIONS, findOrganisation } from './organisations';
@@ -135,11 +136,8 @@ async function insertInvite(deps: Deps, invite: NewInvite): Promise<CreateInvite
   const expiresAt = new Date(now.getTime() + INVITE_TTL_MS);
   const id = deps.newId();
   await deps.db.transaction(async (tx) => {
-    const [existing] = await tx
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.phone, invite.phone));
-    if (existing) throw phoneInUse();
+    // A closed account's number may be invited again, as a new account.
+    if (await openAccountByPhone(tx, invite.phone, now)) throw phoneInUse();
     await tx
       .update(accountInvites)
       .set({ replacedAt: now })

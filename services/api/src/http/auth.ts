@@ -13,8 +13,14 @@ import {
 } from '@hunarpramaan/contracts';
 import { eq } from 'drizzle-orm';
 import type { TokenIssuer } from '../auth/tokens';
-import type { Db } from '../db/client';
-import { users } from '../db/schema';
+import { organisations, users } from '../db/schema';
+import {
+  accountDeactivated,
+  accountStatus,
+  organisationSuspended,
+  phonesOf,
+} from '../domain/accounts';
+import type { Deps } from '../domain/context';
 import { HttpError, forbidden, unauthorized } from './errors';
 
 declare global {
@@ -27,26 +33,49 @@ declare global {
 }
 
 /**
- * A valid token is not enough: its version must still match the account's, so
- * a PIN change or reset ends every older sign-in, and its organisation must be
- * the account's (ADR 010: accounts are checked on every request).
+ * What a deactivated account's phone may still do while it drains: send what
+ * it recorded, its clips, and fetch the checks of those clips (ADR 010 point 8).
+ * Paths are below `/v1`, where `authenticate` is mounted.
  */
-export function authenticate(tokens: TokenIssuer, db: Db): RequestHandler {
+const DRAIN_ROUTES: readonly [method: string, path: RegExp][] = [
+  ['POST', /^\/sync\/push$/],
+  ['GET', /^\/sync\/pull$/],
+  ['PUT', /^\/evidence\/[^/]+\/content$/],
+  ['POST', /^\/evidence\/[^/]+\/complete$/],
+];
+const isDrainRoute = (req: Request) =>
+  DRAIN_ROUTES.some(([method, path]) => req.method === method && path.test(req.path));
+
+/**
+ * A valid token is not enough (ADR 010: accounts are checked on every request):
+ * its version and organisation must still be the account's, so a PIN change or
+ * reset ends every older sign-in; the organisation must be active; and the
+ * account must be active, except that a deactivated account's phone may still
+ * sync while it drains.
+ */
+export function authenticate(tokens: TokenIssuer, deps: Pick<Deps, 'db' | 'now'>): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
     const header = req.get('authorization');
     if (!header?.startsWith('Bearer ')) return next(unauthorized());
     const verified = await tokens.verify(header.slice('Bearer '.length));
     if (!verified) return next(unauthorized('Your sign-in has expired; sign in again'));
-    const [account] = await db
-      .select({ tokenVersion: users.tokenVersion, organisationId: users.organisationId })
+    const [account] = await deps.db
+      .select({ user: users, organisationStatus: organisations.status })
       .from(users)
+      .innerJoin(organisations, eq(organisations.id, users.organisationId))
       .where(eq(users.id, verified.user.id));
     if (
       !account ||
-      account.tokenVersion !== verified.tokenVersion ||
-      account.organisationId !== verified.user.organisationId
+      account.user.tokenVersion !== verified.tokenVersion ||
+      account.user.organisationId !== verified.user.organisationId
     ) {
       return next(new HttpError(401, 'token_revoked', 'Your sign-in has ended; sign in again'));
+    }
+    if (account.organisationStatus !== 'active') return next(organisationSuspended());
+    if (account.user.status !== 'active') {
+      const phones = (await phonesOf(deps.db, [account.user.id])).get(account.user.id) ?? [];
+      const status = accountStatus(account.user, phones, deps.now());
+      if (status !== 'draining' || !isDrainRoute(req)) return next(accountDeactivated());
     }
     res.locals.user = verified.user;
     next();

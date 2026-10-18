@@ -296,6 +296,7 @@ export const en = {
       reused_clip: 'Same clip used twice',
       result_mismatch: 'Signed result does not match the scores',
       invalid_event: 'Event could not be applied',
+      drained_work: 'Synced after deactivation',
     },
   },
   detail: {
@@ -317,6 +318,12 @@ export const en = {
     mismatch_incomplete: 'Scores are missing for {criteria}.',
     mismatch_outcome: 'Signed as {signed}, but the scores give {actual}.',
     mismatch_aggregate: 'Signed {signed}, but the scores give {actual}.',
+    drained_work: 'Synced after the account was deactivated: {type} at entry {seq}.',
+    drained_work_phone: 'Synced after the phone was retired: {type} at entry {seq}.',
+    started_after_deactivation:
+      'This session started after the account was deactivated. Nothing new may start, so it cannot be approved.',
+    started_after_retirement:
+      'This session started on the phone after it was retired. Nothing new may start, so it cannot be approved.',
   },
   errors: {
     title: 'Something went wrong',

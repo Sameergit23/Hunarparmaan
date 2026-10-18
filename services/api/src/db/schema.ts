@@ -19,14 +19,17 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import type {
+  AccountStatus,
   Actor,
   AdminActionType,
   AdminReasonCode,
   AdminSubjectKind,
   AiFlag,
+  DeviceStatus,
   GeoPoint,
   LocalizedText,
   MessageParams,
@@ -75,30 +78,49 @@ export const qpOwners = pgTable('qp_owners', {
     .references(() => organisations.id),
 });
 
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey(),
-  /** One organisation, whose kind may hold the role (`canHold`, checked in the domain). */
-  organisationId: uuid('organisation_id')
-    .notNull()
-    .references(() => organisations.id),
-  role: text('role').$type<Role>().notNull(),
-  name: text('name').notNull(),
-  phone: text('phone').notNull().unique(),
-  pinHash: text('pin_hash').notNull(),
-  /** Goes up when the PIN changes or is reset: older tokens and renewal keys stop working. */
-  tokenVersion: integer('token_version').notNull().default(0),
-  /** Wrong PINs since the last good sign-in or lockout. */
-  failedPinAttempts: integer('failed_pin_attempts').notNull().default(0),
-  lockedUntil: at('locked_until'),
-  /** Lockouts since the last good sign-in; each one doubles the next, up to an hour. */
-  lockouts: integer('lockouts').notNull().default(0),
-  /**
-   * A worker's own account: their worker record. No foreign key, because the
-   * record syncs from a phone after the account exists (rule 2).
-   */
-  workerId: uuid('worker_id').unique(),
-  createdAt: createdAt(),
-});
+export const users = pgTable(
+  'users',
+  {
+    id: uuid('id').primaryKey(),
+    /** One organisation, whose kind may hold the role (`canHold`, checked in the domain). */
+    organisationId: uuid('organisation_id')
+      .notNull()
+      .references(() => organisations.id),
+    role: text('role').$type<Role>().notNull(),
+    name: text('name').notNull(),
+    /** One account per number, among accounts that aren't closed (ADR 010 point 2). */
+    phone: text('phone').notNull(),
+    pinHash: text('pin_hash').notNull(),
+    /**
+     * `draining` once deactivated. It is read as `closed` 30 days after the last
+     * sync from its phones (`accountStatus` in domain/accounts.ts), and stored as
+     * closed when a closed account's number is needed again.
+     */
+    status: text('status').$type<AccountStatus>().notNull().default('active'),
+    /** The last deactivation or reactivation, and who did it: only they may undo it. */
+    statusChangedAt: at('status_changed_at'),
+    statusChangedBy: uuid('status_changed_by'),
+    /** Goes up when the PIN changes or is reset: older tokens and renewal keys stop working. */
+    tokenVersion: integer('token_version').notNull().default(0),
+    /** Wrong PINs since the last good sign-in or lockout. */
+    failedPinAttempts: integer('failed_pin_attempts').notNull().default(0),
+    lockedUntil: at('locked_until'),
+    /** Lockouts since the last good sign-in; each one doubles the next, up to an hour. */
+    lockouts: integer('lockouts').notNull().default(0),
+    /**
+     * A worker's own account: their worker record. No foreign key, because the
+     * record syncs from a phone after the account exists (rule 2).
+     */
+    workerId: uuid('worker_id').unique(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('users_phone_open')
+      .on(t.phone)
+      .where(sql`${t.status} <> 'closed'`),
+    index('users_organisation_status').on(t.organisationId, t.status),
+  ],
+);
 
 export const otpChallenges = pgTable(
   'otp_challenges',
@@ -123,17 +145,28 @@ export const otpChallenges = pgTable(
   ],
 );
 
-export const devices = pgTable('devices', {
-  id: text('id').primaryKey(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id),
-  label: text('label'),
-  registeredAt: at('registered_at')
-    .notNull()
-    .default(sql`now()`),
-  revokedAt: at('revoked_at'),
-});
+export const devices = pgTable(
+  'devices',
+  {
+    id: text('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    label: text('label'),
+    registeredAt: at('registered_at')
+      .notNull()
+      .default(sql`now()`),
+    /** `retired` and `replaced` phones drain; a `lost` one is refused (ADR 010 point 8). */
+    status: text('status').$type<DeviceStatus>().notNull().default('registered'),
+    statusChangedAt: at('status_changed_at'),
+    statusChangedBy: uuid('status_changed_by'),
+    /** Set when the status leaves `registered`. */
+    revokedAt: at('revoked_at'),
+    /** The last accepted push, for the Devices screen and closing drained accounts. */
+    lastSyncAt: at('last_sync_at'),
+  },
+  (t) => [index('devices_user_status').on(t.userId, t.status)],
+);
 
 export type AuthEventType =
   | 'signed_in'

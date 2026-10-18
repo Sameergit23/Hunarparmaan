@@ -44,6 +44,7 @@ import {
   type AuthEventType,
 } from '../db/schema';
 import { HttpError, forbidden, notFound, unauthorized } from '../http/errors';
+import { assertCanSignIn, currentStatus, openAccountByPhone } from './accounts';
 import type { Deps } from './context';
 import { PILOT_ORGANISATIONS } from './organisations';
 
@@ -220,8 +221,7 @@ async function useCode(deps: Deps, challengeId: string, otp: string) {
 
 /** Whether a number has an account. Only ever told after its code was right. */
 export async function accountState(db: Db, phone: string, now: Date): Promise<AccountState> {
-  const [user] = await db.select({ id: users.id }).from(users).where(eq(users.phone, phone));
-  if (user) return 'existing';
+  if (await openAccountByPhone(db, phone, now)) return 'existing';
   return (await pendingInvite(db, phone, now)) ? 'invited' : 'none';
 }
 
@@ -324,7 +324,9 @@ async function recordWrongPin(deps: Deps, userId: string) {
 
 /**
  * Check the PIN of the account behind `phone`. `wrong` is the message for a
- * wrong PIN; `missing` is what to say when the number has no account.
+ * wrong PIN; `missing` is what to say when the number has no account. A
+ * deactivated account, or one in a suspended organisation, is refused only
+ * after the right PIN, so the refusal tells nothing to someone without it.
  */
 async function checkPin(
   deps: Deps,
@@ -334,11 +336,14 @@ async function checkPin(
   missing: () => HttpError,
 ): Promise<UserRow> {
   const now = deps.now();
-  const [user] = await deps.db.select().from(users).where(eq(users.phone, phone));
+  const user = await openAccountByPhone(deps.db, phone, now);
   if (!user) throw missing();
   const until = lockedUntil(deps, user, now);
   if (until) throw locked(until, now);
-  if (await verifySecret(pin, user.pinHash)) return user;
+  if (await verifySecret(pin, user.pinHash)) {
+    await assertCanSignIn(deps.db, user, now);
+    return user;
+  }
   await recordWrongPin(deps, user.id);
   throw wrong();
 }
@@ -433,11 +438,7 @@ export async function registerWorker(
   const pinHash = await hashSecret(input.pin);
   const created = await deps.db.transaction(async (tx) => {
     const challenge = await ticketChallenge(tx, input.ticket, now);
-    const [existing] = await tx
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.phone, challenge.phone));
-    if (existing) throw phoneInUse();
+    if (await openAccountByPhone(tx, challenge.phone, now)) throw phoneInUse();
     // A mobiliser may have typed the number with +91.
     const n = challenge.phone;
     const [record] = await tx
@@ -495,11 +496,7 @@ export async function acceptInvite(
   const pinHash = await hashSecret(input.pin);
   const id = uuidv4();
   await deps.db.transaction(async (tx) => {
-    const [existing] = await tx
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.phone, challenge.phone));
-    if (existing) throw phoneInUse();
+    if (await openAccountByPhone(tx, challenge.phone, now)) throw phoneInUse();
     const [accepted] = await tx
       .update(accountInvites)
       .set({ acceptedAt: now, acceptedUserId: id })
@@ -587,11 +584,12 @@ export async function resetPin(
 ): Promise<LoginResponse> {
   const now = deps.now();
   const challenge = await ticketChallenge(deps.db, input.ticket, now);
-  const [user] = await deps.db.select().from(users).where(eq(users.phone, challenge.phone));
+  const user = await openAccountByPhone(deps.db, challenge.phone, now);
   if (!user) throw notFound('Account');
   if (!SELF_RESET_ROLES.includes(user.role)) {
     throw new HttpError(403, 'pin_reset_by_admin', 'Ask your admin to reset your PIN');
   }
+  await assertCanSignIn(deps.db, user, now);
   const problem = pinProblem(input.newPin, user.role);
   if (problem) throw pinRejected(problem);
   await spendTicket(deps.db, challenge.id, now);
@@ -612,7 +610,8 @@ export async function issueRenewalKey(
     throw forbidden(`${sessionUser.role} does not sign in on a phone`);
   }
   const [device] = await deps.db.select().from(devices).where(eq(devices.id, deviceId));
-  if (!device || device.userId !== sessionUser.id || device.revokedAt) {
+  // No new key for a retired, replaced or lost phone.
+  if (!device || device.userId !== sessionUser.id || device.status !== 'registered') {
     throw forbidden(`device ${deviceId} is not registered to you`);
   }
   const [user] = await deps.db.select().from(users).where(eq(users.id, sessionUser.id));
@@ -649,7 +648,9 @@ export async function issueRenewalKey(
 /**
  * POST /v1/auth/refresh: a new sign-in for the phone, and a new key in place
  * of the old one. A key that was already replaced being used again means it
- * was copied, so every key on that phone ends.
+ * was copied, so every key on that phone ends. A retired phone, or a phone of
+ * a deactivated account, still renews so that it can drain; the token it gets
+ * only syncs (`authenticate`). A lost phone or a closed account does not.
  */
 export async function refreshSignIn(
   deps: Deps,
@@ -685,8 +686,9 @@ export async function refreshSignIn(
     !user ||
     user.tokenVersion !== row.tokenVersion ||
     !device ||
-    device.revokedAt ||
-    device.userId !== user.id
+    device.status === 'lost' ||
+    device.userId !== user.id ||
+    (await currentStatus(deps.db, user, now)) === 'closed'
   ) {
     throw signInEnded();
   }

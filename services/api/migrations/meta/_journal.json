@@ -64,6 +64,13 @@
       "when": 1792333601123,
       "tag": "0008_organisations",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792342998713,
+      "tag": "0009_account_device_status",
+      "breakpoints": true
     }
   ]
 }

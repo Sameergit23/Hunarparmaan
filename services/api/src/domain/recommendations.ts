@@ -100,6 +100,19 @@ export async function approvalBlockers(
     });
   }
 
+  // Nothing new may start once the account is deactivated or the phone retired (ADR 010 point 8).
+  const drained = await tx
+    .select({ params: flags.params })
+    .from(flags)
+    .where(and(eq(flags.kind, 'drained_work'), eq(flags.sessionId, session.id)));
+  const startedLate = drained.find((f) => f.params.when === 'after');
+  if (startedLate) {
+    blockers.push({
+      code: 'started_after_deactivation',
+      params: { by: startedLate.params.by ?? 'account' },
+    });
+  }
+
   // The stored chains are re-verified, so an edit in the database blocks approval too.
   for (const deviceId of await sessionDevices(tx, session.id)) {
     const chain = chains.get(deviceId) ?? (await verifyDeviceChain(tx, deviceId));

@@ -5,6 +5,10 @@
  * from one phone cannot interleave. Each event is acknowledged as stored,
  * duplicate (IT-01: idempotent by id) or rejected. Events must continue the
  * device's stored hash chain; everything from the first bad entry is rejected.
+ *
+ * ADR 010 point 8: a phone reported lost is refused, whatever its events' times
+ * say. A deactivated account's phones, and retired or replaced phones, drain:
+ * what they send is stored and each event flagged `drained_work`.
  */
 import { and, desc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
 import { verifyChain } from '@hunarpramaan/audit';
@@ -26,10 +30,12 @@ import {
   rescores,
   sessions,
   tradePacks,
+  users,
 } from '../db/schema';
 import { isIntegrityViolation } from '../db/errors';
 import { forbidden } from '../http/errors';
 import { parse } from '../http/validate';
+import { deviceLost } from './accounts';
 import type { Deps } from './context';
 import { raiseFlag } from './flags';
 import { qualificationLoader } from './packs';
@@ -39,6 +45,25 @@ import { InvalidEvent, project, sessionIdOf, type ProjectionContext } from './pr
 function actorMatches(event: SyncEvent, user: SessionUser): boolean {
   if (event.actor.kind === 'system') return event.actor.service === 'device-mapper';
   return event.actor.userId === user.id && event.actor.role === user.role;
+}
+
+/** Why a push drains, and from when: the account's deactivation, or the phone's retirement. */
+interface Drain {
+  by: 'account' | 'phone';
+  cutoff: Date | null;
+}
+
+/**
+ * A session started after the cut-off, by the phone's clock, is new work, so
+ * its approval is blocked (`started_after_deactivation`). Earlier work is only
+ * flagged, and the agency sees every drained event to review backdating.
+ */
+function startedAfterCutoff(event: SyncEvent, drain: Drain): boolean {
+  return (
+    event.type === 'session.started' &&
+    drain.cutoff !== null &&
+    new Date(event.occurredAt) > drain.cutoff
+  );
 }
 
 export async function pushEvents(
@@ -54,11 +79,23 @@ export async function pushEvents(
     const [device] = await tx
       .select()
       .from(devices)
-      .where(and(eq(devices.id, request.deviceId), isNull(devices.revokedAt)))
+      .where(eq(devices.id, request.deviceId))
       .for('update');
     if (!device || device.userId !== user.id) {
       throw forbidden(`device ${request.deviceId} is not registered to you`);
     }
+    if (device.status === 'lost') throw deviceLost();
+    // `authenticate` already refused a closed account, so draining here means draining.
+    const [account] = await tx
+      .select({ status: users.status, statusChangedAt: users.statusChangedAt })
+      .from(users)
+      .where(eq(users.id, user.id));
+    const drain: Drain | null =
+      account?.status === 'draining'
+        ? { by: 'account', cutoff: account.statusChangedAt }
+        : device.status !== 'registered'
+          ? { by: 'phone', cutoff: device.statusChangedAt }
+          : null;
 
     const [head] = await tx
       .select()
@@ -153,6 +190,19 @@ export async function pushEvents(
           params: { type: event.type, seq: event.seq, reason },
         });
       }
+      if (drain) {
+        await raiseFlag(tx, {
+          kind: 'drained_work',
+          sessionId: sessionIdOf(event),
+          deviceId: event.deviceId,
+          params: {
+            by: drain.by,
+            type: event.type,
+            seq: event.seq,
+            ...(startedAfterCutoff(event, drain) && { when: 'after' }),
+          },
+        });
+      }
       acks.set(event.id, { id: event.id, status: 'stored' });
     }
     for (const event of fresh.slice(accepted)) {
@@ -174,6 +224,8 @@ export async function pushEvents(
         params: { minutes: Math.round(driftS / 60) },
       });
     }
+
+    await tx.update(devices).set({ lastSyncAt: serverTime }).where(eq(devices.id, device.id));
 
     const uploads = [];
     for (const upload of ctx.uploads) {

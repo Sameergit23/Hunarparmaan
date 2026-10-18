@@ -10,6 +10,23 @@ import type { AdminActionType } from './authority';
 export const OrganisationStatus = z.enum(['active', 'suspended']);
 export type OrganisationStatus = z.infer<typeof OrganisationStatus>;
 
+/**
+ * An account's status (ADR 010 point 8). `draining`: deactivated; work
+ * recorded offline before then still syncs and is flagged, but nothing new
+ * may start. It becomes `closed` 30 days after the last sync from its phones,
+ * or at once with no phones. "Invited" is an invite, and "locked" comes from
+ * wrong PINs; neither is a status.
+ */
+export const AccountStatus = z.enum(['active', 'draining', 'closed']);
+export type AccountStatus = z.infer<typeof AccountStatus>;
+
+/**
+ * A phone's status. A `retired` or `replaced` phone drains like a deactivated
+ * account; a `lost` one is refused on every sync after the report.
+ */
+export const DeviceStatus = z.enum(['registered', 'retired', 'replaced', 'lost']);
+export type DeviceStatus = z.infer<typeof DeviceStatus>;
+
 /** What an admin-log entry is about, so the Audit log can link each row. */
 export const AdminSubjectKind = z.enum(['account', 'invite', 'device', 'organisation']);
 export type AdminSubjectKind = z.infer<typeof AdminSubjectKind>;

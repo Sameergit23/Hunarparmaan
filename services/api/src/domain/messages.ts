@@ -56,7 +56,18 @@ export function describeFlag(kind: FlagKind, params: MessageParams): string {
       return describeMismatch(params);
     case 'invalid_event':
       return fill('{type} at entry {seq} could not be applied: {reason}', params);
+    case 'drained_work':
+      if (params.when === 'after') return describeStartedLate(params);
+      return params.by === 'phone'
+        ? fill('{type} at entry {seq} synced after the phone was retired', params)
+        : fill('{type} at entry {seq} synced after the account was deactivated', params);
   }
+}
+
+function describeStartedLate(params: MessageParams): string {
+  return params.by === 'phone'
+    ? 'the session started on the phone after it was retired; nothing new may start'
+    : 'the session started after the account was deactivated; nothing new may start';
 }
 
 export function describeBlocker({ code, params }: Blocker): string {
@@ -79,5 +90,7 @@ export function describeBlocker({ code, params }: Blocker): string {
       return `result mismatch: ${describeMismatch(params)}`;
     case 'missing_data':
       return 'the session or its qualification is missing';
+    case 'started_after_deactivation':
+      return describeStartedLate(params);
   }
 }

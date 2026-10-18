@@ -302,6 +302,7 @@ export const hi: Messages = {
       reused_clip: 'एक ही क्लिप दो बार',
       result_mismatch: 'साइन किया नतीजा नंबरों से मेल नहीं खाता',
       invalid_event: 'घटना लागू नहीं हो सकी',
+      drained_work: 'बंद होने के बाद सिंक हुआ',
     },
   },
   detail: {
@@ -323,6 +324,12 @@ export const hi: Messages = {
     mismatch_incomplete: '{criteria} के नंबर नहीं दिए गए।',
     mismatch_outcome: '{signed} पर साइन हुआ, पर नंबरों से {actual} बनता है।',
     mismatch_aggregate: '{signed} पर साइन हुआ, पर नंबरों से {actual} बनता है।',
+    drained_work: 'खाता बंद होने के बाद सिंक हुआ: एंट्री {seq} पर {type}।',
+    drained_work_phone: 'फ़ोन हटाए जाने के बाद सिंक हुआ: एंट्री {seq} पर {type}।',
+    started_after_deactivation:
+      'यह सेशन खाता बंद होने के बाद शुरू हुआ। नया काम शुरू नहीं हो सकता, इसलिए इसे मंज़ूरी नहीं दी जा सकती।',
+    started_after_retirement:
+      'यह सेशन फ़ोन हटाए जाने के बाद उस फ़ोन पर शुरू हुआ। नया काम शुरू नहीं हो सकता, इसलिए इसे मंज़ूरी नहीं दी जा सकती।',
   },
   errors: {
     title: 'कुछ गड़बड़ हो गई',

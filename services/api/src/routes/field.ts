@@ -9,6 +9,7 @@ import {
 import { packagePack } from '@hunarpramaan/trade-packs';
 import { devices } from '../db/schema';
 import type { Deps } from '../domain/context';
+import { deviceLost } from '../domain/accounts';
 import { clipForAssessor, receiveUpload } from '../domain/evidence';
 import { latestPack } from '../domain/packs';
 import { pullUpdates, pushEvents } from '../domain/sync';
@@ -29,6 +30,8 @@ export function fieldRoutes(deps: Deps) {
     const [existing] = await deps.db.select().from(devices).where(eq(devices.id, input.deviceId));
     if (existing && existing.userId !== user.id)
       throw conflict('This device is bound to another account');
+    // A phone reported lost stays lost; a retired one is returned as it is.
+    if (existing?.status === 'lost') throw deviceLost();
     let device = existing;
     if (!device) {
       [device] = await deps.db
