@@ -29,6 +29,27 @@
       "when": 1792307611469,
       "tag": "0003_session_worker_any_order",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792362037691,
+      "tag": "0004_organisations_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792362077485,
+      "tag": "0005_admin_events_append_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792362078743,
+      "tag": "0006_auth_events_append_only",
+      "breakpoints": true
     }
   ]
 }

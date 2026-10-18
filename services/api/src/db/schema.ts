@@ -19,14 +19,24 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import type {
+  AccountStatus,
   Actor,
+  AdminActionType,
+  AdminSubject,
   AiFlag,
+  DeactivationReason,
+  DeviceStatus,
   GeoPoint,
   LocalizedText,
   MessageParams,
+  OrgKind,
+  OrgStatus,
+  OrgSuspendReason,
   PassRule,
   Role,
   TradePack,
@@ -40,26 +50,89 @@ const createdAt = () =>
 
 type Rubric = { '0': LocalizedText; '1': LocalizedText; '2': LocalizedText };
 
-// --- Accounts and devices (mutable) ------------------------------------------
+// --- Organisations, accounts and devices (mutable) ---------------------------
 
-export const users = pgTable('users', {
+/** Every account belongs to one organisation, for good (ADR 010). */
+export const organisations = pgTable('organisations', {
   id: uuid('id').primaryKey(),
-  role: text('role').$type<Role>().notNull(),
-  name: text('name').notNull(),
-  phone: text('phone').notNull().unique(),
-  pinHash: text('pin_hash').notNull(),
+  name: text('name').notNull().unique(),
+  kind: text('kind').$type<OrgKind>().notNull(),
+  status: text('status').$type<OrgStatus>().notNull().default('active'),
+  suspendedReason: text('suspended_reason').$type<OrgSuspendReason>(),
+  suspendedBy: uuid('suspended_by').references((): AnyPgColumn => users.id),
+  suspendedAt: at('suspended_at'),
   createdAt: createdAt(),
 });
 
-export const otpChallenges = pgTable('otp_challenges', {
-  id: uuid('id').primaryKey(),
-  phone: text('phone').notNull(),
-  codeHash: text('code_hash').notNull(),
-  attempts: integer('attempts').notNull().default(0),
-  expiresAt: at('expires_at').notNull(),
-  usedAt: at('used_at'),
-  createdAt: createdAt(),
-});
+/**
+ * One organisation and one role per account, never changed: a move is a new
+ * account. A phone number has at most one account that is invited or active;
+ * deactivated (draining) accounts keep theirs, so a person who moves can be
+ * invited again on the same number.
+ */
+export const users = pgTable(
+  'users',
+  {
+    id: uuid('id').primaryKey(),
+    orgId: uuid('org_id')
+      .notNull()
+      .references(() => organisations.id),
+    role: text('role').$type<Role>().notNull(),
+    name: text('name').notNull(),
+    phone: text('phone').notNull(),
+    /** Null until an invited person sets their PIN. */
+    pinHash: text('pin_hash'),
+    status: text('status').$type<AccountStatus>().notNull().default('active'),
+    /** Bumped to end every token issued before, for example on reactivation. */
+    tokenVersion: integer('token_version').notNull().default(0),
+    /** Wrong PINs since the last right one; every fifth locks the account. */
+    failedPins: integer('failed_pins').notNull().default(0),
+    lockedUntil: at('locked_until'),
+    activatedAt: at('activated_at'),
+    deactivatedAt: at('deactivated_at'),
+    deactivatedBy: uuid('deactivated_by').references((): AnyPgColumn => users.id),
+    deactivationReason: text('deactivation_reason').$type<DeactivationReason>(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('users_phone_live')
+      .on(t.phone)
+      .where(sql`${t.status} <> 'draining'`),
+    index('users_org').on(t.orgId),
+  ],
+);
+
+export const otpChallenges = pgTable(
+  'otp_challenges',
+  {
+    id: uuid('id').primaryKey(),
+    phone: text('phone').notNull(),
+    codeHash: text('code_hash').notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    expiresAt: at('expires_at').notNull(),
+    usedAt: at('used_at'),
+    createdAt: createdAt(),
+  },
+  (t) => [index('otp_challenges_phone').on(t.phone, t.createdAt)],
+);
+
+/** A one-time code for an invited account: hashed like a PIN, valid for 72 hours. */
+export const invites = pgTable(
+  'invites',
+  {
+    id: uuid('id').primaryKey(),
+    accountId: uuid('account_id')
+      .notNull()
+      .references(() => users.id),
+    codeHash: text('code_hash').notNull(),
+    expiresAt: at('expires_at').notNull(),
+    usedAt: at('used_at'),
+    /** Null for the command-line bootstrap, which runs before any admin exists. */
+    createdBy: uuid('created_by').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [index('invites_account').on(t.accountId)],
+);
 
 export const devices = pgTable('devices', {
   id: text('id').primaryKey(),
@@ -70,8 +143,63 @@ export const devices = pgTable('devices', {
   registeredAt: at('registered_at')
     .notNull()
     .default(sql`now()`),
+  /** Retired and replaced phones drain; a lost one is refused from `lostSince`. */
+  status: text('status').$type<DeviceStatus>().notNull().default('active'),
   revokedAt: at('revoked_at'),
+  revokedBy: uuid('revoked_by').references(() => users.id),
+  lostSince: at('lost_since'),
 });
+
+// --- Admin and sign-in logs (append-only) -------------------------------------
+
+/**
+ * Every admin action (ADR 010), hash-chained with @hunarpramaan/audit like the
+ * phones' events: one chain for the whole platform. Ids and reason codes only,
+ * never a name, phone number, PIN or code (rule 8).
+ */
+export const adminEvents = pgTable(
+  'admin_events',
+  {
+    seq: integer('seq').primaryKey(),
+    id: uuid('id').notNull().unique(),
+    type: text('type').$type<AdminActionType>().notNull(),
+    /** Null only for the command-line bootstrap. */
+    actorId: uuid('actor_id').references(() => users.id),
+    actorRole: text('actor_role').$type<Role>().notNull(),
+    /** The organisation the action concerns, which scopes who may read it. */
+    orgId: uuid('org_id').references(() => organisations.id),
+    subjectKind: text('subject_kind').$type<AdminSubject['kind']>().notNull(),
+    subjectId: text('subject_id').notNull(),
+    reason: text('reason'),
+    /** Kept as the exact string that was hashed. */
+    at: text('at').notNull(),
+    prevHash: text('prev_hash').notNull(),
+    hash: text('hash').notNull(),
+  },
+  (t) => [index('admin_events_org').on(t.orgId)],
+);
+
+export type AuthEventKind =
+  | 'otp_requested'
+  | 'signed_in'
+  | 'wrong_code'
+  | 'wrong_pin'
+  | 'locked'
+  | 'activated'
+  | 'refused';
+
+/** Sign-in attempts. No phone number or IP address is stored (rule 8). */
+export const authEvents = pgTable(
+  'auth_events',
+  {
+    id: uuid('id').primaryKey(),
+    kind: text('kind').$type<AuthEventKind>().notNull(),
+    /** Null when the number has no account. */
+    userId: uuid('user_id').references(() => users.id),
+    at: at('at').notNull(),
+  },
+  (t) => [index('auth_events_user').on(t.userId, t.at)],
+);
 
 // --- The hash-chained event log (append-only) --------------------------------
 
@@ -463,9 +591,11 @@ export const studyRounds = pgTable('study_rounds', {
   recordedAt: createdAt(),
 });
 
-/** Tables that reject UPDATE and DELETE (see migration 0001). */
+/** Tables that reject UPDATE and DELETE (see migration 0001 and the later `_append_only` ones). */
 export const APPEND_ONLY_TABLES = [
   'audit_entries',
+  'admin_events',
+  'auth_events',
   'trade_packs',
   'consents',
   'consent_withdrawals',

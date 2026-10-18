@@ -8,7 +8,8 @@
     "dev": "expo start --web --port 8081",
     "start": "expo start",
     "android": "expo run:android",
-    "web:export": "expo export --platform web --output-dir dist",
+    "build": "expo export --platform web --output-dir dist",
+    "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

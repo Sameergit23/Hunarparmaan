@@ -6,9 +6,40 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "android": { "package": "in.hunarpramaan.app" },
+    "android": {
+      "package": "in.hunarpramaan.app",
+      "allowBackup": false
+    },
     "web": { "bundler": "metro", "output": "single" },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      ["expo-sqlite", { "useSQLCipher": true }],
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "सबूत की क्लिप और शुरुआत की फ़ोटो के लिए कैमरा चाहिए। The camera records evidence clips and the start photo.",
+          "microphonePermission": "क्लिप में आवाज़ और अपना अनुभव बोलने के लिए माइक चाहिए। The microphone records sound in clips and the worker's spoken answers.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "टेस्ट की जगह पक्की करने के लिए लोकेशन चाहिए। Location confirms where the assessment takes place."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": false,
+          "cameraPermission": "शुरुआत की फ़ोटो के लिए कैमरा चाहिए। The camera takes the start photo.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-localization",
+      "expo-font"
+    ],
     "experiments": { "typedRoutes": false }
   }
 }
