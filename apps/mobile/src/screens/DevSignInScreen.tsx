@@ -23,7 +23,8 @@ const DEMO_MOBILISER_PHONE = '9000000001';
 
 function errorText(error: unknown, m: Messages): string {
   if (error instanceof HttpStatusError) {
-    if (error.status === 401) return /expired/i.test(error.message) ? m.signIn.expired : m.signIn.wrong;
+    if (error.status === 401)
+      return /expired/i.test(error.message) ? m.signIn.expired : m.signIn.wrong;
     if (error.status === 409) return m.signIn.deviceTaken;
     if (error.status === 403) return m.signIn.wrongRole;
     if (error.status === 400) return m.signIn.badPhone;

@@ -94,7 +94,7 @@ export function transliterate(text: string): string {
   const chars = Array.from(text.normalize('NFC'));
   let out = '';
   for (let i = 0; i < chars.length; i++) {
-    let ch = chars[i]!;
+    let ch = chars[i] ?? '';
     if (chars[i + 1] === NUKTA && CONSONANTS[ch + NUKTA]) {
       ch += NUKTA;
       i += 1;

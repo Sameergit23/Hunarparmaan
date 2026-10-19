@@ -45,7 +45,9 @@ export async function openLocalDatabase(): Promise<LocalDatabase> {
   const cipher = client.getFirstSync<{ cipher_version: string }>('PRAGMA cipher_version');
   if (!cipher?.cipher_version) {
     client.closeSync();
-    throw new Error('SQLCipher is not in this build; check the expo-sqlite plugin in app.config.ts');
+    throw new Error(
+      'SQLCipher is not in this build; check the expo-sqlite plugin in app.config.ts',
+    );
   }
   client.execSync('PRAGMA foreign_keys = ON');
   const db = drizzle(client);

@@ -21,7 +21,12 @@ import { border, color, font, radius, role, size, type } from '../theme';
 type IconComponent = ComponentType<LucideProps>;
 
 /** Feather-style outlines with square caps and mitred joins, on a 24px grid. */
-export function Icon({ icon: Glyph, size: px = 22, tint = color.ink, strokeWidth = 2 }: {
+export function Icon({
+  icon: Glyph,
+  size: px = 22,
+  tint = color.ink,
+  strokeWidth = 2,
+}: {
   icon: IconComponent;
   size?: number;
   tint?: string;
@@ -133,7 +138,9 @@ export function Button({
 }
 
 export function Card({ children, strong }: { children: ReactNode; strong?: boolean }) {
-  return <View style={[styles.card, strong ? styles.cardStrong : styles.cardQuiet]}>{children}</View>;
+  return (
+    <View style={[styles.card, strong ? styles.cardStrong : styles.cardQuiet]}>{children}</View>
+  );
 }
 
 export function Label({ children }: { children: ReactNode }) {

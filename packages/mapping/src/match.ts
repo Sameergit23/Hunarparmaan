@@ -114,7 +114,7 @@ function findTerm(
   for (let i = 0; i < tokens.length; i++) {
     let joined = '';
     for (let n = 1; n <= span && i + n <= tokens.length; n++) {
-      joined += tokens[i + n - 1]!.key;
+      joined += tokens[i + n - 1]?.key ?? '';
       for (const key of keys) {
         if (joined === key) {
           return { heard: phrase(tokens, i, n), exact: true };

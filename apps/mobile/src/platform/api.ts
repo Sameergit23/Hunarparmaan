@@ -56,8 +56,7 @@ async function request<T>(
 }
 
 export const api = {
-  requestOtp: (phone: string) =>
-    request('/v1/auth/otp', { body: { phone }, schema: OtpResponse }),
+  requestOtp: (phone: string) => request('/v1/auth/otp', { body: { phone }, schema: OtpResponse }),
   login: (body: LoginRequest) => request('/v1/auth/login', { body, schema: LoginResponse }),
   registerDevice: (token: string, body: RegisterDeviceRequest) =>
     request('/v1/devices', { body, token, schema: RegisterDeviceResponse }),

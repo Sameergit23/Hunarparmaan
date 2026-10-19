@@ -50,12 +50,18 @@ importers:
       '@hunarpramaan/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@hunarpramaan/mapping':
+        specifier: workspace:*
+        version: link:../../packages/mapping
       '@hunarpramaan/scoring':
         specifier: workspace:*
         version: link:../../packages/scoring
       '@hunarpramaan/trade-packs':
         specifier: workspace:*
         version: link:../../packages/trade-packs
+      '@hunarpramaan/voice':
+        specifier: workspace:*
+        version: link:../../packages/voice
       drizzle-orm:
         specifier: ^0.45.4
         version: 0.45.4(@electric-sql/pglite@0.5.10)(@types/pg@8.23.1)(@types/sql.js@1.4.11)(expo-sqlite@58.0.13(expo@58.0.14)(react-native@0.88.0(@babel/core@7.29.7)(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(pg@8.23.1)(sql.js@1.15.0)

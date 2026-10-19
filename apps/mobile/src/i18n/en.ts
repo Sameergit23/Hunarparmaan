@@ -52,6 +52,26 @@ export const en = {
     submit: 'Continue',
     nameRequired: 'Enter the name.',
     badPhone: 'Enter a 10-digit mobile number.',
+    languageRequired: 'Choose the language.',
+    voice: 'Fill in by voice',
+    voiceStop: 'Stop voice',
+    voiceHint: 'The app asks for each field and reads it back. You can also type.',
+    ask: {
+      name: "Say the worker's name.",
+      phone: 'Say the mobile number, one digit at a time.',
+      language: 'Say the language: Hindi or English.',
+      confirm: 'Name {name}. Number {phone}. Language {language}. Is that right? Say yes or no.',
+    },
+    problem: {
+      heard_nothing: 'Nothing was heard. Say it again.',
+      phone_too_few: 'Say {missing} more digits.',
+      phone_too_many: 'Too many digits. Say the number again.',
+      phone_not_mobile:
+        "That doesn't look like a mobile number. Say a number that starts with 6, 7, 8 or 9.",
+      language_unclear: 'Say Hindi or English.',
+      yes_no_unclear: 'Say yes or no.',
+    },
+    languageName: { hi: 'Hindi', en: 'English' },
   },
   consent: {
     title: 'Consent',

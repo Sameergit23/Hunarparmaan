@@ -13,7 +13,7 @@ export interface Question {
   text: LocalizedText;
 }
 
-export const ELECTRICIAN_QUESTIONS: readonly Question[] = [
+export const ELECTRICIAN_QUESTIONS: readonly [Question, ...Question[]] = [
   {
     id: 'experience',
     nosCode: null,
