@@ -275,7 +275,8 @@ Hunarparmaan/
 │   ├── contracts/             # zod schemas shared by phone, API and web; AUTHORITY and READ_ACCESS tables
 │   ├── scoring/               # pure TypeScript: coverage, routing, results (same code on phone and server)
 │   ├── audit/                 # hash chain: canonical JSON (RFC 8785), SHA-256, verify
-│   └── trade-packs/           # QP data per trade: NOS, criteria, marks, rubrics, glossary
+│   ├── trade-packs/           # QP data per trade: NOS, criteria, marks, rubrics, glossary
+│   └── voice/                 # pure TypeScript: spoken numbers, yes or no and commands for voice sign-in
 ├── evaluation/                # planned: rater study and mapping test
 ├── infra/
 │   ├── docker-compose.yml     # PostgreSQL + pgvector, Redis, SeaweedFS
