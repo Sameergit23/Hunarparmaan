@@ -1,4 +1,5 @@
 /** Builds the real dependencies from configuration, for the server, worker and seed. */
+import { createVisionClient } from './ai/vision';
 import { createTokenIssuer } from './auth/tokens';
 import type { Config } from './config';
 import { openDatabase } from './db/client';
@@ -26,10 +27,20 @@ export async function createRuntime(config: Config) {
     store = new LocalObjectStore(config.PUBLIC_API_URL, config.LOCAL_OBJECT_DIR);
   }
 
-  const inline = new InlineQueue();
+  const inline = new InlineQueue({
+    background: ['evidence.vision'],
+    onError: (job, err) => logger.error({ job: job.name, err }, 'background job failed'),
+  });
   const queue: JobQueue = config.REDIS_URL ? await createBullQueue(config.REDIS_URL) : inline;
 
-  const deps: Deps = { db: database.db, config, store, queue, ...clock };
+  const deps: Deps = {
+    db: database.db,
+    config,
+    store,
+    queue,
+    vision: createVisionClient(config),
+    ...clock,
+  };
   inline.setHandler(createJobHandler(deps, logger));
 
   return {

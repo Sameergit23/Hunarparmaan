@@ -33,6 +33,12 @@ const Env = z.object({
   PUBLIC_API_URL: z.string().url().default('http://localhost:4000'),
   /** Planned (S4): the web app's base URL, printed on certificates as the QR target. Not used yet. */
   PUBLIC_WEB_URL: z.string().url().default('http://localhost:3000'),
+  /** The AI service (services/ai). Without it, verified clips get no server-side AI checks. */
+  AI_SERVICE_URL: z.string().url().optional(),
+  /** Sent as a bearer token when the AI service is set up to require one. */
+  AI_SERVICE_TOKEN: z.string().min(16).optional(),
+  /** A clip's checks take about a minute on a laptop CPU, a few seconds on a GPU. */
+  AI_TIMEOUT_MS: z.coerce.number().int().positive().default(180_000),
 });
 
 export type Config = Omit<z.infer<typeof Env>, 'JWT_SECRET' | 'MOCK_INTEGRATIONS'> & {

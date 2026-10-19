@@ -225,8 +225,28 @@ export const hi: Messages = {
   aiChecks: {
     'ppe.gloves': 'दस्ताने',
     'ppe.helmet': 'हेलमेट',
+    'ppe.shoes': 'सेफ़्टी जूते',
+    'ppe.goggles': 'आँखों की सुरक्षा',
+    'work.joint_insulated': 'तार के जोड़ पर टेप',
     'meter.reading': 'मीटर रीडिंग',
     'step.order': 'कदमों का क्रम',
+  },
+  aiServer: {
+    label: 'AI संकेत, सिंक के बाद जाँचा गया',
+    fault: {
+      'ppe.gloves': 'हाथ पर दस्ताने नहीं दिखे',
+      'ppe.helmet': 'हेलमेट नहीं दिखा',
+      'ppe.shoes': 'सेफ़्टी जूते नहीं दिखे',
+      'ppe.goggles': 'घिसाई या वेल्डिंग के समय आँखों की सुरक्षा नहीं दिखी',
+      'work.joint_insulated': 'बिना टेप या कनेक्टर का तार जोड़ दिखा',
+    },
+    faultOther: '{check} पर फ़्लैग हुआ',
+    sure: '{confidence}% भरोसा',
+    seenAt: '{times} पर दिखा।',
+    conflict:
+      'AI संकेत के बावजूद पूरे अंक दिए गए: मास्टर असेसर पहले के अंक देखे बिना क्लिप दोबारा जाँचेंगे।',
+    notVisible: '{check}: दिखाई नहीं दिया',
+    noHazard: '{check}: घिसाई या वेल्डिंग नहीं दिखी',
   },
   approvals: {
     title: 'मंज़ूरी',

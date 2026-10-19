@@ -12,7 +12,7 @@ if (!config.REDIS_URL) {
   process.exit(1);
 }
 const runtime = await createRuntime(config);
-const handle = createJobHandler(runtime.deps, runtime.logger);
+const handle = createJobHandler(runtime.deps, runtime.logger, { retryAi: true });
 const worker = new Worker(QUEUE_NAME, (job) => handle({ name: job.name, data: job.data } as Job), {
   connection: { url: config.REDIS_URL },
   concurrency: 4,

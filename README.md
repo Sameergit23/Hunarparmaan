@@ -129,7 +129,7 @@ Yellow boxes are AI steps, which only suggest. Black boxes are the people who ch
 |---|---|---|
 | Speech to text | Vosk small Hindi model | Bhashini (Sarvam AI as backup), used when there is signal |
 | Mapping to QPs | Glossary + keyword match (BM25): an instant, provisional result | LLM claim extraction + multilingual-e5 embeddings: the final result |
-| Assessment aids | Safety-gear detector on frames from each clip | Vision-language model: step order, meter readings, the finished-work photo |
+| Assessment aids | Safety-gear detector on frames from each clip (*planned*) | Safety-gear and workmanship checks with OWLv2 on each verified clip ([ADR 012](docs/adr/012-safety-gear-detector-owlv2.md); results below). Planned: a vision-language model for step order, meter readings and the finished-work photo |
 | Consistency checks | SHA-256 hash of each clip at capture | Hash-chain check, reused-clip detection, kappa/alpha per assessor, 10% blind re-score sample |
 
 **Guardrails**
@@ -215,9 +215,9 @@ sequenceDiagram
     P->>A: POST /v1/evidence/:id/complete
     A->>W: queue jobs (re-hash, map, vision)
     W->>O: read the clip, re-hash, compare
-    W->>X: /map and /vision/ppe
-    X-->>W: matches, flags, confidence
-    W->>D: store results and flags
+    W->>X: /map and /v1/vision/checks (verified clips only)
+    X-->>W: matches, check results, confidence
+    W->>D: store results and flags (never scores)
     P->>A: GET /v1/sync/pull?cursor=...
     A-->>P: results, re-score tasks, pack updates
 ```
@@ -232,10 +232,11 @@ sequenceDiagram
 | On-device data | `expo-sqlite` with SQLCipher, Drizzle ORM, and an outbox table for sync | Encrypted and local-first: every write lands on the phone first |
 | Offline speech | [Vosk small Hindi model](https://alphacephei.com/vosk/models) (`vosk-model-small-hi-0.22`, 42 MB, Apache-2.0) via [react-native-vosk](https://github.com/riderodd/react-native-vosk) | Runs without internet. Word error rate is about 21–25%, so the worker confirms the transcript |
 | Online speech and language | [Bhashini](https://bhashini.gov.in/) (MeitY), with [Sarvam AI](https://docs.sarvam.ai/api-reference) as backup | Better accuracy when online; Bhashini is the government's own language stack |
-| Vision on the phone | A small safety-gear detector (TFLite or ONNX, chosen in the Sprint 0 spike) | Flags missing gloves or a missing helmet offline |
+| Vision on the server | [OWLv2](https://huggingface.co/google/owlv2-base-patch16-ensemble) (Apache-2.0), an open-vocabulary detector, in the AI service ([ADR 012](docs/adr/012-safety-gear-detector-owlv2.md)) | Checks gloves, helmet, safety shoes, eye protection and wire joints after sync, with no AGPL code; each check is text, so a new one needs no training run |
+| Vision on the phone | A small safety-gear detector (TFLite or ONNX, *planned*) | Flags missing gloves or a missing helmet offline. OWLv2 is too big for the 3 GB phone |
 | API | Node.js + Express (TypeScript), zod, JWT with role-based access | Our core stack |
 | Jobs | Redis + BullMQ | Keeps heavy AI off the API and retries failed jobs |
-| AI service | Python 3.12 + FastAPI | Handles LLM claim extraction (any OpenAI-compatible endpoint), [multilingual-e5-small](https://huggingface.co/intfloat/multilingual-e5-small) embeddings (MIT, 384 dimensions), vision checks, and statsmodels + krippendorff for agreement |
+| AI service | Python 3.12 + FastAPI, with uv | Runs the vision checks today. Planned: LLM claim extraction (any OpenAI-compatible endpoint), [multilingual-e5-small](https://huggingface.co/intfloat/multilingual-e5-small) embeddings (MIT, 384 dimensions), and statsmodels + krippendorff for agreement |
 | Database | PostgreSQL 17 + pgvector | Stores QP data and scores as relational data, with vector search in the same database |
 | Media | S3-compatible storage: SeaweedFS (Apache-2.0) for development | Clips are stored under their hash. Production can use any S3 store |
 | Dashboard | Next.js + Tailwind + Recharts | Quick to build; server rendering suits slow networks |
@@ -266,24 +267,25 @@ Hunarparmaan/
 │   │   ├── src/routes/        # HTTP only
 │   │   ├── src/domain/        # rules and queries: sync, projections, results, recommendations
 │   │   ├── src/db/            # Drizzle schema, migrate, seed, PGlite lock
-│   │   ├── src/worker/        # BullMQ worker: re-hashes clips (AI jobs come with services/ai)
+│   │   ├── src/worker/        # BullMQ worker: re-hashes clips, then runs the AI checks on verified ones
 │   │   ├── migrations/        # SQL migrations, including the append-only triggers
-│   │   ├── scripts/           # reset-local-db.ts (pnpm db:reset)
+│   │   ├── scripts/           # reset-local-db.ts (pnpm db:reset), ai-backfill.ts
 │   │   └── test/              # integration tests, IT-01 to IT-03
-│   └── ai/                    # planned: Python FastAPI, claim extraction, embeddings, vision, agreement stats
+│   └── ai/                    # Python FastAPI: safety-gear and workmanship checks; claim extraction, embeddings and agreement stats planned
 ├── packages/
 │   ├── contracts/             # zod schemas shared by phone, API and web; AUTHORITY and READ_ACCESS tables
 │   ├── scoring/               # pure TypeScript: coverage, routing, results (same code on phone and server)
 │   ├── audit/                 # hash chain: canonical JSON (RFC 8785), SHA-256, verify
 │   └── trade-packs/           # QP data per trade: NOS, criteria, marks, rubrics, glossary
-├── evaluation/                # planned: rater study and mapping test
+├── evaluation/
+│   └── safety-gear/           # labelled public photos (URLs only), evaluate.py; rater study and mapping test planned
 ├── infra/
 │   ├── docker-compose.yml     # PostgreSQL + pgvector, Redis, SeaweedFS
 │   └── postgres-init/         # creates the hp_test database
 ├── docs/
 │   ├── problem-statement.md   # the official SIH PS text
 │   ├── design/                # Wire code, tokens, screen references, data model, access control
-│   └── adr/                   # architecture decision records 001 to 011
+│   └── adr/                   # architecture decision records 001 to 012
 └── .github/
     ├── workflows/ci.yml
     └── pull_request_template.md
@@ -301,7 +303,7 @@ Everything runs on your own computer, on Windows, macOS or Linux. You only need 
 | Node.js | 22.18 or later, or 24.11 or later. Node 25 and later are not supported yet | API, dashboard, tests |
 | pnpm | 10, the version pinned in `package.json` | Workspaces |
 | Docker Desktop, or Docker Engine with Compose v2 | Latest stable | Optional: PostgreSQL, Redis and the S3 store, as in production |
-| Python + [uv](https://docs.astral.sh/uv/) | 3.12 | AI service (*planned*) |
+| Python + [uv](https://docs.astral.sh/uv/) | 3.12 | Optional: the AI service and its evaluation |
 | Android Studio + JDK 17 | Latest stable | The Android dev build (*planned*) |
 | An Android phone | Android 9+, 3 GB RAM | The target device (*planned*): test on it, not only on the emulator |
 
@@ -406,13 +408,33 @@ $env:TEST_DATABASE_URL='postgres://hp:hp@localhost:5432/hp_test'; pnpm --filter 
 
 **Secret scan and audit, as CI runs them.** With [gitleaks](https://github.com/gitleaks/gitleaks) installed: `gitleaks git .`. Then `pnpm audit --audit-level high`.
 
-**Planned: the AI service and the Android dev build.** These folders do not exist yet. When they land: `cd services/ai`, `uv sync`, `uv run uvicorn app.main:app --reload --port 8000`; and `pnpm --filter @hunarpramaan/mobile android` (which runs `npx expo run:android`). The phone has to reach the API, so set `EXPO_PUBLIC_API_URL` to your computer's LAN address (for example `http://192.168.1.20:4000`), not `localhost`.
+### The AI service (optional)
+
+The safety-gear and workmanship checks run in `services/ai` ([README](services/ai/README.md)). You need Python 3.12 and [uv](https://docs.astral.sh/uv/getting-started/installation/) (`pip install uv` works too). Everything else runs without it; the dashboard then simply shows no server-side hints.
+
+```bash
+pnpm ai:dev        # installs on first run (about 1 GB, CPU PyTorch), then serves :8000
+```
+
+Then set `AI_SERVICE_URL=http://localhost:8000` in the root `.env` and restart `pnpm dev`. From then on, each clip whose hash the API verifies goes to the AI service in the background; the first check downloads the model (620 MB). On a laptop CPU a clip takes about a minute, a photo about 10 s.
+
+To see it end to end, with the demo data loaded and both running:
+
+```bash
+pnpm ai:eval       # once: downloads the evaluation photos and measures the checks
+pnpm ai:clip       # once: stitches three of them into a short demo clip
+pnpm demo:vision   # plays the two phones over HTTP: a new session with real photos and the clip
+```
+
+`demo:vision` prints the session's address; sign in as the agency and the hints show beside each score. Clips uploaded while the AI service was off can be checked later with `pnpm --filter @hunarpramaan/api ai:backfill` (stop `pnpm dev` first on PGlite).
+
+**Planned: the Android dev build.** `pnpm --filter @hunarpramaan/mobile android` (which runs `npx expo run:android`). The phone has to reach the API, so set `EXPO_PUBLIC_API_URL` to your computer's LAN address (for example `http://192.168.1.20:4000`), not `localhost`.
 
 | Local service | Address |
 |---|---|
 | API | `http://localhost:4000` (OpenAPI docs at `/docs` are *planned*) |
 | Web dashboard | `http://localhost:3000` |
-| AI service | `http://localhost:8000` (*planned*) |
+| AI service | `http://localhost:8000` (`pnpm ai:dev`) |
 | PostgreSQL | `localhost:5432` (Docker setup) |
 | Redis | `localhost:6379` (Docker setup) |
 | S3 store (SeaweedFS) | `http://localhost:8333` (Docker setup) |
@@ -443,7 +465,8 @@ A setting typed in the shell, such as `PORT=4001 pnpm dev`, reaches the apps too
 | `RESCORE_SAMPLE_RATE` · `GEOFENCE_RADIUS_M` · `CLOCK_DRIFT_LIMIT_S` · `JWT_TTL_HOURS` | `0.10` · `200` · `300` · `12` | api |
 | `TEST_DATABASE_URL` | `postgres://hp:hp@localhost:5432/hp_test`: API tests on PostgreSQL; the name must contain "test" | api tests |
 | `API_URL` | `http://localhost:4000` (the default) | web |
-| `AI_SERVICE_URL` | `http://localhost:8000` | api worker (*planned*) |
+| `AI_SERVICE_URL` · `AI_SERVICE_TOKEN` · `AI_TIMEOUT_MS` | `http://localhost:8000` · a shared token, if the AI service requires one · `180000`; without the URL, clips get no server-side AI checks | api and its worker |
+| `AI_MAX_FRAMES` · `AI_DEVICE` | `6` · `cpu` or `cuda` (default: a GPU if PyTorch sees one); [all settings](services/ai/README.md#settings) | ai |
 | `LLM_BASE_URL` · `LLM_API_KEY` · `LLM_MODEL` | Any OpenAI-compatible endpoint, preferably hosted in India | ai (*planned*) |
 | `BHASHINI_USER_ID` · `BHASHINI_API_KEY` · `SARVAM_API_KEY` | From the Bhashini portal; Sarvam is the backup | ai (*planned*) |
 | `EXPO_PUBLIC_API_URL` | `http://192.168.1.20:4000` | mobile (*planned*) |
@@ -464,7 +487,9 @@ Run them from the repo root.
 | `pnpm db:seed` | Load the trade pack, demo accounts and demo pilot; running it again adds nothing | ✅ |
 | `pnpm db:reset` | Delete the local PGlite database and clips, to start the demo again (stop `pnpm dev` first) | ✅ |
 | `pnpm db:migrate` | Apply database migrations (the API also does this itself on PGlite) | ✅ |
-| `pnpm test` | Unit and integration tests in every workspace | ✅ TypeScript; Python with the AI service |
+| `pnpm test` | Unit and integration tests in every TypeScript workspace | ✅ |
+| `pnpm ai:dev` · `pnpm ai:test` · `pnpm ai:lint` | Run the AI service on :8000 · its pytest suite · Ruff (needs uv) | ✅ |
+| `pnpm ai:eval` · `pnpm ai:clip` · `pnpm demo:vision` | Measure the vision checks · make the demo clip · run a demo session through the checks | ✅ |
 | `pnpm lint` · `pnpm typecheck` · `pnpm build` | ESLint and Prettier, TypeScript, production builds | ✅ |
 | `pnpm format` | Rewrite files in Prettier style | ✅ |
 | `pnpm pack:build electrician` | Validate and package a trade pack for phones | ✅ |
@@ -1016,9 +1041,9 @@ Rotate sleep so that nobody codes exhausted.
 
 | Level | Tools | What it covers | When it runs |
 |---|---|---|---|
-| Unit | Vitest; jest-expo and pytest *planned* | Coverage and result formulas; the routing edge case (0.699 vs 0.700); hash chain; rubric rules; kappa and alpha against a published worked example | Every PR |
+| Unit | Vitest and pytest; jest-expo *planned* | Coverage and result formulas; the routing edge case (0.699 vs 0.700); hash chain; rubric rules; kappa and alpha against a published worked example | Every PR |
 | Contract | zod schemas (OpenAPI *planned*) | Phone ↔ API payloads; trade-pack schema | Every PR |
-| Integration | Supertest on in-process PGlite, or PostgreSQL 17 with `TEST_DATABASE_URL` (CI); jobs run inline. FastAPI TestClient *planned* | Idempotent sync; chain verification; queue → AI → database; role checks | Every PR |
+| Integration | Supertest on in-process PGlite, or PostgreSQL 17 with `TEST_DATABASE_URL` (CI); jobs run inline, with a fake AI service. FastAPI TestClient with a fake detector | Idempotent sync; chain verification; queue → AI → database; role checks | Every PR |
 | End-to-end | Playwright (web); [Maestro](https://maestro.mobile.dev/) (Android) *planned* | The full flow; the airplane-mode drill; the dashboard updating after sync | Before every review |
 | Performance | k6 and the Android Studio profiler on the 3 GB phone (*planned*) | 50 phones syncing at once; app memory; time to transcript | S5–S6 |
 | Security | gitleaks, `pnpm audit`, tamper tests; pip-audit *planned* | Secrets; vulnerable packages; an edited clip rejected; the wrong role blocked | Every PR, and in S6 |
@@ -1061,6 +1086,20 @@ R1,C01,PC3,2,41
 R1,C02,PC3,1,55
 R2,C01,PC3,2,38
 ```
+
+**Safety-gear and workmanship checks** (`evaluation/safety-gear/`)
+
+The AI hints beside the score are measured, not promised. 94 public photos (Wikimedia Commons and Flickr, open licences; downloaded at run time, never committed) are labelled for each check; thresholds are chosen on half of them and the numbers below come from the other half. Method, labels and error analysis are in [its README](evaluation/safety-gear/README.md).
+
+| Check (test split) | Photos (faults) | Precision (95% CI) | Recall (95% CI) |
+|---|---|---|---|
+| `ppe.gloves`: no gloves | 38 (15) | 67% (39–86) | 53% (30–75) |
+| `ppe.helmet`: no helmet | 38 (19) | 65% (45–81) | 79% (57–91) |
+| `ppe.shoes`: sandals, slippers or bare feet | 38 (5) | 100% (51–100) | 80% (38–96) |
+| `ppe.goggles`: no eye protection while grinding or welding | 38 (3) | 50% (9–91) | 33% (6–79) |
+| `work.joint_insulated`: a bare wire joint | 9 (3) | 20% (4–62) | 33% (6–79) |
+
+A zero-shot detector on a small, single-labeller set: good enough to prompt the assessor to look, not to decide anything. That is why every result is a yellow hint, full marks beside a raised hint go to a blind re-score, and the assessor's disagreements become the labels for a fine-tuned detector later.
 
 **Mapping test** (`evaluation/mapping-test/`)
 
@@ -1160,4 +1199,4 @@ Mentors: `[faculty mentor]` and `[ITI electrician instructor or certified assess
 
 ## Licence
 
-Not chosen yet; we suggest Apache-2.0, added as a `LICENSE` file in Sprint 0. Third-party models keep their own licences: the Vosk Hindi model is Apache-2.0, multilingual-e5-small is MIT and Ultralytics YOLO is AGPL-3.0.
+Not chosen yet; we suggest Apache-2.0, added as a `LICENSE` file in Sprint 0. Third-party models keep their own licences: the Vosk Hindi model and OWLv2 are Apache-2.0, multilingual-e5-small is MIT and Ultralytics YOLO is AGPL-3.0 (not used; see ADR 007 and 012). The evaluation photos keep their own licences and authors, listed in `evaluation/safety-gear/manifest.json`; the repo holds only their addresses.

@@ -1,0 +1,114 @@
+{
+  "split": "test",
+  "rules": "1",
+  "model": "owlv2-base-patch16-ensemble@cfd3195",
+  "checks": [
+    {
+      "check": "ppe.gloves",
+      "images": 38,
+      "faults": 15,
+      "tp": 8,
+      "fp": 4,
+      "fn": 7,
+      "tn": 19,
+      "precision": 0.6666666666666666,
+      "precisionCi": [0.3906175873976139, 0.8618821601026385],
+      "recall": 0.5333333333333333,
+      "recallCi": [0.3011663015105079, 0.7519077474025355],
+      "statuses": {
+        "fault/clear": 6,
+        "fault/raised": 8,
+        "fault/unclear": 1,
+        "na/clear": 6,
+        "na/raised": 4,
+        "na/unclear": 3,
+        "ok/clear": 10
+      }
+    },
+    {
+      "check": "ppe.helmet",
+      "images": 38,
+      "faults": 19,
+      "tp": 15,
+      "fp": 8,
+      "fn": 4,
+      "tn": 11,
+      "precision": 0.6521739130434783,
+      "precisionCi": [0.4488997690689164, 0.8118894536301776],
+      "recall": 0.7894736842105263,
+      "recallCi": [0.5666528575973392, 0.9149246150840843],
+      "statuses": {
+        "fault/clear": 4,
+        "fault/raised": 15,
+        "na/clear": 6,
+        "na/raised": 2,
+        "na/unclear": 2,
+        "ok/clear": 3,
+        "ok/raised": 6
+      }
+    },
+    {
+      "check": "ppe.shoes",
+      "images": 38,
+      "faults": 5,
+      "tp": 4,
+      "fp": 0,
+      "fn": 1,
+      "tn": 33,
+      "precision": 1.0,
+      "precisionCi": [0.5100999795960008, 1.0],
+      "recall": 0.8,
+      "recallCi": [0.3755282641185388, 0.9637768390302125],
+      "statuses": {
+        "fault/raised": 4,
+        "fault/unclear": 1,
+        "na/clear": 5,
+        "na/unclear": 23,
+        "ok/clear": 4,
+        "ok/unclear": 1
+      }
+    },
+    {
+      "check": "ppe.goggles",
+      "images": 38,
+      "faults": 3,
+      "tp": 1,
+      "fp": 1,
+      "fn": 2,
+      "tn": 34,
+      "precision": 0.5,
+      "precisionCi": [0.09452865480086614, 0.9054713451991339],
+      "recall": 0.3333333333333333,
+      "recallCi": [0.0614903152761605, 0.7923450448735121],
+      "statuses": {
+        "fault/raised": 1,
+        "fault/unclear": 2,
+        "na/clear": 2,
+        "na/unclear": 22,
+        "ok/clear": 8,
+        "ok/raised": 1,
+        "ok/unclear": 2
+      }
+    },
+    {
+      "check": "work.joint_insulated",
+      "images": 9,
+      "faults": 3,
+      "tp": 1,
+      "fp": 4,
+      "fn": 2,
+      "tn": 2,
+      "precision": 0.2,
+      "precisionCi": [0.03622316096978745, 0.6244717358814613],
+      "recall": 0.3333333333333333,
+      "recallCi": [0.0614903152761605, 0.7923450448735121],
+      "statuses": {
+        "fault/clear": 2,
+        "fault/raised": 1,
+        "na/raised": 1,
+        "ok/clear": 2,
+        "ok/raised": 3
+      }
+    }
+  ]
+}

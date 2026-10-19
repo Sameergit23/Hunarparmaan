@@ -42,6 +42,7 @@ import {
   workers,
 } from '../db/schema';
 import { notFound } from '../http/errors';
+import { aiResultsByCriterion } from './ai-results';
 import { sessionDevices, verifyDeviceChain, type DeviceChainResult } from './chain';
 import { qualificationLoader } from './packs';
 import { approvalBlockers } from './recommendations';
@@ -241,6 +242,7 @@ export async function sessionDetail(db: Db, sessionId: string): Promise<SessionD
     .innerJoin(rescores, eq(rescores.taskId, rescoreTasks.id))
     .where(eq(rescoreTasks.sessionId, sessionId));
   const rescoreBy = new Map(rescoreRows.map((r) => [r.criterionId, r.value as ScoreValue]));
+  const aiByCriterion = await aiResultsByCriterion(db, sessionId);
 
   const criteriaResults: CriterionResult[] = qualification.nos.flatMap((n) =>
     n.criteria.map((c) => {
@@ -252,6 +254,7 @@ export async function sessionDetail(db: Db, sessionId: string): Promise<SessionD
         marks: c.marks,
         score: (score?.value as ScoreValue | undefined) ?? null,
         aiFlags: score?.aiFlags ?? [],
+        aiResults: aiByCriterion.get(c.id) ?? [],
         conflictReason: score?.conflictReason ?? null,
         rescore: rescoreBy.get(c.id) ?? null,
       };

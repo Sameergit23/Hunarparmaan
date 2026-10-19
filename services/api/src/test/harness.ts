@@ -38,6 +38,7 @@ export async function startHarness() {
     config,
     store: new LocalObjectStore('http://api.test', null, () => now),
     queue,
+    vision: null,
     now: () => now,
     random: () => dice,
     newId: () => uuidv7(),

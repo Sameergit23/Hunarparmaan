@@ -28,6 +28,12 @@ export function date(iso: string, lang: Lang): string {
   }).format(new Date(iso));
 }
 
+/** Seconds into a clip as minutes and seconds: 17.5 → "0:17". */
+export function clipTime(seconds: number): string {
+  const whole = Math.floor(seconds);
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
+}
+
 export function dateTime(iso: string, lang: Lang): string {
   return new Intl.DateTimeFormat(locale(lang), {
     day: 'numeric',

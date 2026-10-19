@@ -65,7 +65,7 @@ describe('electrician trade pack', () => {
 
   it('packages to canonical JSON whose hash phones can check', () => {
     const out = packagePack(loadPack());
-    expect(out.fileName).toBe('csdci-electrician-2026.10.0.json');
+    expect(out.fileName).toBe('csdci-electrician-2026.10.1.json');
     expect(out.sha256).toBe(sha256Hex(out.contents));
     expect(JSON.parse(out.contents)).toEqual(loadPack());
   });

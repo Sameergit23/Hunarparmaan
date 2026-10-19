@@ -1,5 +1,14 @@
 import Link from 'next/link';
-import { ArrowLeft, BadgeCheck, Clock, Hash, TriangleAlert, Video, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  BadgeCheck,
+  Clock,
+  Hash,
+  RefreshCcw,
+  TriangleAlert,
+  Video,
+  X,
+} from 'lucide-react';
 import { SessionDetail, type CriterionResult, type EvidenceView } from '@hunarpramaan/contracts';
 import { Icon } from '@/components/icon';
 import { OfficeShell } from '@/components/office-shell';
@@ -8,7 +17,7 @@ import { AiHint, Card, Chip, Label, ScorePlates, ThresholdBar } from '@/componen
 import { apiGet } from '@/lib/api';
 import { date, dateTime, percent } from '@/lib/format';
 import { fill, type Lang, type Messages } from '@/lib/i18n';
-import { blockerText, flagText } from '@/lib/messages';
+import { aiCheckText, aiSeenAt, blockerText, flagText } from '@/lib/messages';
 import { ChainCheck } from './chain-check';
 
 export const metadata = { title: 'Session' };
@@ -53,6 +62,12 @@ function EvidenceRow({ clip, m, lang }: { clip: EvidenceView; m: Messages; lang:
 
 function ScoreRow({ c, m, lang }: { c: CriterionResult; m: Messages; lang: Lang }) {
   const raised = c.aiFlags.filter((f) => f.raised);
+  // Checks the server ran after sync: the assessor may have scored without them.
+  const server = c.aiResults.flatMap((r) =>
+    r.checks.map((check) => ({ ...check, at: r.evidenceId })),
+  );
+  const serverRaised = server.filter((x) => x.status === 'raised');
+  const serverOther = server.filter((x) => x.status !== 'raised');
   return (
     <li className="grid gap-3 border-b-[1.5px] border-divider pb-4 last:border-0 last:pb-0 md:grid-cols-[1fr_220px]">
       <div className="flex flex-col gap-2">
@@ -72,6 +87,28 @@ function ScoreRow({ c, m, lang }: { c: CriterionResult; m: Messages; lang: Lang 
             note={m.aiHintOnly}
           />
         ))}
+        {serverRaised.map((x) => (
+          <AiHint
+            key={`${x.at}-${x.check}`}
+            title={`${m.aiServer.label}: ${aiCheckText(x, m)}`}
+            note={[aiSeenAt(x, m), m.aiHintOnly].filter(Boolean).join(' ')}
+          />
+        ))}
+        {serverRaised.length > 0 && c.score === 2 && (
+          <p className="m-0 flex items-start gap-2 text-sm text-ink2">
+            <Icon as={RefreshCcw} size={16} className="mt-0.5 flex-none" />
+            {m.aiServer.conflict}
+          </p>
+        )}
+        {serverOther.length > 0 && (
+          <span className="flex flex-wrap gap-1.5">
+            {serverOther.map((x) => (
+              <Chip key={`${x.at}-${x.check}`} tone="ai">
+                {aiCheckText(x, m)}
+              </Chip>
+            ))}
+          </span>
+        )}
         {c.conflictReason && (
           <p className="m-0 rounded-card border-[1.5px] border-line bg-ground px-3 py-2 text-[15px]">
             <span className="font-semibold">{m.session.reason}: </span>

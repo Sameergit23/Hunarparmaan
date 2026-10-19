@@ -40,5 +40,11 @@ export const GeoPoint = z.strictObject({
 });
 export type GeoPoint = z.infer<typeof GeoPoint>;
 
+/**
+ * An AI check, such as `ppe.gloves` or `work.joint_insulated`: the trade pack
+ * lists the checks per criterion, and AI flags and results name them.
+ */
+export const AiCheckId = z.string().regex(/^[a-z]+(\.[a-z_]+)+$/);
+
 /** A short, human-written reason, required for overrides and conflicts. */
 export const Reason = z.string().trim().min(3).max(500);

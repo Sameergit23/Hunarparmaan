@@ -1,0 +1,1580 @@
+{
+  "about": "Public images labelled for the safety-gear and workmanship checks. evaluate.py downloads them into raw/; they are never committed. scene: 'worker' photos are used to measure the PPE checks and 'wiring' photos the joint check, as the trade pack runs each check only on the criteria it fits. labels: 'fault' (the gear is missing, or a wire joint is bare) or 'ok' (the gear is worn, or the joint is taped or capped). A check not listed for an image in its scene counts as 'na': the body part or joint is not visible, or, for eye protection, nothing is being ground, cut or welded. A flag raised on an 'na' image is a false alarm.",
+  "labelledBy": "One labeller, by eye, from the 1280 px images; not yet reviewed by a second person (see README.md).",
+  "model": "owlv2-base-patch16-ensemble@cfd3195",
+  "images": [
+    {
+      "id": "commons-0a913ffa",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault",
+        "ppe.goggles": "fault"
+      },
+      "title": "Marble Grinding Near Taj Mahal June 2006.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Marble_Grinding_Near_Taj_Mahal_June_2006.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Marble_Grinding_Near_Taj_Mahal_June_2006.JPG/1280px-Marble_Grinding_Near_Taj_Mahal_June_2006.JPG",
+      "sha256": "9eb8a08e103beeae222596cda9e6cdb48756cf40a805e9542e55b9d59d1b32e9",
+      "licence": "CC BY-SA 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "author": "JJ Harrison (https://www.jjharrison.com.au/)"
+    },
+    {
+      "id": "commons-0cde60cb",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.goggles": "fault"
+      },
+      "title": "Welding 1.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Welding_1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/Welding_1.jpg/1280px-Welding_1.jpg",
+      "sha256": "ea9d6821748ea2fda36d3d166cfd54d675465efec0077925add5bc2604904aa3",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Kehvkevv"
+    },
+    {
+      "id": "commons-0f3764f8",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.goggles": "ok"
+      },
+      "title": "Welding in casing installation.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Welding_in_casing_installation.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/08/Welding_in_casing_installation.jpg/1280px-Welding_in_casing_installation.jpg",
+      "sha256": "951ddab5d36bb90b44c300a77ba62b281854b42cf1164d632a4d1f69b304a431",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Tish Madesh"
+    },
+    {
+      "id": "commons-103e9c09",
+      "split": "test",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "fault"
+      },
+      "title": "Gebruik lasdop.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Gebruik_lasdop.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Gebruik_lasdop.jpg/1280px-Gebruik_lasdop.jpg",
+      "sha256": "559c5a1b00a116210581f444701238cb0a399cfd87924831a111422bae736172",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Alex P. Kok"
+    },
+    {
+      "id": "commons-163f132a",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "ok"
+      },
+      "title": "Blue Grass Chemical Agent-Destruction Pilot Plant Control and Support Building (9969535664).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Blue_Grass_Chemical_Agent-Destruction_Pilot_Plant_Control_and_Support_Building_(9969535664).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Blue_Grass_Chemical_Agent-Destruction_Pilot_Plant_Control_and_Support_Building_%289969535664%29.jpg/1280px-Blue_Grass_Chemical_Agent-Destruction_Pilot_Plant_Control_and_Support_Building_%289969535664%29.jpg",
+      "sha256": "5d705c6dcbf7f34a30a3124a2acf98cccc903fb7ddf516156295103a8269b929",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0",
+      "author": "PEO ACWA"
+    },
+    {
+      "id": "commons-19b8f2a5",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "US Navy 040323-N-6293B-002 Aviation Structural Mechanic 2nd Class Luke Bauer, of Arvada, Colo., utilizes a torch to cut scrap metal, which will be used to weld a bracket, aboard USS Enterprise (CVN 65).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:US_Navy_040323-N-6293B-002_Aviation_Structural_Mechanic_2nd_Class_Luke_Bauer,_of_Arvada,_Colo.,_utilizes_a_torch_to_cut_scrap_metal,_which_will_be_used_to_weld_a_bracket,_aboard_USS_Enterprise_(CVN_65).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/US_Navy_040323-N-6293B-002_Aviation_Structural_Mechanic_2nd_Class_Luke_Bauer%2C_of_Arvada%2C_Colo.%2C_utilizes_a_torch_to_cut_scrap_metal%2C_which_will_be_used_to_weld_a_bracket%2C_aboard_USS_Enterprise_%28CVN_65%29.jpg/1280px-thumbnail.jpg",
+      "sha256": "2fc64d8e5c178f74f38a832ea5ed8529567790d8f3e08a90eb13885fb7c8ee32",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "U.S. Navy photo by Photographer's Mate Airman Marcel A. Barbeau."
+    },
+    {
+      "id": "commons-1fb40e46",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.helmet": "fault",
+        "ppe.goggles": "ok",
+        "ppe.shoes": "ok"
+      },
+      "title": "DVO 4792.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:DVO_4792.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/DVO_4792.JPG/1280px-DVO_4792.JPG",
+      "sha256": "d929ff30d1f23a0058e2f3964e5bcec00aea3cf41714104b456a81130f3a27e7",
+      "licence": "CC BY-SA 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "author": "Tormale"
+    },
+    {
+      "id": "commons-2074552b",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "NATO Exercise Steadfast Dart 2025 AHQSGT1-OFFICIAL-20250216-002-171.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:NATO_Exercise_Steadfast_Dart_2025_AHQSGT1-OFFICIAL-20250216-002-171.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/NATO_Exercise_Steadfast_Dart_2025_AHQSGT1-OFFICIAL-20250216-002-171.jpg/1280px-NATO_Exercise_Steadfast_Dart_2025_AHQSGT1-OFFICIAL-20250216-002-171.jpg",
+      "sha256": "03603b236493fb5dc1bf7782d57f6a7d6ae850c496a66442d15537a311bf834f",
+      "licence": "OGL 3",
+      "licenceUrl": "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3",
+      "author": "Sgt Anil Gurung RLC"
+    },
+    {
+      "id": "commons-21cddf96",
+      "split": "test",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "ok"
+      },
+      "title": "Dual light switches with exposed wiring.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Dual_light_switches_with_exposed_wiring.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Dual_light_switches_with_exposed_wiring.jpg/1280px-Dual_light_switches_with_exposed_wiring.jpg",
+      "sha256": "d1b11d65e77cf1085df2017ebc30fb36bf4e39ad06615434b4fbd6cc4f7fa176",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0",
+      "author": "Paul Cutler from Chaska, USA"
+    },
+    {
+      "id": "commons-235be84c",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault",
+        "ppe.goggles": "fault"
+      },
+      "title": "Fire Work.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Fire_Work.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/Fire_Work.jpg/1280px-Fire_Work.jpg",
+      "sha256": "39f0466dcb758e2563b7156f2ab469b36788e67961028e7015fe40e713423d09",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Moizee"
+    },
+    {
+      "id": "commons-249c2980",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault"
+      },
+      "title": "Male labour working at Building construction site.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Male_labour_working_at_Building_construction_site.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Male_labour_working_at_Building_construction_site.jpg/1280px-Male_labour_working_at_Building_construction_site.jpg",
+      "sha256": "b6cf4913ea1ce07596b95a507ee65f28ea2bf7655986005e8233a6d9df0afcb7",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Jim Carter"
+    },
+    {
+      "id": "commons-27821b1e",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "Welding (1).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Welding_(1).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Welding_%281%29.jpg/1280px-Welding_%281%29.jpg",
+      "sha256": "f7c228286de6d561a0213b2a9ff5d13b4045ccedc399cd67115f6c5898eb08e4",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0",
+      "author": "Andrey from Russia"
+    },
+    {
+      "id": "commons-31e8db8f",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault"
+      },
+      "title": "Electrician at work, Goa, India. 3.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Electrician_at_work,_Goa,_India._3.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/Electrician_at_work%2C_Goa%2C_India._3.jpg/1280px-Electrician_at_work%2C_Goa%2C_India._3.jpg",
+      "sha256": "b5c58cb571cf5b500fdc5a1ad62cb230c7b28edac24878a6a31917abd826c85b",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Fredericknoronha"
+    },
+    {
+      "id": "commons-383f4a80",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault"
+      },
+      "title": "Welding Course.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Welding_Course.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Welding_Course.jpg/1280px-Welding_Course.jpg",
+      "sha256": "5e489dc6a45b59e0f624d948ae7d265b6986ec2b020296cca2fb7ec50b53f988",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Felicity.weary"
+    },
+    {
+      "id": "commons-457c2b71",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "ok"
+      },
+      "title": "13990112000448637212679269518260 رزمایش مدافعان سلامت.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:13990112000448637212679269518260_%D8%B1%D8%B2%D9%85%D8%A7%DB%8C%D8%B4_%D9%85%D8%AF%D8%A7%D9%81%D8%B9%D8%A7%D9%86_%D8%B3%D9%84%D8%A7%D9%85%D8%AA.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/56/13990112000448637212679269518260_%D8%B1%D8%B2%D9%85%D8%A7%DB%8C%D8%B4_%D9%85%D8%AF%D8%A7%D9%81%D8%B9%D8%A7%D9%86_%D8%B3%D9%84%D8%A7%D9%85%D8%AA.jpg",
+      "sha256": "75d0b3cd8c730d7417de93b3a02d443fb2b817f6e5074831f27d32c9c78182c9",
+      "licence": "CC BY 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0",
+      "author": "Mohammad Sadegh Nikgostar"
+    },
+    {
+      "id": "commons-4c074a35",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.goggles": "ok"
+      },
+      "title": "A Sailor welds a radar mount. (8202178523).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:A_Sailor_welds_a_radar_mount._(8202178523).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/A_Sailor_welds_a_radar_mount._%288202178523%29.jpg/1280px-A_Sailor_welds_a_radar_mount._%288202178523%29.jpg",
+      "sha256": "6160c448c3d76272d75b367ae5a4620357391bc1e5ff19be74567efb40d3c788",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Official U.S. Navy Page from United States of America"
+    },
+    {
+      "id": "commons-4cf7b251",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault",
+        "ppe.goggles": "ok"
+      },
+      "title": "Flickr - Official U.S. Navy Imagery - Seaman Bruce Medeiros grinds a wench..jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Flickr_-_Official_U.S._Navy_Imagery_-_Seaman_Bruce_Medeiros_grinds_a_wench..jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Flickr_-_Official_U.S._Navy_Imagery_-_Seaman_Bruce_Medeiros_grinds_a_wench..jpg/1280px-Flickr_-_Official_U.S._Navy_Imagery_-_Seaman_Bruce_Medeiros_grinds_a_wench..jpg",
+      "sha256": "d06433438c5ff7f732312aac964d046297e476d26e0de357f0028d933d3f1663",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Official Navy Page from United States of America MC3 Marcos Vazquez/U.S. Navy"
+    },
+    {
+      "id": "commons-4f7e4fc5",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault",
+        "ppe.shoes": "ok"
+      },
+      "title": "Welding pic 2.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Welding_pic_2.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Welding_pic_2.jpg",
+      "sha256": "bc0de709023512aa4c72e7e2848a397037771db6ef1445182483e58b6d4051cb",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Edwin Njoroge"
+    },
+    {
+      "id": "commons-5221f750",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.helmet": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "Great Bridge Lock Replacement 2014 (12680435433).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Great_Bridge_Lock_Replacement_2014_(12680435433).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Great_Bridge_Lock_Replacement_2014_%2812680435433%29.jpg/1280px-Great_Bridge_Lock_Replacement_2014_%2812680435433%29.jpg",
+      "sha256": "9140e18d81399fb53cfad84b84cb8c1c52caa11133df9937c6e88664d5567908",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "U.S. Army Corps of Engineers Norfolk District from United States"
+    },
+    {
+      "id": "commons-5a5f0e4d",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault"
+      },
+      "title": "475th CES paves the way at Manda Bay (8376493).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:475th_CES_paves_the_way_at_Manda_Bay_(8376493).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/475th_CES_paves_the_way_at_Manda_Bay_%288376493%29.jpg/1280px-475th_CES_paves_the_way_at_Manda_Bay_%288376493%29.jpg",
+      "sha256": "9d2ef3f427980eea5d15d2217d188e35f79cc1ccb129533e773e96225f123887",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "U.S. Air Force photo by Senior Airman Olivia Gibson"
+    },
+    {
+      "id": "commons-5c346fff",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "ok",
+        "ppe.shoes": "ok",
+        "ppe.gloves": "ok"
+      },
+      "title": "Construction Workers.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Construction_Workers.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Construction_Workers.jpg/1280px-Construction_Workers.jpg",
+      "sha256": "590fa4a148a882d43351dbee29dd20931e5281efa4d2716fa78aec3ce2b345c4",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0",
+      "author": "photo taken by flickr Paul Keheler"
+    },
+    {
+      "id": "commons-5f9d31db",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "2015 tram tracks replacement in Tallinn 092.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:2015_tram_tracks_replacement_in_Tallinn_092.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/2015_tram_tracks_replacement_in_Tallinn_092.JPG/1280px-2015_tram_tracks_replacement_in_Tallinn_092.JPG",
+      "sha256": "19def0dcb5727a17345404fad50b768d8ba4aeb07699b12cfce3aef3ffbbefe3",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Dmitry G"
+    },
+    {
+      "id": "commons-5fbd4a93",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault"
+      },
+      "title": "JAF CE, Tech. Sgt. Spotts repairs EALS 160701-F-RN544-190.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:JAF_CE,_Tech._Sgt._Spotts_repairs_EALS_160701-F-RN544-190.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/JAF_CE%2C_Tech._Sgt._Spotts_repairs_EALS_160701-F-RN544-190.jpg/1280px-JAF_CE%2C_Tech._Sgt._Spotts_repairs_EALS_160701-F-RN544-190.jpg",
+      "sha256": "42cf95f4f4acaf030474aaffeac1efd855da84cb727eba8b12c973fe03bbbe33",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Senior Airman Justyn Freeman"
+    },
+    {
+      "id": "commons-60157bf0",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.shoes": "fault"
+      },
+      "title": "Workers At Dusk, GEC, Chittagong.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Workers_At_Dusk,_GEC,_Chittagong.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Workers_At_Dusk%2C_GEC%2C_Chittagong.jpg/1280px-Workers_At_Dusk%2C_GEC%2C_Chittagong.jpg",
+      "sha256": "f478ef3619c70c1d639bf8efce53c2dd4ed4d94ad1416b081180cc0e187a9e41",
+      "licence": "CC BY-SA 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "author": "Nayeem KALAM"
+    },
+    {
+      "id": "commons-65b83d38",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok"
+      },
+      "title": "Cobra Gold 2015 ENCAP, Site 2 150205-M-AR450-028.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Cobra_Gold_2015_ENCAP,_Site_2_150205-M-AR450-028.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Cobra_Gold_2015_ENCAP%2C_Site_2_150205-M-AR450-028.jpg/1280px-Cobra_Gold_2015_ENCAP%2C_Site_2_150205-M-AR450-028.jpg",
+      "sha256": "b8891bc30525f99b29bf0a683ca90179ba3bbad58a4046cb04f6a98bad5a3be9",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Lance Cpl. Wesley Timm"
+    },
+    {
+      "id": "commons-6aab2a90",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "Tig Welding WP9.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Tig_Welding_WP9.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Tig_Welding_WP9.jpg/1280px-Tig_Welding_WP9.jpg",
+      "sha256": "75ac24d8ce253b6ac3c815de812e34d66512f0375739304aa7b324eb0c6751de",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Prowelder87"
+    },
+    {
+      "id": "commons-6aeb2f7c",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault",
+        "ppe.shoes": "fault"
+      },
+      "title": "Construction bangladesh 02 jlr.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Construction_bangladesh_02_jlr.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Construction_bangladesh_02_jlr.jpg/1280px-Construction_bangladesh_02_jlr.jpg",
+      "sha256": "dcfa597633aba3874e3a07e55a0178c592e25af1d9cce89dcd481d9351d7fdca",
+      "licence": "CC BY-SA 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "author": "Jeff Ratliff"
+    },
+    {
+      "id": "commons-6f606abb",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "120328-N-NG906-008 (6881276630).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:120328-N-NG906-008_(6881276630).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/120328-N-NG906-008_%286881276630%29.jpg/1280px-120328-N-NG906-008_%286881276630%29.jpg",
+      "sha256": "8ce98a0210e0faa0bccd36fa9738c03295a9fdf419dce940a9c5707f433df6ab",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "U.S. Department of Defense Current Photos"
+    },
+    {
+      "id": "commons-751d3267",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "Exercise IRON STORM 23 APOG-OFFICIAL-20230830-023-21.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Exercise_IRON_STORM_23_APOG-OFFICIAL-20230830-023-21.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Exercise_IRON_STORM_23_APOG-OFFICIAL-20230830-023-21.jpg/1280px-Exercise_IRON_STORM_23_APOG-OFFICIAL-20230830-023-21.jpg",
+      "sha256": "46dfb88ecdc9f53dc43d9f8deb0ffe49193220cf67f66350659978d47e8eebf9",
+      "licence": "OGL 3",
+      "licenceUrl": "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3",
+      "author": "Mike Whitehurst"
+    },
+    {
+      "id": "commons-79456f75",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.goggles": "ok"
+      },
+      "title": "Workers Welding.png",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Workers_Welding.png",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/Workers_Welding.png/1280px-Workers_Welding.png",
+      "sha256": "c95bc94447190cff549f93bba056e619af2fc5a0da7f789bb87ed2040219576d",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Fargrotega"
+    },
+    {
+      "id": "commons-7cf011bc",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.helmet": "ok"
+      },
+      "title": "A Veteran Helping Veterans (27583226295).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:A_Veteran_Helping_Veterans_(27583226295).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/A_Veteran_Helping_Veterans_%2827583226295%29.jpg/1280px-A_Veteran_Helping_Veterans_%2827583226295%29.jpg",
+      "sha256": "de9a99de5ea4147967e35bf0d9864acc7eb132d73431e10a3f62edd051493a88",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "USCapitol"
+    },
+    {
+      "id": "commons-8267f014",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "ok",
+        "ppe.shoes": "ok"
+      },
+      "title": "Construction workers not wearing fall protection equipment.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Construction_workers_not_wearing_fall_protection_equipment.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Construction_workers_not_wearing_fall_protection_equipment.jpg",
+      "sha256": "23aba350f9eace6466851d7e4b0178a3bf02ef208b31f20cbf46e71e049b8e42",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "National Institute for Occupational Safety and Health (NIOSH) from USA"
+    },
+    {
+      "id": "commons-83178a33",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "ok"
+      },
+      "title": "Wire nuts and junction box.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Wire_nuts_and_junction_box.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/08/Wire_nuts_and_junction_box.JPG/1280px-Wire_nuts_and_junction_box.JPG",
+      "sha256": "314df110d108d69e1b62809deb36365f9c52d8193c6d5c408b6f3bb9663ee2a8",
+      "licence": "CC BY-SA 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "author": "Dmitry G"
+    },
+    {
+      "id": "commons-877a0c17",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault",
+        "ppe.shoes": "fault"
+      },
+      "title": "Traditional worker with coconut rope.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Traditional_worker_with_coconut_rope.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Traditional_worker_with_coconut_rope.jpg/1280px-Traditional_worker_with_coconut_rope.jpg",
+      "sha256": "ceb569b5a3ccc204ad63ebf22aa578bbdef5cca85193028c22d3ef5df278bb56",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Curved.kiwix"
+    },
+    {
+      "id": "commons-88b69c99",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "Woman with chop saw and hard hat (3401747795).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Woman_with_chop_saw_and_hard_hat_(3401747795).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Woman_with_chop_saw_and_hard_hat_%283401747795%29.jpg/1280px-Woman_with_chop_saw_and_hard_hat_%283401747795%29.jpg",
+      "sha256": "0e06ad57fdf7b80812f0fc0e3ea24525415788f94e757d1a91b73c94176dabf0",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0",
+      "author": "Sean McGrath from Saint John, NB, Canada"
+    },
+    {
+      "id": "commons-8bea33d0",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "U.S. Marine Corps Lance Cpl. Steven Cole does welding work at the Escuela Calderas engineering site in Puntarenas, Costa Rica, Aug. 4, 2011, during Continuing Promise 2011 110804-N-NY820-170.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:U.S._Marine_Corps_Lance_Cpl._Steven_Cole_does_welding_work_at_the_Escuela_Calderas_engineering_site_in_Puntarenas,_Costa_Rica,_Aug._4,_2011,_during_Continuing_Promise_2011_110804-N-NY820-170.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/U.S._Marine_Corps_Lance_Cpl._Steven_Cole_does_welding_work_at_the_Escuela_Calderas_engineering_site_in_Puntarenas%2C_Costa_Rica%2C_Aug._4%2C_2011%2C_during_Continuing_Promise_2011_110804-N-NY820-170.jpg/1280px-thumbnail.jpg",
+      "sha256": "eb8dd41bff78c47809fe7230fcee4944d20a2ab6b74cc9bbe7c227b7f320bddf",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "MC2 Eric Tretter"
+    },
+    {
+      "id": "commons-8f7f73cb",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.goggles": "fault"
+      },
+      "title": "Welding work.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Welding_work.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/Welding_work.jpg/1280px-Welding_work.jpg",
+      "sha256": "22554ffc38bf3ad08bc68e27d0e034f790ff4c355fd94d896ebef606345212f2",
+      "licence": "CC0",
+      "licenceUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "author": "Wilfredor"
+    },
+    {
+      "id": "commons-954f2f17",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "US Army soldier welding two metal pieces, Fort Gregg-Adams, Virginia, March 2025.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:US_Army_soldier_welding_two_metal_pieces,_Fort_Gregg-Adams,_Virginia,_March_2025.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8e/US_Army_soldier_welding_two_metal_pieces%2C_Fort_Gregg-Adams%2C_Virginia%2C_March_2025.jpg/1280px-US_Army_soldier_welding_two_metal_pieces%2C_Fort_Gregg-Adams%2C_Virginia%2C_March_2025.jpg",
+      "sha256": "20ba8d93800fc5e078bf2471b473325278e022118f56c74d5920c78c2d3d30af",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Juan F. Jimenez, Army"
+    },
+    {
+      "id": "commons-95c148cc",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault"
+      },
+      "title": "US Capitol subway maintenance.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:US_Capitol_subway_maintenance.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/30/US_Capitol_subway_maintenance.jpg/1280px-US_Capitol_subway_maintenance.jpg",
+      "sha256": "0aa8811c4e8eac631ef70867361de5af94d21f3b2e6b8f631c0074771a6e06d9",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Architect of the Capitol, U.S. Congress"
+    },
+    {
+      "id": "commons-9fff930c",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "ok",
+        "ppe.shoes": "ok"
+      },
+      "title": "US Navy 061209-N-1328C-397 Commander, U.S. Naval Facilities Engineering Command Rear Adm. Richard E. Cellon speaks with Construction Electrician 1st Class Damien Brandlen, leading petty officer for the Tadjoura Primary school p.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:US_Navy_061209-N-1328C-397_Commander,_U.S._Naval_Facilities_Engineering_Command_Rear_Adm._Richard_E._Cellon_speaks_with_Construction_Electrician_1st_Class_Damien_Brandlen,_leading_petty_officer_for_the_Tadjoura_Primary_school_p.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/US_Navy_061209-N-1328C-397_Commander%2C_U.S._Naval_Facilities_Engineering_Command_Rear_Adm._Richard_E._Cellon_speaks_with_Construction_Electrician_1st_Class_Damien_Brandlen%2C_leading_petty_officer_for_the_Tadjoura_Primary_school_p.jpg/1280px-thumbnail.jpg",
+      "sha256": "87841d602e8ec166b8eba3658e35ce72c59d2cd19c00dfec9626640502d6afb1",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "U.S. Navy photo by Chief Mass Communication Specialist Eric A. Clement"
+    },
+    {
+      "id": "commons-a076bcd7",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault"
+      },
+      "title": "Labourers - Convention Centre Complex Under Construction - Science City - Calcutta 1994-May 003.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Labourers_-_Convention_Centre_Complex_Under_Construction_-_Science_City_-_Calcutta_1994-May_003.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Labourers_-_Convention_Centre_Complex_Under_Construction_-_Science_City_-_Calcutta_1994-May_003.JPG/1280px-Labourers_-_Convention_Centre_Complex_Under_Construction_-_Science_City_-_Calcutta_1994-May_003.JPG",
+      "sha256": "8a3eea196c0ce0d630e521ec826a6e6e55d6771116302008c8e2528c6a5c684c",
+      "licence": "CC BY 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/3.0",
+      "author": "Biswarup Ganguly"
+    },
+    {
+      "id": "commons-a4dddfed",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault"
+      },
+      "title": "Electrician at work, Goa, India. 2.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Electrician_at_work,_Goa,_India._2.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Electrician_at_work%2C_Goa%2C_India._2.jpg/1280px-Electrician_at_work%2C_Goa%2C_India._2.jpg",
+      "sha256": "3a802d6123e7afa02168d4363fe9bc7b3fefcab360f0430898ca07989bdd9554",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Fredericknoronha"
+    },
+    {
+      "id": "commons-a6886690",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "130926-N-JO908-044 (10155529675).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:130926-N-JO908-044_(10155529675).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/130926-N-JO908-044_%2810155529675%29.jpg/1280px-130926-N-JO908-044_%2810155529675%29.jpg",
+      "sha256": "dddbd196fcb12296aacc9b2c58e266cfb6b6d08b1d94075de02878378f8d7c50",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "U.S. Department of Defense Current Photos"
+    },
+    {
+      "id": "commons-a882641a",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault"
+      },
+      "title": "Aiguisage d'une machette à la meule.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Aiguisage_d%27une_machette_%C3%A0_la_meule.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/Aiguisage_d%27une_machette_%C3%A0_la_meule.jpg/1280px-Aiguisage_d%27une_machette_%C3%A0_la_meule.jpg",
+      "sha256": "c9316d958c93868ac3a3bc71fd569787a390b527edac2279fcc871b77b544725",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Sid Mbog"
+    },
+    {
+      "id": "commons-a9a58241",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "fault"
+      },
+      "title": "Alternative Line Cord Connection.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Alternative_Line_Cord_Connection.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Alternative_Line_Cord_Connection.JPG/1280px-Alternative_Line_Cord_Connection.JPG",
+      "sha256": "1894048ee167a675b5296e2ffae575fc2152e153e45606f077d790737377401c",
+      "licence": "CC BY-SA 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "author": "Jstapko"
+    },
+    {
+      "id": "commons-aa4783ac",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault"
+      },
+      "title": "475th CES paves the way at Manda Bay (8376491).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:475th_CES_paves_the_way_at_Manda_Bay_(8376491).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/80/475th_CES_paves_the_way_at_Manda_Bay_%288376491%29.jpg/1280px-475th_CES_paves_the_way_at_Manda_Bay_%288376491%29.jpg",
+      "sha256": "4e197521512086f76dfa0985535800dfc2aeb8e322d02f039aad91af359236ee",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "U.S. Air Force photo by Senior Airman Olivia Gibson"
+    },
+    {
+      "id": "commons-aad61e69",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "ok",
+        "ppe.shoes": "ok"
+      },
+      "title": "Construction workers and a crane in Andhra Pradesh.png",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Construction_workers_and_a_crane_in_Andhra_Pradesh.png",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Construction_workers_and_a_crane_in_Andhra_Pradesh.png/1280px-Construction_workers_and_a_crane_in_Andhra_Pradesh.png",
+      "sha256": "76b4a745cc0da6f58799bd8383c0ccd11df1f9135dbedc9c7ec8d9e963cd817c",
+      "licence": "CC BY 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/3.0",
+      "author": "Narendra Modi"
+    },
+    {
+      "id": "commons-abaa54fb",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.helmet": "ok"
+      },
+      "title": "160620-N-ZZ999-002 (27901152156).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:160620-N-ZZ999-002_(27901152156).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/30/160620-N-ZZ999-002_%2827901152156%29.jpg/1280px-160620-N-ZZ999-002_%2827901152156%29.jpg",
+      "sha256": "7d648cedf484d2a7ef2980e33d993294b8af4e08e1dcf498892f97562926cbf0",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Commander, U.S. Naval Forces Europe-Africa/U.S. 6th Fleet"
+    },
+    {
+      "id": "commons-ac2f34e1",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "ok",
+        "ppe.shoes": "ok"
+      },
+      "title": "Baliwagenyo welder with green hard hat working atop a petrol station metal structure 01.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Baliwagenyo_welder_with_green_hard_hat_working_atop_a_petrol_station_metal_structure_01.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Baliwagenyo_welder_with_green_hard_hat_working_atop_a_petrol_station_metal_structure_01.jpg/1280px-Baliwagenyo_welder_with_green_hard_hat_working_atop_a_petrol_station_metal_structure_01.jpg",
+      "sha256": "ca8c01436b7b621792a056a548f5669d9c2cc5dd5904515672be0d8f169079be",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "FBenjr123"
+    },
+    {
+      "id": "commons-ae01f0ed",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "fault"
+      },
+      "title": "Improperly joined overhead wires.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Improperly_joined_overhead_wires.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Improperly_joined_overhead_wires.JPG/1280px-Improperly_joined_overhead_wires.JPG",
+      "sha256": "dd2d0fa37207f83ce80d2a3a8bdb11003f1feb43a4eb22b6085d999132b4d027",
+      "licence": "CC BY-SA 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "author": "net_man"
+    },
+    {
+      "id": "commons-ae85d59a",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault"
+      },
+      "title": "475th CES paves the way at Manda Bay (8376492).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:475th_CES_paves_the_way_at_Manda_Bay_(8376492).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/475th_CES_paves_the_way_at_Manda_Bay_%288376492%29.jpg/1280px-475th_CES_paves_the_way_at_Manda_Bay_%288376492%29.jpg",
+      "sha256": "04e3646085199a25ff49d2ee6e7bff86cf954cc89386264b05c23a6b57fbcf91",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "U.S. Air Force photo by Senior Airman Olivia Gibson"
+    },
+    {
+      "id": "commons-b42f0b2c",
+      "split": "test",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "ok"
+      },
+      "title": "Centraaldoos.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Centraaldoos.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ed/Centraaldoos.JPG/1280px-Centraaldoos.JPG",
+      "sha256": "1a4b5930830b11e0996d8d00e3dc730f38ad3e106289e22e90a99de4dfbf5f9c",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "HandigeHarry"
+    },
+    {
+      "id": "commons-bcb6d586",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "ok"
+      },
+      "title": "Line Cord As Resistor.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Line_Cord_As_Resistor.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Line_Cord_As_Resistor.JPG/1280px-Line_Cord_As_Resistor.JPG",
+      "sha256": "e1d715c290934c7741590b03fadfe18afd90e7b0320417989f46f64a853d4ff3",
+      "licence": "CC BY-SA 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "author": "Jstapko"
+    },
+    {
+      "id": "commons-bf7a39a0",
+      "split": "test",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "ok"
+      },
+      "title": "Electrical Tape over Exposed wire.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Electrical_Tape_over_Exposed_wire.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5f/Electrical_Tape_over_Exposed_wire.jpg/1280px-Electrical_Tape_over_Exposed_wire.jpg",
+      "sha256": "818f59487b3a674c5ba4cb021635418984a0a25714f9ac09bd31c3bc42054db3",
+      "licence": "CC BY-SA 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "author": "Christopher.nunez"
+    },
+    {
+      "id": "commons-c06b47ca",
+      "split": "test",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "ok"
+      },
+      "title": "Electrical tape for safety =).jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Electrical_tape_for_safety_%3D).jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Electrical_tape_for_safety_%3D%29.jpg/1280px-Electrical_tape_for_safety_%3D%29.jpg",
+      "sha256": "639f50dd452a93eb7cf8902114361a92757ef3f5330be36245e7e1f58b8dd422",
+      "licence": "CC BY-SA 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "author": "Mcyr5397"
+    },
+    {
+      "id": "commons-c5a37af4",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault"
+      },
+      "title": "FEMA - 41677 - Volunteer doing electrical work in Alaska.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:FEMA_-_41677_-_Volunteer_doing_electrical_work_in_Alaska.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/FEMA_-_41677_-_Volunteer_doing_electrical_work_in_Alaska.jpg/1280px-FEMA_-_41677_-_Volunteer_doing_electrical_work_in_Alaska.jpg",
+      "sha256": "1dcd6992c7f7b61a939d1af8f98cb3e2868533aa6cc3e52d82b682612852b36a",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Ben Brennan"
+    },
+    {
+      "id": "commons-c61306a5",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault"
+      },
+      "title": "Worker - Science City Site Office Under Construction - Calcutta 1993-Monsoon 748.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Worker_-_Science_City_Site_Office_Under_Construction_-_Calcutta_1993-Monsoon_748.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Worker_-_Science_City_Site_Office_Under_Construction_-_Calcutta_1993-Monsoon_748.JPG/1280px-Worker_-_Science_City_Site_Office_Under_Construction_-_Calcutta_1993-Monsoon_748.JPG",
+      "sha256": "c7b96a9f079a3ebe3417ebe3ad75f88af053d2d991e74ed62f0133976101f426",
+      "licence": "CC BY 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/3.0",
+      "author": "Biswarup Ganguly"
+    },
+    {
+      "id": "commons-d569f588",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "ok",
+        "ppe.shoes": "ok"
+      },
+      "title": "Baliwagenyo welder with green hard hat working atop a petrol station metal structure 02.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Baliwagenyo_welder_with_green_hard_hat_working_atop_a_petrol_station_metal_structure_02.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/Baliwagenyo_welder_with_green_hard_hat_working_atop_a_petrol_station_metal_structure_02.jpg/1280px-Baliwagenyo_welder_with_green_hard_hat_working_atop_a_petrol_station_metal_structure_02.jpg",
+      "sha256": "e21543df795119ad6ba05628b433e4ad4095e8c8edc118f758d0bebb1ba7825b",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "FBenjr123"
+    },
+    {
+      "id": "commons-d6405ce7",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "ok",
+        "ppe.shoes": "ok"
+      },
+      "title": "Building construction Moira Close Broadwater Farm Haringey 2025 01.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Building_construction_Moira_Close_Broadwater_Farm_Haringey_2025_01.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Building_construction_Moira_Close_Broadwater_Farm_Haringey_2025_01.jpg/1280px-Building_construction_Moira_Close_Broadwater_Farm_Haringey_2025_01.jpg",
+      "sha256": "dc8190bb428337e8e3f742d998acdab603e9b9b7f43eae70fedfbd721f41498e",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Acabashi"
+    },
+    {
+      "id": "commons-dcdffaed",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.goggles": "ok"
+      },
+      "title": "Mig Welding Overhead.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Mig_Welding_Overhead.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Mig_Welding_Overhead.jpg/1280px-Mig_Welding_Overhead.jpg",
+      "sha256": "6cbb8ae7192d28173d455f074332ea54f4f83405ddc825aae5d9fc329b19ae39",
+      "licence": "CC BY-SA 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Prowelder87"
+    },
+    {
+      "id": "commons-de06973c",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.goggles": "ok"
+      },
+      "title": "Defense.gov News Photo 090801-N-2344B-167.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Defense.gov_News_Photo_090801-N-2344B-167.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Defense.gov_News_Photo_090801-N-2344B-167.jpg/1280px-Defense.gov_News_Photo_090801-N-2344B-167.jpg",
+      "sha256": "4004905edfed853f7794a8a54cee826f67b0ebf90fe782c5123eb3680fe2b2e1",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Petty Officer 3rd Class Briana C. Brotzman, U.S. Navy"
+    },
+    {
+      "id": "commons-df421ff2",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.goggles": "ok"
+      },
+      "title": "U.S. Navy Hull Maintenance Technician Fireman Dennis Nemeth welds piping aboard aboard the aircraft carrier USS Nimitz (CVN 68) in the Indian Ocean June 8, 2013 130608-N-LP801-011.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:U.S._Navy_Hull_Maintenance_Technician_Fireman_Dennis_Nemeth_welds_piping_aboard_aboard_the_aircraft_carrier_USS_Nimitz_(CVN_68)_in_the_Indian_Ocean_June_8,_2013_130608-N-LP801-011.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/U.S._Navy_Hull_Maintenance_Technician_Fireman_Dennis_Nemeth_welds_piping_aboard_aboard_the_aircraft_carrier_USS_Nimitz_%28CVN_68%29_in_the_Indian_Ocean_June_8%2C_2013_130608-N-LP801-011.jpg/1280px-thumbnail.jpg",
+      "sha256": "eb9cf53a8a267714f73a50f8224d78c6d2781302b0af0a7c5626577a2d8aef26",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "MC3 Raul Moreno Jr."
+    },
+    {
+      "id": "commons-e005a50c",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "ok"
+      },
+      "title": "Electrician Mike Hughes Installing Meter Base.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Electrician_Mike_Hughes_Installing_Meter_Base.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Electrician_Mike_Hughes_Installing_Meter_Base.jpg/1280px-Electrician_Mike_Hughes_Installing_Meter_Base.jpg",
+      "sha256": "e6ce33d1ff5c850ffdd578628a544e1c70434702fb2d390710fa96f8e41bf3e9",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0",
+      "author": "Team Massachusetts 4D Home"
+    },
+    {
+      "id": "commons-e26cbabb",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault",
+        "ppe.goggles": "ok"
+      },
+      "title": "Defense.gov News Photo 070313-N-0120A-146.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Defense.gov_News_Photo_070313-N-0120A-146.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/Defense.gov_News_Photo_070313-N-0120A-146.jpg/1280px-Defense.gov_News_Photo_070313-N-0120A-146.jpg",
+      "sha256": "9bf9101a7e5d4c8affe1f72b2c4c8f0e174f768c9ebfb47350bd0202808f3ea6",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "Petty Officer 3rd Class Mark R. Alvarez, U.S. Navy"
+    },
+    {
+      "id": "commons-e68c582b",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "ok"
+      },
+      "title": "US Navy 061209-N-1328C-386 Commander, U.S. Naval Facilities Engineering Command Rear Adm. Richard E. Cellon speaks with Construction Electrician 1st Class Damien Brandlen, leading petty officer for the Tadjoura Primary school p.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:US_Navy_061209-N-1328C-386_Commander,_U.S._Naval_Facilities_Engineering_Command_Rear_Adm._Richard_E._Cellon_speaks_with_Construction_Electrician_1st_Class_Damien_Brandlen,_leading_petty_officer_for_the_Tadjoura_Primary_school_p.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9e/US_Navy_061209-N-1328C-386_Commander%2C_U.S._Naval_Facilities_Engineering_Command_Rear_Adm._Richard_E._Cellon_speaks_with_Construction_Electrician_1st_Class_Damien_Brandlen%2C_leading_petty_officer_for_the_Tadjoura_Primary_school_p.jpg/1280px-thumbnail.jpg",
+      "sha256": "d88862cad60083c61cce854c73952601f150d2c61827438bc533ddb0b68c6320",
+      "licence": "Public domain",
+      "licenceUrl": null,
+      "author": "U.S. Navy photo by Chief Mass Communication Specialist Eric A. Clement"
+    },
+    {
+      "id": "commons-ecad0f63",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.shoes": "fault"
+      },
+      "title": "10 Construction worker safety - unsafe rooftop worker wearing flip flops.jpg",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:10_Construction_worker_safety_-_unsafe_rooftop_worker_wearing_flip_flops.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/6f/10_Construction_worker_safety_-_unsafe_rooftop_worker_wearing_flip_flops.jpg",
+      "sha256": "8b5a912c877a8a078be151e6fd7c3b5628697df3a7890b98632d4b8982edb2fd",
+      "licence": "CC BY 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/3.0",
+      "author": "Marek Ślusarczyk (Tupungato) Photo portfolio"
+    },
+    {
+      "id": "commons-f044463e",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault"
+      },
+      "title": "Piling Worker - Convention Centre Complex Under Constrution - Science City Site - Calcutta 1994-April 113.JPG",
+      "source": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Piling_Worker_-_Convention_Centre_Complex_Under_Constrution_-_Science_City_Site_-_Calcutta_1994-April_113.JPG",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Piling_Worker_-_Convention_Centre_Complex_Under_Constrution_-_Science_City_Site_-_Calcutta_1994-April_113.JPG/1280px-Piling_Worker_-_Convention_Centre_Complex_Under_Constrution_-_Science_City_Site_-_Calcutta_1994-April_113.JPG",
+      "sha256": "e3fa3ccf2ce5bbfbb3b095fdedabb01ec5a403650c4519fddbad2595afdd15a2",
+      "licence": "CC BY 3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/3.0",
+      "author": "Biswarup Ganguly"
+    },
+    {
+      "id": "flickr-0051cdff",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {},
+      "title": "Exposed wires",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/64586501@N00/22849675647",
+      "url": "https://live.staticflickr.com/5627/22849675647_9562929275_b.jpg",
+      "sha256": "39c3c62617f9204d21c674913d3294b2947a78b0d0917ae1e5b4517efb75deca",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "Plusea"
+    },
+    {
+      "id": "flickr-18a0a2f3",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.shoes": "fault"
+      },
+      "title": "Holding the Boat",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/89165847@N00/46478599365",
+      "url": "https://live.staticflickr.com/7800/46478599365_44e9cbe4eb_b.jpg",
+      "sha256": "9eaf5a9e2776e500f367d64b11b40ad547eafdd73e3c72808737be60c268379f",
+      "licence": "CC BY-SA 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "author": "mikecogh"
+    },
+    {
+      "id": "flickr-3a296ef5",
+      "split": "test",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "fault"
+      },
+      "title": "Dangerous Wiring",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/89165847@N00/23498499736",
+      "url": "https://live.staticflickr.com/689/23498499736_9586ddbd7b_b.jpg",
+      "sha256": "061bac92ed27490ac6b6913e377ca3b73db5381cd0b43d4bab44b65dcffb1723",
+      "licence": "CC BY-SA 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "author": "mikecogh"
+    },
+    {
+      "id": "flickr-3ff4507a",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault"
+      },
+      "title": "The labour woman",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/30474650@N03/11144831565",
+      "url": "https://live.staticflickr.com/7387/11144831565_989ce22203_b.jpg",
+      "sha256": "1266f77c9964eb88a40e8293e174b49256ec8c9535b02b5baaa2baa158320b5a",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "M Prem Kumar"
+    },
+    {
+      "id": "flickr-409db92b",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {},
+      "title": "electrical tape for temporary binding",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/28208534@N07/4199551140",
+      "url": "https://live.staticflickr.com/2509/4199551140_fcb89708e2_b.jpg",
+      "sha256": "199a4643e52f1bc439963ad5c45afc8e0ad91f5f96355beea29cc6999e52d441",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "mikemol"
+    },
+    {
+      "id": "flickr-4e6b69b9",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok"
+      },
+      "title": "Weekend work 2012-12-10 09",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/61135621@N03/8260443907",
+      "url": "https://live.staticflickr.com/8489/8260443907_3c795bfb31_b.jpg",
+      "sha256": "764a4711647b5aa232c6e20b9e2a62f068bfdfb2f09e11e260edd9da1424ad56",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "MTAPhotos"
+    },
+    {
+      "id": "flickr-57d653b7",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok"
+      },
+      "title": "Angle-Grinder-cutting-with-Sparks__IMG_2866",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/28958738@N06/8410007770",
+      "url": "https://live.staticflickr.com/8376/8410007770_e235208eb4_b.jpg",
+      "sha256": "87362c8916cbf65f1fb2f42d48355067ee15774178f82f6b992b40954da830ba",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "Public Domain Photos"
+    },
+    {
+      "id": "flickr-66a577b9",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.shoes": "fault"
+      },
+      "title": "Chain Gang",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/89165847@N00/8426503710",
+      "url": "https://live.staticflickr.com/8092/8426503710_75b93cc464_b.jpg",
+      "sha256": "8d8695e2a7bba3ec6e15b9395b995a81ce8b64292a72ebd43ebb408fdf9dc471",
+      "licence": "CC BY-SA 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "author": "mikecogh"
+    },
+    {
+      "id": "flickr-672bdcfc",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault",
+        "ppe.shoes": "fault"
+      },
+      "title": "Going to work",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/57669526@N04/5330311571",
+      "url": "https://live.staticflickr.com/5041/5330311571_9d09a3853d_b.jpg",
+      "sha256": "7e7cc11410d6509b0d83cbf27d7a19ebcf73e0f64f416fec1af482cca24c3a9c",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "Dai Luo"
+    },
+    {
+      "id": "flickr-741fd779",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "ok",
+        "ppe.helmet": "ok"
+      },
+      "title": "Rat's Nest",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/13515581@N00/16694762754",
+      "url": "https://live.staticflickr.com/7720/16694762754_a05425a7b1_b.jpg",
+      "sha256": "e1a155da913811957b84e6efdc4c801b94b4486ddc63776c787ad550d9b7fac0",
+      "licence": "CC BY-SA 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "author": "jqpubliq"
+    },
+    {
+      "id": "flickr-99d67a82",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault"
+      },
+      "title": "Tool Grinder Sparks Diy Edited 2020",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/188454520@N02/49916883243",
+      "url": "https://live.staticflickr.com/65535/49916883243_e5a41954f7_b.jpg",
+      "sha256": "622c24d615234dd4c000b1d121be20310de32b3974073d8defe6df53eedd6c18",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "chimpwithcan"
+    },
+    {
+      "id": "flickr-9f1bbe98",
+      "split": "test",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "fault"
+      },
+      "title": "Splicing extra plugs onto Nokia hands-free",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/11834247@N00/76369160",
+      "url": "https://live.staticflickr.com/37/76369160_29209a3602_b.jpg",
+      "sha256": "2bd0a428220fa33c20028ea4a027931203ae96eebf0ae3122408478692705a75",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "Ben Helps"
+    },
+    {
+      "id": "flickr-a80cbc3f",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "ok"
+      },
+      "title": "Electrical tape to the rescue",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/82439748@N00/1538641426",
+      "url": "https://live.staticflickr.com/2383/1538641426_74b2672431_b.jpg",
+      "sha256": "802874acb7e41f2aade853216ac7d6d0004fe16ce8974ea8e1d01f3939ae17e2",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "blmurch"
+    },
+    {
+      "id": "flickr-afe2a113",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault",
+        "ppe.goggles": "fault"
+      },
+      "title": "Working with an Angle Grinder and Listening to an iPod",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/89165847@N00/12069347973",
+      "url": "https://live.staticflickr.com/2890/12069347973_6df6f59383_b.jpg",
+      "sha256": "dbc145ed1e73fd0bdcb1538485b5ab97bb01b4739f50190774f3c74af4f9c182",
+      "licence": "CC BY-SA 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "author": "mikecogh"
+    },
+    {
+      "id": "flickr-b472b858",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault",
+        "ppe.shoes": "fault"
+      },
+      "title": "Risky Practice",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/89165847@N00/47393686451",
+      "url": "https://live.staticflickr.com/4843/47393686451_a68fc1e207_b.jpg",
+      "sha256": "68eed517316109848a6231eaab05bda007cb89af2ae0f34901385afea14e1ce5",
+      "licence": "CC BY-SA 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "author": "mikecogh"
+    },
+    {
+      "id": "flickr-bbcbe9f7",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.shoes": "fault"
+      },
+      "title": "safe hands, navsari",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/43109416@N00/15849393203",
+      "url": "https://live.staticflickr.com/7446/15849393203_edcec128c4.jpg",
+      "sha256": "b0f68734e6e34b6764726d7a488a82eb2821adcd8fa5de5b59d725f6e30f1dcf",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "nevil zaveri (thank you for 20+M views:)"
+    },
+    {
+      "id": "flickr-bf630689",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.gloves": "fault",
+        "ppe.helmet": "fault"
+      },
+      "title": "India on the road, a woman constructor, India, 2001",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/8213176@N03/2245817600",
+      "url": "https://live.staticflickr.com/2391/2245817600_8a592cc8c4_b.jpg",
+      "sha256": "d5837130d753ec2e71f4a9424805f87b96914461215b0852295b0532c8d88cc9",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "rahuldlucca"
+    },
+    {
+      "id": "flickr-d0d598f4",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.shoes": "ok",
+        "ppe.goggles": "fault"
+      },
+      "title": "Man At Work",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/22737123@N04/8071567156",
+      "url": "https://live.staticflickr.com/8316/8071567156_66a5a8f100_b.jpg",
+      "sha256": "757b025607aa13a3f2024f2926c1d2a19e277e0d85595dee3dfb424070422acd",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "Devin_Smith"
+    },
+    {
+      "id": "flickr-e54aeb0e",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "ok"
+      },
+      "title": "Orange WIre Nuts",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/7417392@N05/16809462800",
+      "url": "https://live.staticflickr.com/8691/16809462800_aa91b5a7ca_b.jpg",
+      "sha256": "51ebd59873e830c7f287c81c9e4cf307760dae9ae7405ad2daeaf954da0789df",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "leighklotz"
+    },
+    {
+      "id": "flickr-e89c154e",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault"
+      },
+      "title": "Up a pole",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/21761122@N06/4542035605",
+      "url": "https://live.staticflickr.com/4001/4542035605_0503e69844_b.jpg",
+      "sha256": "3d4abbd562327bf3bac955a3958f1d97eb736ed6cf86564872c2ec2567a0f815",
+      "licence": "CC BY-SA 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "author": "runran"
+    },
+    {
+      "id": "flickr-ea402887",
+      "split": "test",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "ok"
+      },
+      "title": "No terminal block. Just wire nuts, tape, and hopes and dreams.",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/98823378@N08/54426992309",
+      "url": "https://live.staticflickr.com/65535/54426992309_3c79666aaf_b.jpg",
+      "sha256": "4ce61236192842ff5045374daea2a36e471e4dc7e748980061b99b06865c4b5a",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "A.J.____"
+    },
+    {
+      "id": "flickr-ea930eb5",
+      "split": "test",
+      "scene": "worker",
+      "labels": {
+        "ppe.helmet": "fault",
+        "ppe.shoes": "fault"
+      },
+      "title": "Examining an Angle Grinder",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/89165847@N00/12003371463",
+      "url": "https://live.staticflickr.com/5550/12003371463_43c153b023_b.jpg",
+      "sha256": "1f171c1633d552354f4272f2ce4c41e99f673514758495bb326af9b435ae35dd",
+      "licence": "CC BY-SA 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "author": "mikecogh"
+    },
+    {
+      "id": "flickr-ecd3e906",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "fault"
+      },
+      "title": "Exposed Wires",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/47511315@N05/5993371915",
+      "url": "https://live.staticflickr.com/6131/5993371915_a2ed2fccf9_b.jpg",
+      "sha256": "001f40c59d57fe549354ac76a4a7f778526f2ec73c36a7fbde08fc20b0dab9f5",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "existangst"
+    },
+    {
+      "id": "flickr-f3e8ec99",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "ok"
+      },
+      "title": "Installing protective electrical tape to the terminal connections for a transformer in a power substation in Queens.",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/59595815@N03/49870742286",
+      "url": "https://live.staticflickr.com/65535/49870742286_32ffdd63d9_b.jpg",
+      "sha256": "7f0ab4eb1aa80109d936875a8d3694b25e9b82afff28b5f3caf5c87afa8e38a3",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "author": "MTA C&D - EAST SIDE ACCESS"
+    },
+    {
+      "id": "flickr-fc6a0a3f",
+      "split": "test",
+      "scene": "wiring",
+      "labels": {},
+      "title": "Exposed wires, garage entrance",
+      "source": "Flickr (via Openverse)",
+      "page": "https://www.flickr.com/photos/44124427152@N01/18301255",
+      "url": "https://live.staticflickr.com/14/18301255_40475f7cf3_b.jpg",
+      "sha256": "5a215e92cefdfbcb09a2eddd9040aa52b349b0cf5d71dd8cffe7d83cf35ebac5",
+      "licence": "CC BY-SA 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "author": "Salim Virji"
+    },
+    {
+      "id": "wordpress-ebf86dab",
+      "split": "tune",
+      "scene": "wiring",
+      "labels": {
+        "work.joint_insulated": "fault"
+      },
+      "title": "On a fence, an electrical box is shown broken open, with large electrical wires coiling out of it, cut off so the bare wire is in easy reach.",
+      "source": "wordpress",
+      "page": "https://wordpress.org/photos/photo/60968b71f3/",
+      "url": "https://pd.w.org/2025/09/60968b71f3073c0e9.31305393-2048x1152.jpeg",
+      "sha256": "2505f06d67d2dd3ea7ec2b3df66f53ed3960b2c07258bb3f426a39c2bbe02cfe",
+      "licence": "CC0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "author": "Topher"
+    },
+    {
+      "id": "wordpress-fc610ed4",
+      "split": "tune",
+      "scene": "worker",
+      "labels": {},
+      "title": "A close-up of a slightly dirty white light switch hanging from a twisted wire.",
+      "source": "wordpress",
+      "page": "https://wordpress.org/photos/photo/476995af03/",
+      "url": "https://pd.w.org/2026/02/476995af03434851.94592534-1444x2048.jpeg",
+      "sha256": "c6db4d422d24eba552965c6f48daccbfb4437baf3bbce14026da7ac9b13f9391",
+      "licence": "CC0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "author": "Manjil Aryal"
+    }
+  ]
+}

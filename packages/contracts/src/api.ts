@@ -5,6 +5,7 @@
  */
 import { z } from 'zod';
 import {
+  AiCheckId,
   EntityId,
   EventId,
   LocalizedText,
@@ -233,13 +234,51 @@ export const EvidenceView = z.strictObject({
 });
 export type EvidenceView = z.infer<typeof EvidenceView>;
 
+// --- AI results ---------------------------------------------------------------
+
+/**
+ * `raised`: the check saw the fault (for example a bare hand). `clear`: it saw
+ * the gear or the right work. `unclear`: it could not tell, because what it
+ * needs was not in frame (`not_visible`) or, for eye protection, nothing was
+ * being ground, cut or welded (`no_hazard_seen`).
+ */
+export const AiCheckStatus = z.enum(['raised', 'clear', 'unclear']);
+export type AiCheckStatus = z.infer<typeof AiCheckStatus>;
+
+export const AiCheckView = z.strictObject({
+  check: AiCheckId,
+  status: AiCheckStatus,
+  confidence: z.number().min(0).max(1),
+  reason: z.enum(['not_visible', 'no_hazard_seen']).nullable(),
+  /** Seconds into the clip of the frames behind the result; 0 for a photo. */
+  frameTimes: z.array(z.number().nonnegative()),
+});
+export type AiCheckView = z.infer<typeof AiCheckView>;
+
+/**
+ * A server-side AI check on one clip, stored after the clip's hash was verified
+ * (`ai_result.stored`). A suggestion beside the assessor's score, never a score
+ * (rule 1); it arrives after sync, so the assessor may have scored without it.
+ */
+export const AiResultView = z.strictObject({
+  evidenceId: EventId,
+  /** The model, its revision and the rules version, so a result can be traced. */
+  engine: z.string(),
+  createdAt: Timestamp,
+  checks: z.array(AiCheckView),
+});
+export type AiResultView = z.infer<typeof AiResultView>;
+
 export const CriterionResult = z.strictObject({
   criterionId: z.string(),
   nosCode: z.string(),
   text: LocalizedText,
   marks: z.int(),
   score: ScoreValue.nullable(),
+  /** The AI flags the assessor saw while scoring, as recorded with the score. */
   aiFlags: z.array(AiFlag),
+  /** Server-side checks on this criterion's clips: the newest result per clip. */
+  aiResults: z.array(AiResultView),
   conflictReason: z.string().nullable(),
   rescore: ScoreValue.nullable(),
 });

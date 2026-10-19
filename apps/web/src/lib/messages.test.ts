@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { BlockerCode, FlagKind, type MessageParams } from '@hunarpramaan/contracts';
+import { AiCheckStatus, BlockerCode, FlagKind, type MessageParams } from '@hunarpramaan/contracts';
 import { en } from './i18n/en';
 import { hi } from './i18n/hi';
-import { blockerText, flagText } from './messages';
+import { aiCheckText, aiSeenAt, blockerText, flagText } from './messages';
 
 const params: MessageParams = {
   criterionId: 'L3-N1.PC1',
@@ -63,5 +63,49 @@ describe.each([
     expect(blockerText({ code: 'result_mismatch', params }, m, lang)).toContain(
       m.sessions.outcome.pass,
     );
+  });
+});
+
+describe.each([
+  ['en', en],
+  ['hi', hi],
+] as const)('AI check wording in %s', (_lang, m) => {
+  const checks = ['ppe.gloves', 'ppe.helmet', 'ppe.shoes', 'ppe.goggles', 'work.joint_insulated'];
+
+  it.each(checks)('names %s and words its fault', (check) => {
+    expect(m.aiChecks[check]).toBeTruthy();
+    expect(m.aiServer.fault[check]).toBeTruthy();
+  });
+
+  it.each(AiCheckStatus.options)('words a %s check with every value filled', (status) => {
+    for (const reason of [null, 'not_visible', 'no_hazard_seen'] as const) {
+      const text = aiCheckText(
+        { check: 'ppe.goggles', status, confidence: 0.82, reason, frameTimes: [12] },
+        m,
+      );
+      expect(text.length).toBeGreaterThan(5);
+      expect(text).not.toMatch(/\{\w+\}/);
+    }
+  });
+
+  it('gives the confidence and the times in the clip', () => {
+    const raised = {
+      check: 'ppe.gloves',
+      status: 'raised' as const,
+      confidence: 0.816,
+      reason: null,
+      frameTimes: [17.5, 71],
+    };
+    expect(aiCheckText(raised, m)).toContain('82%');
+    expect(aiSeenAt(raised, m)).toContain('0:17, 1:11');
+    expect(aiSeenAt({ ...raised, frameTimes: [0] }, m)).toBe('');
+  });
+
+  it('words a check it has no name for', () => {
+    const text = aiCheckText(
+      { check: 'ppe.harness', status: 'raised', confidence: 0.6, reason: null, frameTimes: [] },
+      m,
+    );
+    expect(text).toContain('ppe.harness');
   });
 });

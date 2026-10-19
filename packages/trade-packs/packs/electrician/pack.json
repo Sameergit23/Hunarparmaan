@@ -2,7 +2,7 @@
   "schemaVersion": "1.0",
   "pack": {
     "id": "csdci-electrician",
-    "version": "2026.10.0",
+    "version": "2026.10.1",
     "status": "draft",
     "languages": ["hi", "en"]
   },
@@ -61,7 +61,7 @@
                 "minSeconds": 30,
                 "maxSeconds": 60
               },
-              "aiChecks": ["ppe.gloves"]
+              "aiChecks": ["ppe.gloves", "ppe.goggles"]
             },
             {
               "id": "L3-N1.PC2",
@@ -90,7 +90,7 @@
                 "minSeconds": 30,
                 "maxSeconds": 60
               },
-              "aiChecks": ["step.order"]
+              "aiChecks": ["step.order", "work.joint_insulated"]
             },
             {
               "id": "L3-N1.PC3",
@@ -158,7 +158,7 @@
                 "minSeconds": 30,
                 "maxSeconds": 60
               },
-              "aiChecks": ["ppe.gloves"]
+              "aiChecks": ["ppe.gloves", "ppe.shoes", "ppe.goggles"]
             },
             {
               "id": "L3-N2.PC2",
@@ -253,7 +253,7 @@
               "evidence": {
                 "type": "photo"
               },
-              "aiChecks": ["ppe.gloves", "ppe.helmet"]
+              "aiChecks": ["ppe.gloves", "ppe.helmet", "ppe.shoes"]
             },
             {
               "id": "L3-N3.PC2",
@@ -335,7 +335,7 @@
                 "minSeconds": 30,
                 "maxSeconds": 60
               },
-              "aiChecks": ["ppe.gloves"]
+              "aiChecks": ["ppe.gloves", "ppe.goggles", "work.joint_insulated"]
             },
             {
               "id": "L4-N1.PC2",
@@ -393,7 +393,7 @@
                 "minSeconds": 30,
                 "maxSeconds": 60
               },
-              "aiChecks": ["ppe.gloves"]
+              "aiChecks": ["ppe.gloves", "ppe.shoes", "ppe.goggles"]
             }
           ]
         },
@@ -525,7 +525,7 @@
               "evidence": {
                 "type": "photo"
               },
-              "aiChecks": ["ppe.gloves", "ppe.helmet"]
+              "aiChecks": ["ppe.gloves", "ppe.helmet", "ppe.shoes"]
             },
             {
               "id": "L4-N3.PC2",

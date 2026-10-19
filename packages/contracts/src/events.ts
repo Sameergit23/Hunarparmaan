@@ -9,6 +9,7 @@
 import { z } from 'zod';
 import { DEVICE_EVENT_TYPES, canPerform, type DeviceEventType } from './authority';
 import {
+  AiCheckId,
   EntityId,
   EventId,
   GeoPoint,
@@ -43,7 +44,7 @@ const Fraction = z.number().min(0).max(1);
 
 /** An AI flag exactly as the assessor saw it next to the rubric. */
 export const AiFlag = z.strictObject({
-  check: z.string().regex(/^[a-z]+(\.[a-z_]+)+$/),
+  check: AiCheckId,
   raised: z.boolean(),
   confidence: Fraction,
   source: z.enum(['device', 'server']),

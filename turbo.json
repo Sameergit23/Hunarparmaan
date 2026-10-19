@@ -19,7 +19,10 @@
     "CLOCK_DRIFT_LIMIT_S",
     "PUBLIC_API_URL",
     "PUBLIC_WEB_URL",
-    "API_URL"
+    "API_URL",
+    "AI_SERVICE_URL",
+    "AI_SERVICE_TOKEN",
+    "AI_TIMEOUT_MS"
   ],
   "tasks": {
     "build": {

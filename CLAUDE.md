@@ -16,7 +16,7 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 
 ## Status and dates
 
-- Sprint 0 runs 19–25 Oct 2026. These exist: the four shared packages (`packages/contracts`, `scoring`, `audit`, `trade-packs`), `services/api` and `apps/web`. Still to come: `apps/mobile`, `services/ai` and `evaluation/`. README "Repository layout" marks which folders are planned.
+- Sprint 0 runs 19–25 Oct 2026. These exist: the four shared packages (`packages/contracts`, `scoring`, `audit`, `trade-packs`), `services/api`, `apps/web`, `services/ai` (the safety-gear and workmanship checks only, ADR 012) and `evaluation/safety-gear`. Still to come: `apps/mobile`, the rest of `services/ai` and the other evaluations. README "Repository layout" marks which folders are planned.
 - The team develops on their own computers (Windows, macOS and Linux), with GitHub for PRs and CI. Keep every script cross-platform: Node APIs instead of `rm -rf`, `cp` or shell-only syntax in `package.json`, and paths built with `node:path`.
 - The admin panel and organisation scoping are designed but not built: ADR 010, ADR 011 and `docs/design/access-control.md`. Organisations and personal data outside the hash chain come in Sprint 1, scoping (IT-05) in Sprint 2, admin screens in Sprints 3–5.
 - Gates: G1 Sprint 0 exit (25 Oct) · G2 feature complete (29 Nov) · G3 demo-ready (6 Dec). The 36-hour Grand Finale is in December 2026.
@@ -45,7 +45,7 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 | `apps/mobile` | React Native, Expo dev build (not Expo Go), TypeScript, expo-sqlite + SQLCipher, Drizzle ORM, react-native-vosk |
 | `apps/web` | Next.js, Tailwind, Recharts |
 | `services/api` | Node.js + Express (TypeScript), zod, JWT roles, BullMQ on Redis |
-| `services/ai` | Python 3.12, FastAPI, uv, multilingual-e5-small, statsmodels, krippendorff |
+| `services/ai` | Python 3.12, FastAPI, uv, OWLv2 for the vision checks (ADR 012); planned: multilingual-e5-small, statsmodels, krippendorff |
 | Data | PostgreSQL 17 + pgvector; SeaweedFS for clips (S3 API). Don't use MinIO: its community repo was archived in April 2026 |
 | Shared | `packages/contracts` (zod; OpenAPI planned), `packages/scoring`, `packages/audit`, `packages/trade-packs` |
 
@@ -83,6 +83,9 @@ Node 22.18+ or 24.11+ (`.nvmrc` says 24) and pnpm 10 (`corepack enable` picks th
 
 Run `pnpm check` before every push. CI runs the same, plus a build, the API tests on PostgreSQL 17, Playwright, gitleaks and `pnpm audit`. Locally, the API tests run on PostgreSQL with `TEST_DATABASE_URL=postgres://hp:hp@localhost:5432/hp_test` (the Docker setup creates `hp_test`; the tests refuse a database without "test" in its name, because they empty it).
 
+| `pnpm ai:dev` · `pnpm ai:test` · `pnpm ai:lint` | The AI service on :8000 · its pytest suite · Ruff. Needs uv; not part of `pnpm check`, but CI runs the tests and lint |
+| `pnpm ai:eval` · `pnpm ai:clip` · `pnpm demo:vision` | Measure the vision checks on `evaluation/safety-gear` · make the demo clip · run a demo session through the AI checks against a running `pnpm dev` |
+
 Still planned: `pnpm e2e:mobile`, `pnpm eval:*`. Add them here when they exist.
 
 **Code notes**
@@ -95,6 +98,7 @@ Still planned: `pnpm e2e:mobile`, `pnpm eval:*`. Add them here when they exist.
 - API code layout: `src/routes` (HTTP only) → `src/domain` (rules and queries) → `src/db`. Read models take no transaction (ADR 008).
 - Schema changes: edit `schema.ts` and run `db:generate`. If a new table holds events, add it to `APPEND_ONLY_TABLES` and write a new migration with its `_append_only` and `_no_truncate` triggers (`pnpm --filter @hunarpramaan/api exec drizzle-kit generate --custom --name <table>_append_only`), copying the pattern in `0001_append_only.sql`; `migrations.test.ts` fails while the triggers and the list differ. Never edit a migration that has been applied: databases that ran it would not get the change.
 - Flags and approval blockers are codes plus values; word them in `apps/web/src/lib/messages.ts` and both dictionaries, never as English from the API.
+- AI checks: a check id (`ppe.gloves`) is listed per criterion in the trade pack's `aiChecks`, written as prompts in `services/ai/src/hunarpramaan_ai/vision/checks.py`, and worded in `messages.ts` and both dictionaries (`aiChecks`, `aiServer`). A new check needs all three and labelled photos in `evaluation/safety-gear`. Changing prompts or thresholds bumps `RULES_VERSION` and needs a fresh `pnpm ai:eval`; tune only on the tune split.
 - Web strings live in `apps/web/src/lib/i18n/en.ts` and `hi.ts`; the Hindi file is typed against the English one.
 
 ## How we work

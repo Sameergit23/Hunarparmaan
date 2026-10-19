@@ -13,6 +13,8 @@ export default tseslint.config(
       '**/next-env.d.ts',
       '**/test-results/**',
       '**/playwright-report/**',
+      // The AI service's Python virtual environment (services/ai) holds third-party JavaScript.
+      '**/.venv/**',
     ],
   },
   js.configs.recommended,

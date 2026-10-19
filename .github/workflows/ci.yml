@@ -70,6 +70,31 @@ jobs:
         env:
           TEST_DATABASE_URL: postgres://hp:hp@localhost:5432/hp_test
 
+  ai-service:
+    # The unit and API tests use a fake detector, so CI installs neither PyTorch nor the model.
+    name: AI service (Python ${{ matrix.python }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, python: '3.12' }
+          - { os: windows-latest, python: '3.12' }
+    defaults:
+      run:
+        working-directory: services/ai
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+          cache-dependency-glob: services/ai/uv.lock
+      - run: uv sync --locked
+      - run: uv run ruff check . ../../evaluation
+      - run: uv run ruff format --check . ../../evaluation
+      - run: uv run pytest
+
   e2e-web:
     name: Web end-to-end (Playwright)
     runs-on: ubuntu-latest

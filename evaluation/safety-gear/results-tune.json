@@ -1,0 +1,111 @@
+{
+  "split": "tune",
+  "rules": "1",
+  "model": "owlv2-base-patch16-ensemble@cfd3195",
+  "checks": [
+    {
+      "check": "ppe.gloves",
+      "images": 36,
+      "faults": 15,
+      "tp": 13,
+      "fp": 6,
+      "fn": 2,
+      "tn": 15,
+      "precision": 0.6842105263157895,
+      "precisionCi": [0.4601001017506463, 0.846358289955714],
+      "recall": 0.8666666666666667,
+      "recallCi": [0.6211750079348376, 0.9626395301086407],
+      "statuses": {
+        "fault/clear": 2,
+        "fault/raised": 13,
+        "na/clear": 5,
+        "na/raised": 4,
+        "na/unclear": 3,
+        "ok/clear": 7,
+        "ok/raised": 2
+      }
+    },
+    {
+      "check": "ppe.helmet",
+      "images": 36,
+      "faults": 18,
+      "tp": 18,
+      "fp": 3,
+      "fn": 0,
+      "tn": 15,
+      "precision": 0.8571428571428571,
+      "precisionCi": [0.6536350585077049, 0.950190782017865],
+      "recall": 1.0,
+      "recallCi": [0.8241154494176252, 1.0],
+      "statuses": {
+        "fault/raised": 18,
+        "na/clear": 3,
+        "na/raised": 2,
+        "na/unclear": 5,
+        "ok/clear": 7,
+        "ok/raised": 1
+      }
+    },
+    {
+      "check": "ppe.shoes",
+      "images": 36,
+      "faults": 5,
+      "tp": 5,
+      "fp": 1,
+      "fn": 0,
+      "tn": 30,
+      "precision": 0.8333333333333334,
+      "precisionCi": [0.43649056343635395, 0.9699474141282697],
+      "recall": 1.0,
+      "recallCi": [0.5655085052479191, 1.0],
+      "statuses": {
+        "fault/raised": 5,
+        "na/clear": 4,
+        "na/raised": 1,
+        "na/unclear": 21,
+        "ok/clear": 5
+      }
+    },
+    {
+      "check": "ppe.goggles",
+      "images": 36,
+      "faults": 3,
+      "tp": 2,
+      "fp": 1,
+      "fn": 1,
+      "tn": 32,
+      "precision": 0.6666666666666666,
+      "precisionCi": [0.2076549551264879, 0.9385096847238394],
+      "recall": 0.6666666666666666,
+      "recallCi": [0.2076549551264879, 0.9385096847238394],
+      "statuses": {
+        "fault/raised": 2,
+        "fault/unclear": 1,
+        "na/clear": 2,
+        "na/unclear": 21,
+        "ok/clear": 8,
+        "ok/raised": 1,
+        "ok/unclear": 1
+      }
+    },
+    {
+      "check": "work.joint_insulated",
+      "images": 11,
+      "faults": 4,
+      "tp": 4,
+      "fp": 2,
+      "fn": 0,
+      "tn": 5,
+      "precision": 0.6666666666666666,
+      "precisionCi": [0.29998832134152864, 0.9032306674407831],
+      "recall": 1.0,
+      "recallCi": [0.5100999795960008, 1.0],
+      "statuses": {
+        "fault/raised": 4,
+        "na/clear": 2,
+        "ok/clear": 3,
+        "ok/raised": 2
+      }
+    }
+  ]
+}

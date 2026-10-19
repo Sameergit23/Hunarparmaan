@@ -23,6 +23,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import type {
   Actor,
+  AiCheckStatus,
   AiFlag,
   GeoPoint,
   LocalizedText,
@@ -304,6 +305,48 @@ export const evidenceChecks = pgTable('evidence_checks', {
     .default(sql`now()`),
 });
 
+/** One check's result from the AI service, as stored; boxes are fractions of the frame. */
+export interface StoredAiCheck {
+  check: string;
+  status: AiCheckStatus;
+  confidence: number;
+  reason: 'not_visible' | 'no_hazard_seen' | null;
+  frames: {
+    index: number;
+    timeSec: number;
+    score: number;
+    box: [number, number, number, number] | null;
+  }[];
+}
+
+/**
+ * Append-only. Server-side AI suggestions on a verified clip (`ai_result.stored`,
+ * written by the queue worker). Never a score: rule 1, ADR 006.
+ */
+export const aiResults = pgTable(
+  'ai_results',
+  {
+    id: uuid('id').primaryKey(),
+    evidenceId: uuid('evidence_id')
+      .notNull()
+      .references(() => evidence.id),
+    sessionId: uuid('session_id')
+      .notNull()
+      .references(() => sessions.id),
+    criterionId: text('criterion_id').notNull(),
+    /** Model, revision and rules version; a re-run with new rules adds a row. */
+    engine: text('engine').notNull(),
+    checks: jsonb('checks').$type<StoredAiCheck[]>().notNull(),
+    /** Checks the criterion asks for that the AI service has no rule for yet. */
+    unsupported: jsonb('unsupported').$type<string[]>().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('ai_results_session').on(t.sessionId),
+    unique('ai_results_evidence_engine').on(t.evidenceId, t.engine),
+  ],
+);
+
 /** Append-only. A correction is a new score that `supersedes` the old one. */
 export const scores = pgTable(
   'scores',
@@ -476,6 +519,7 @@ export const APPEND_ONLY_TABLES = [
   'calibration_scores',
   'evidence',
   'evidence_checks',
+  'ai_results',
   'scores',
   'recommendations',
   'approvals',

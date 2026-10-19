@@ -43,6 +43,7 @@ The schema lives in [`services/api/src/db/schema.ts`](../../services/api/src/db/
 | `calibration_scores` | yes | Scores on the reference clips before a session (FR-07) |
 | `evidence` | yes | One row per clip: criterion, SHA-256 at capture, size, time and GPS |
 | `evidence_checks` | yes | The server's re-hash of each upload: verified or mismatch |
+| `ai_results` | yes | AI suggestions only (`ai_result.stored`, [ADR 012](../adr/012-safety-gear-detector-owlv2.md)): the safety-gear and workmanship checks the queue worker ran on a verified clip, each raised, clear or unclear with a confidence and the frames behind it. One row per clip and engine (model, revision and rules version) |
 | `scores` | yes | 0/1/2 with the AI flags the assessor saw, a reason when they disagreed, and `supersedes` for corrections |
 | `recommendations` | yes | The signed result and the exact score events it covers |
 | `approvals` | yes | The awarding body's single decision per recommendation |
@@ -54,7 +55,7 @@ The schema lives in [`services/api/src/db/schema.ts`](../../services/api/src/db/
 |---|---|---|
 | `flags` | yes | Integrity checks: a kind, the values for its message, and the English text |
 | `flag_reviews` | yes | The agency's note on a flag |
-| `rescore_tasks` | yes | Clips sampled for blind re-scoring: a random 10% plus every flagged clip (FR-13) |
+| `rescore_tasks` | yes | Clips sampled for blind re-scoring: a random 10% plus every flagged clip, including full marks beside a raised server-side AI check (FR-13) |
 | `rescores` | yes | The master assessor's blind score |
 | `study_rounds` | no | Round A and Round B results from the rater study; seeded placeholders are marked `demo` |
 

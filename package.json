@@ -20,7 +20,13 @@
     "dev": "turbo run dev",
     "db:migrate": "pnpm --filter @hunarpramaan/api run db:migrate",
     "db:seed": "pnpm --filter @hunarpramaan/api run db:seed",
-    "db:reset": "pnpm --filter @hunarpramaan/api run db:reset"
+    "db:reset": "pnpm --filter @hunarpramaan/api run db:reset",
+    "ai:dev": "uv run --directory services/ai --extra detector uvicorn hunarpramaan_ai.app:app --port 8000",
+    "ai:test": "uv run --directory services/ai pytest",
+    "ai:lint": "uv run --directory services/ai ruff check . ../../evaluation && uv run --directory services/ai ruff format --check . ../../evaluation",
+    "ai:eval": "uv run --directory services/ai --extra detector python ../../evaluation/safety-gear/evaluate.py",
+    "ai:clip": "uv run --directory services/ai python ../../evaluation/safety-gear/make_clip.py",
+    "demo:vision": "pnpm --filter @hunarpramaan/api run demo:vision"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

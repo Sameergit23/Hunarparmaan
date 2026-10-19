@@ -5,7 +5,7 @@
  * offline. Codes and texts come from the QP files on NQR.
  */
 import { z } from 'zod';
-import { LocalizedText, NqrCode, ScoreValue, Sha256Hex } from './common';
+import { AiCheckId, LocalizedText, NqrCode, ScoreValue, Sha256Hex } from './common';
 import { TRADE_PACK_SCHEMA_VERSION } from './version';
 
 /** Weights are decimals from the QP file, so allow for rounding when they are summed. */
@@ -29,9 +29,6 @@ const EvidenceSpec = z
   .refine((e) => e.type !== 'video' || e.minSeconds <= e.maxSeconds, {
     message: 'minSeconds must not exceed maxSeconds',
   });
-
-/** AI check ids such as `ppe.gloves` or `meter.reading`. */
-const AiCheckId = z.string().regex(/^[a-z]+(\.[a-z_]+)+$/);
 
 export const Criterion = z.strictObject({
   /** Unique within its qualification; PC numbers restart in each NOS, so prefix them. */

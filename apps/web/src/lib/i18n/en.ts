@@ -220,9 +220,29 @@ export const en = {
   aiChecks: {
     'ppe.gloves': 'Gloves',
     'ppe.helmet': 'Helmet',
+    'ppe.shoes': 'Safety shoes',
+    'ppe.goggles': 'Eye protection',
+    'work.joint_insulated': 'Taped wire joint',
     'meter.reading': 'Meter reading',
     'step.order': 'Step order',
   } as Record<string, string>,
+  /** Results of the AI checks run on the server after sync (ai_result.stored). */
+  aiServer: {
+    label: 'AI hint, checked after sync',
+    fault: {
+      'ppe.gloves': 'no gloves seen on a hand',
+      'ppe.helmet': 'no helmet seen',
+      'ppe.shoes': 'no safety shoes seen',
+      'ppe.goggles': 'no eye protection seen while grinding or welding',
+      'work.joint_insulated': 'a wire joint without tape or a connector seen',
+    } as Record<string, string>,
+    faultOther: '{check} flagged',
+    sure: '{confidence}% sure',
+    seenAt: 'Seen at {times}.',
+    conflict: 'Full marks beside an AI hint: a master assessor re-scores the clip blind.',
+    notVisible: '{check}: not in view',
+    noHazard: '{check}: no grinding or welding seen',
+  },
   approvals: {
     title: 'Approvals',
     body: 'Signed recommendations waiting for the awarding body. The tool checks the evidence; you decide.',
