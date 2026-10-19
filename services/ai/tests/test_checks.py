@@ -13,6 +13,7 @@ from hunarpramaan_ai.vision.checks import (
     iou,
     judge_clip,
     judge_frame,
+    sits_on,
 )
 
 GLOVES = CHECKS["ppe.gloves"]
@@ -73,6 +74,42 @@ def test_a_hard_hat_on_a_head_clears_the_head():
     assert judge_frame(HELMET, [head, hat]).status == "ok"
 
 
+# A face boxed as a bare head, from y 0.2 to 0.4, with the hard hat in different places.
+FACE = (0.40, 0.20, 0.60, 0.40)
+
+
+def test_a_hard_hat_just_above_a_face_clears_it():
+    face = region(FACE, a_bare_head=0.2)
+    on_the_brim = region((0.38, 0.08, 0.62, 0.22), a_hard_hat=0.5)  # bottom 0.02 inside
+    just_above = region((0.40, 0.06, 0.62, 0.18), a_hard_hat=0.5)  # bottom 0.02 above
+    assert judge_frame(HELMET, [face, on_the_brim]).status == "ok"
+    assert judge_frame(HELMET, [face, just_above]).status == "ok"
+
+
+def test_a_hard_hat_beside_or_far_above_a_bare_head_does_not_clear_it():
+    face = region(FACE, a_bare_head=0.2)
+    beside = region((0.62, 0.08, 0.80, 0.21), a_hard_hat=0.5)  # another worker's hat
+    barely_over = region((0.55, 0.08, 0.75, 0.21), a_hard_hat=0.5)  # 0.05 of 0.20 overlap
+    far_above = region((0.42, 0.00, 0.58, 0.08), a_hard_hat=0.5)  # 0.12 gap, over 0.4 x 0.2
+    for hat in (beside, barely_over, far_above):
+        assert judge_frame(HELMET, [face, hat]).status == "fault"
+
+
+def test_a_hat_box_reaching_far_into_the_head_does_not_clear_it():
+    # The hat's bottom edge is 0.15 below the head's top, more than 0.4 x 0.2.
+    head = region(FACE, a_bare_head=0.2)
+    low = region((0.38, 0.10, 0.62, 0.35), a_hard_hat=0.5)
+    assert judge_frame(HELMET, [head, low]).status == "fault"
+
+
+def test_only_checks_that_ask_for_it_clear_a_fault_below_an_ok_region():
+    face = region(FACE, a_bare_head=0.2)
+    hat = region((0.38, 0.08, 0.62, 0.22), a_hard_hat=0.5)
+    assert HELMET.above_clears > 0
+    assert all(spec.above_clears == 0 for spec in CHECKS.values() if spec is not HELMET)
+    assert judge_frame(replace(HELMET, above_clears=0.0), [face, hat]).status == "fault"
+
+
 def frames(*statuses: str, score: float = 0.4) -> list[FrameJudgement]:
     return [FrameJudgement(s, score if s in ("fault", "ok") else 0.0) for s in statuses]
 
@@ -113,3 +150,13 @@ def test_box_geometry():
     assert iou((0, 0, 0.5, 0.5), (0.5, 0.5, 1, 1)) == 0.0
     assert contains((0, 0, 1, 1), (0.2, 0.2, 0.4, 0.4))
     assert not contains((0, 0, 0.3, 0.3), (0.2, 0.2, 0.6, 0.6))
+    below = (0.4, 0.2, 0.6, 0.4)
+    assert sits_on((0.4, 0.1, 0.6, 0.2), below, gap=0.1)
+    assert sits_on((0.4, 0.1, 0.6, 0.21), below, gap=0.1)  # a little inside
+    assert not sits_on((0.4, 0.1, 0.6, 0.15), below, gap=0.1)  # 0.05 short, over 0.1 x 0.2
+    assert not sits_on((0.4, 0.5, 0.6, 0.6), below, gap=1.0)  # under it, not on it
+    assert not sits_on((0.4, 0.2, 0.6, 0.21), below, gap=0.1)  # same top: not higher
+    assert not sits_on((0.4, 0.1, 0.4, 0.2), below, gap=0.1)  # no width
+    # Half the narrower box's width must overlap.
+    assert sits_on((0.45, 0.1, 0.65, 0.2), below, gap=0.1)
+    assert not sits_on((0.55, 0.1, 0.75, 0.2), below, gap=0.1)

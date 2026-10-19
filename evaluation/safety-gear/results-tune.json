@@ -1,6 +1,6 @@
 {
   "split": "tune",
-  "rules": "1",
+  "rules": "2",
   "model": "owlv2-base-patch16-ensemble@cfd3195",
   "checks": [
     {

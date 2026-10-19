@@ -11,7 +11,7 @@ from .detector import Detector
 
 #: Bumped whenever prompts, thresholds or the aggregation change, so a stored
 #: result says which rules produced it.
-RULES_VERSION = "1"
+RULES_VERSION = "2"
 
 
 @dataclass(frozen=True)

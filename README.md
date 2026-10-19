@@ -1094,7 +1094,7 @@ The AI hints beside the score are measured, not promised. 94 public photos (Wiki
 | Check (test split) | Photos (faults) | Precision (95% CI) | Recall (95% CI) |
 |---|---|---|---|
 | `ppe.gloves`: no gloves | 38 (15) | 67% (39–86) | 53% (30–75) |
-| `ppe.helmet`: no helmet | 38 (19) | 65% (45–81) | 79% (57–91) |
+| `ppe.helmet`: no helmet | 38 (19) | 75% (53–89) | 79% (57–91) |
 | `ppe.shoes`: sandals, slippers or bare feet | 38 (5) | 100% (51–100) | 80% (38–96) |
 | `ppe.goggles`: no eye protection while grinding or welding | 38 (3) | 50% (9–91) | 33% (6–79) |
 | `work.joint_insulated`: a bare wire joint | 9 (3) | 20% (4–62) | 33% (6–79) |

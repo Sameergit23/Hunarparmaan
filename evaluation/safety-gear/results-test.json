@@ -1,6 +1,6 @@
 {
   "split": "test",
-  "rules": "1",
+  "rules": "2",
   "model": "owlv2-base-patch16-ensemble@cfd3195",
   "checks": [
     {
@@ -30,11 +30,11 @@
       "images": 38,
       "faults": 19,
       "tp": 15,
-      "fp": 8,
+      "fp": 5,
       "fn": 4,
-      "tn": 11,
-      "precision": 0.6521739130434783,
-      "precisionCi": [0.4488997690689164, 0.8118894536301776],
+      "tn": 14,
+      "precision": 0.75,
+      "precisionCi": [0.5312949900419365, 0.888139947210597],
       "recall": 0.7894736842105263,
       "recallCi": [0.5666528575973392, 0.9149246150840843],
       "statuses": {
@@ -43,8 +43,8 @@
         "na/clear": 6,
         "na/raised": 2,
         "na/unclear": 2,
-        "ok/clear": 3,
-        "ok/raised": 6
+        "ok/clear": 6,
+        "ok/raised": 3
       }
     },
     {

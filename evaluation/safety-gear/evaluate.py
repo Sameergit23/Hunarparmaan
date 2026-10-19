@@ -219,11 +219,19 @@ def tune(entries: list[dict], cache: ScoreCache, checks: list[str]) -> None:
     for check in checks:
         base = CHECKS[check]
         contexts = [0.2, 0.25, 0.3, 0.35, 0.4] if base.context else [base.context_score]
+        # 0 turns the rule off, so the grid also shows whether it helps at all.
+        aboves = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0] if base.above_clears else [0.0]
         trials = []
-        for min_score, margin, context in itertools.product(
-            [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4], [0.0, 0.03, 0.05, 0.1], contexts
+        for min_score, margin, context, above in itertools.product(
+            [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4], [0.0, 0.03, 0.05, 0.1], contexts, aboves
         ):
-            spec = replace(base, min_score=min_score, margin=margin, context_score=context)
+            spec = replace(
+                base,
+                min_score=min_score,
+                margin=margin,
+                context_score=context,
+                above_clears=above,
+            )
             rows = [
                 {
                     "label": entry["labels"].get(check, "na"),
@@ -235,11 +243,22 @@ def tune(entries: list[dict], cache: ScoreCache, checks: list[str]) -> None:
             s = summarise(rows, check)
             p, r = s["precision"] or 0.0, s["recall"] or 0.0
             f1 = 2 * p * r / (p + r) if p + r else 0.0
-            trials.append((f1, p, r, min_score, margin, context))
+            trials.append((f1, p, r, min_score, margin, context, above))
         trials.sort(reverse=True)
-        print(f"\n{check}: F1, precision, recall, min_score, margin, context_score")
+        print(f"\n{check}: F1, precision, recall, min_score, margin, context_score, above_clears")
         for t in trials[:5]:
             print("  " + ", ".join(f"{v:.2f}" for v in t))
+        if len(aboves) > 1:
+            # Ties are common on a small set: show the whole range of above_clears that is
+            # as good as the best, at the best of the other thresholds.
+            best = trials[0]
+            same = [t for t in trials if t[3:6] == best[3:6]]
+            print(
+                "  above_clears at those thresholds: "
+                + ", ".join(
+                    f"{t[6]:.2f} -> F1 {t[0]:.2f}" for t in sorted(same, key=lambda t: t[6])
+                )
+            )
 
 
 # --- Main -----------------------------------------------------------------------------

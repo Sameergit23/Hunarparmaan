@@ -42,12 +42,12 @@ The first run downloads the photos (politely, about one a second) and the model,
 15 minutes on a laptop CPU. The model's raw scores are cached in `raw/cache/`, so later runs take
 seconds. If a photo has changed upstream, the script warns: check its labels.
 
-## Results (rules 1, OWLv2 base `cfd3195`, test split)
+## Results (rules 2, OWLv2 base `cfd3195`, test split)
 
 | Check | Photos (faults) | Precision (95% CI) | Recall (95% CI) |
 |---|---|---|---|
 | `ppe.gloves` | 38 (15) | 67% (39–86) | 53% (30–75) |
-| `ppe.helmet` | 38 (19) | 65% (45–81) | 79% (57–91) |
+| `ppe.helmet` | 38 (19) | 75% (53–89) | 79% (57–91) |
 | `ppe.shoes` | 38 (5) | 100% (51–100) | 80% (38–96) |
 | `ppe.goggles` | 38 (3) | 50% (9–91) | 33% (6–79) |
 | `work.joint_insulated` | 9 (3) | 20% (4–62) | 33% (6–79) |
@@ -59,9 +59,18 @@ have the counts.
 
 **What goes wrong on the test split**
 
-- **Helmet:** a worn hard hat still raises "no helmet" when the detector boxes the face under the
-  hat as a bare head (5 of the 8 false alarms). A rule that lets a hard hat above a head clear it,
-  tested on the tune split, is the next step.
+- **Helmet:** under rules 1, a worn hard hat raised "no helmet" when the detector boxed the face or
+  hair under it as a bare head (5 of the 8 false alarms). Rules 2 add `above_clears`: a hard hat
+  sitting on a fault region clears it when the two overlap across half the narrower box and the
+  hat's bottom edge is within 0.4 of the region's height of its top. False alarms fell from 8 to 5
+  (precision 65% to 75%), and every fault rules 1 caught is still caught.
+  - The idea for the rule came from these test errors, so treat the gain as optimistic until new
+    photos confirm it. Its value was chosen on the tune split alone. That split has no false alarm
+    of this kind, so it could only show where the rule starts to cost: 0.1 to 0.7 changed nothing
+    there and 0.8 missed a fault, so we took 0.4, the middle of that range.
+  - Of the 5 left, 3 are worn hard hats whose face box lies mostly inside the hat box. A rule for
+    those would also clear a bare head in the tune split that the detector boxed as a hard hat, so
+    it waits for more labelled photos. The other 2 are photos with no head labelled.
 - **Gloves:** small or dark hands at a distance are missed; bare hands holding a tool are read as
   gloved.
 - **Eye protection and wire joints:** too few faults (3 each) to say much. Joints are the weakest

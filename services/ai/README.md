@@ -36,7 +36,7 @@ An answer:
 
 ```json
 {
-  "engine": "owlv2-base-patch16-ensemble@cfd3195+rules.1",
+  "engine": "owlv2-base-patch16-ensemble@cfd3195+rules.2",
   "media": { "kind": "video", "frames": 6, "durationSec": 42.0 },
   "results": [
     {
@@ -64,7 +64,7 @@ hint was right. Boxes are fractions of the frame. Errors are `{"error": {"code",
 | Check | Fault it looks for | Runs on (trade pack) |
 |---|---|---|
 | `ppe.gloves` | A bare hand | Most practical criteria |
-| `ppe.helmet` | A bare head | Wear and check PPE |
+| `ppe.helmet` | A bare head, unless a hard hat covers it or sits just above it | Wear and check PPE |
 | `ppe.shoes` | Bare feet, sandals, flip-flops or slippers | Wear and check PPE; earth pit; cable trays |
 | `ppe.goggles` | A face without goggles, glasses, a face shield or a welding helmet, in frames with sparks, a grinder or a welding torch | Conduit (wall chasing); earth pit; cable trays |
 | `work.joint_insulated` | Bare twisted copper or an exposed joint, rather than tape or a connector | Switches and sockets; conduit (L4) |

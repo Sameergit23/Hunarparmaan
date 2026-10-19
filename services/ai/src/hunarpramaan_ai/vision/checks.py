@@ -39,6 +39,10 @@ class CheckSpec:
     margin: float = 0.0
     #: A fault region that contains an ok region is cleared (goggles on a face, a helmet on a head).
     contain_clears: bool = False
+    #: A fault region with an ok region sitting on top of it is cleared (a face or hair under a
+    #: hard hat): the ok region's bottom edge must lie within this fraction of the fault
+    #: region's height of its top (see `sits_on`). 0 turns the rule off.
+    above_clears: float = 0.0
     context_score: float = 0.25
     #: How fast the confidence rises above `min_score`, where it is 50% (see `confidence`).
     scale: float = 0.1
@@ -51,7 +55,7 @@ class CheckSpec:
 CHECKS: dict[str, CheckSpec] = {
     spec.id: spec
     for spec in (
-        # Thresholds from a grid search on the tune split (evaluate.py --tune), rules 1.
+        # Thresholds from a grid search on the tune split (evaluate.py --tune), rules 2.
         CheckSpec(
             id="ppe.gloves",
             ok=("a gloved hand", "a work glove", "a rubber glove"),
@@ -66,6 +70,7 @@ CHECKS: dict[str, CheckSpec] = {
             min_score=0.1,
             margin=0.1,
             contain_clears=True,
+            above_clears=0.4,
         ),
         CheckSpec(
             id="ppe.shoes",
@@ -149,6 +154,21 @@ def contains(outer: Box, inner: Box, share: float = 0.6) -> bool:
     return area > 0 and _intersection(outer, inner) / area >= share
 
 
+def sits_on(top: Box, below: Box, gap: float, share: float = 0.5) -> bool:
+    """Whether `top` sits directly on `below`, as a hard hat sits on a face.
+
+    The boxes must overlap across at least `share` of the narrower one's width, `top` must
+    start higher, and its bottom edge must lie within `gap` times `below`'s height of
+    `below`'s top edge, just above it or a little inside it.
+    """
+    narrower = min(top[2] - top[0], below[2] - below[0])
+    overlap = min(top[2], below[2]) - max(top[0], below[0])
+    height = below[3] - below[1]
+    if narrower <= 0 or height <= 0 or overlap < share * narrower:
+        return False
+    return top[1] < below[1] and abs(top[3] - below[1]) <= gap * height
+
+
 def regions(spec: CheckSpec, proposals: Sequence[Proposal]) -> list[Region]:
     """Each region labelled by the stronger prompt set, after non-maximum suppression."""
     found: list[Region] = []
@@ -179,6 +199,10 @@ def judge_frame(spec: CheckSpec, proposals: Sequence[Proposal]) -> FrameJudgemen
     faults = [r for r in found if r.role == "fault"]
     if spec.contain_clears:
         faults = [f for f in faults if not any(contains(f.box, o.box) for o in oks)]
+    if spec.above_clears > 0:
+        faults = [
+            f for f in faults if not any(sits_on(o.box, f.box, spec.above_clears) for o in oks)
+        ]
     if faults:
         worst = max(faults, key=lambda r: r.score)
         return FrameJudgement("fault", worst.score, worst.box)
