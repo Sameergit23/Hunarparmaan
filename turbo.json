@@ -19,7 +19,8 @@
     "CLOCK_DRIFT_LIMIT_S",
     "PUBLIC_API_URL",
     "PUBLIC_WEB_URL",
-    "API_URL"
+    "API_URL",
+    "EXPO_PUBLIC_API_URL"
   ],
   "tasks": {
     "build": {

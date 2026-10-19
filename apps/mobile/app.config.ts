@@ -10,7 +10,6 @@ const config: ExpoConfig = {
   slug: 'hunarpramaan',
   version: '0.1.0',
   orientation: 'portrait',
-  userInterfaceStyle: 'light',
   backgroundColor: '#E4E5E0',
   android: {
     package: 'in.hunarpramaan.app',

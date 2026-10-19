@@ -40,6 +40,7 @@ export const en = {
     declared: 'Answers saved',
     notDeclared: 'Interview not done',
     signOut: 'Sign out',
+    signInAgain: 'Sign in again',
     unsynced: "{count} items aren't synced yet. Sync them before you sign out.",
   },
   register: {

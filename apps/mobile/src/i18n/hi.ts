@@ -42,6 +42,7 @@ export const hi: Messages = {
     declared: 'जवाब सेव हैं',
     notDeclared: 'इंटरव्यू बाकी',
     signOut: 'साइन आउट करें',
+    signInAgain: 'फिर से साइन इन करें',
     unsynced: '{count} चीज़ें अभी भेजनी बाकी हैं। साइन आउट से पहले सिंक करें।',
   },
   register: {

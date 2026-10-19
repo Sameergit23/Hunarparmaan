@@ -16,7 +16,7 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 
 ## Status and dates
 
-- Sprint 0 runs 19–25 Oct 2026. These exist: the five shared packages (`packages/contracts`, `scoring`, `audit`, `trade-packs`, `voice`), `services/api` and `apps/web`. Still to come: `apps/mobile`, `services/ai` and `evaluation/`. README "Repository layout" marks which folders are planned.
+- Sprint 0 runs 19–25 Oct 2026. These exist: the six shared packages (`packages/contracts`, `scoring`, `audit`, `trade-packs`, `voice`, `mapping`), `services/api`, `apps/web` and `apps/mobile` (the voice-interview walking skeleton; not yet built on a phone, see `apps/mobile/README.md`). Still to come: `services/ai` and `evaluation/`. README "Repository layout" marks which folders are planned.
 - The team develops on their own computers (Windows, macOS and Linux), with GitHub for PRs and CI. Keep every script cross-platform: Node APIs instead of `rm -rf`, `cp` or shell-only syntax in `package.json`, and paths built with `node:path`.
 - The admin panel and organisation scoping are designed but not built: ADR 010, ADR 011 and `docs/design/access-control.md`. Organisations and personal data outside the hash chain come in Sprint 1, scoping (IT-05) in Sprint 2, admin screens in Sprints 3–5.
 - Gates: G1 Sprint 0 exit (25 Oct) · G2 feature complete (29 Nov) · G3 demo-ready (6 Dec). The 36-hour Grand Finale is in December 2026.
@@ -47,7 +47,7 @@ Pilot trade: Assistant Electrician (CSDCI, NSQF Level 3, `QG-03-CO-03951-2025-V2
 | `services/api` | Node.js + Express (TypeScript), zod, JWT roles, BullMQ on Redis |
 | `services/ai` | Python 3.12, FastAPI, uv, multilingual-e5-small, statsmodels, krippendorff |
 | Data | PostgreSQL 17 + pgvector; SeaweedFS for clips (S3 API). Don't use MinIO: its community repo was archived in April 2026 |
-| Shared | `packages/contracts` (zod; OpenAPI planned), `packages/scoring`, `packages/audit`, `packages/trade-packs`, `packages/voice` (spoken numbers, yes or no and commands for voice sign-in) |
+| Shared | `packages/contracts` (zod; OpenAPI planned), `packages/scoring`, `packages/audit`, `packages/trade-packs`, `packages/voice` (spoken numbers, yes or no and commands for voice sign-in), `packages/mapping` (the phone's offline keyword match) |
 
 SIDH, Aadhaar eKYC, OTP and NQR are mocked behind `MOCK_INTEGRATIONS=true`.
 
@@ -78,6 +78,9 @@ Node 22.18+ or 24.11+ (`.nvmrc` says 24) and pnpm 10 (`corepack enable` picks th
 | `pnpm lint` | ESLint, then a Prettier check (`pnpm format` fixes formatting) |
 | `pnpm e2e:install` · `pnpm e2e:web` | Download Chromium once · Playwright against a running `pnpm dev` on fresh demo data (`pnpm db:reset && pnpm db:seed`; the approval tests skip once the demo recommendation is approved). `PLAYWRIGHT_CHROMIUM_PATH` uses an installed Chromium instead |
 | `pnpm pack:build electrician` | Validate the trade pack and write `packages/trade-packs/dist/` |
+| `pnpm --filter @hunarpramaan/mobile model:download` | Download the Vosk Hindi model into `apps/mobile/assets/model-hi` (git-ignored) and check its SHA-256 |
+| `pnpm --filter @hunarpramaan/mobile android` | Android dev build on a phone or emulator (`expo run:android`); needs Android Studio, JDK 17 and `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` |
+| `pnpm --filter @hunarpramaan/mobile db:generate` | New local migration from `apps/mobile/src/db/schema.ts`; then `pnpm format` |
 | `pnpm --filter @hunarpramaan/<pkg> test` | One workspace only |
 | `pnpm --filter @hunarpramaan/api db:generate` | New migration from `services/api/src/db/schema.ts` |
 
@@ -95,7 +98,9 @@ Still planned: `pnpm e2e:mobile`, `pnpm eval:*`. Add them here when they exist.
 - API code layout: `src/routes` (HTTP only) → `src/domain` (rules and queries) → `src/db`. Read models take no transaction (ADR 008).
 - Schema changes: edit `schema.ts` and run `db:generate`. If a new table holds events, add it to `APPEND_ONLY_TABLES` and write a new migration with its `_append_only` and `_no_truncate` triggers (`pnpm --filter @hunarpramaan/api exec drizzle-kit generate --custom --name <table>_append_only`), copying the pattern in `0001_append_only.sql`; `migrations.test.ts` fails while the triggers and the list differ. Never edit a migration that has been applied: databases that ran it would not get the change.
 - Flags and approval blockers are codes plus values; word them in `apps/web/src/lib/messages.ts` and both dictionaries, never as English from the API.
-- Web strings live in `apps/web/src/lib/i18n/en.ts` and `hi.ts`; the Hindi file is typed against the English one.
+- Web strings live in `apps/web/src/lib/i18n/en.ts` and `hi.ts`; the Hindi file is typed against the English one. The phone's are in `apps/mobile/src/i18n/`, the same way.
+- Phone writes go through `appendEvent` in `apps/mobile/src/db/outbox.ts`: it seals the event, checks it against `SyncEvent`, and writes the outbox row and the table row in one transaction. Keep `src/core` free of React Native imports so Vitest can test it on sql.js.
+- The phone's `react-native-vosk` events: `stop()` closes the recognizer at once and sends a final result only when it has words, so `src/platform/speech.ts` finishes after a short wait. Load the model only while a screen needs it (3 GB phones).
 
 ## How we work
 

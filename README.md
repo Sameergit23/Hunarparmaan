@@ -260,7 +260,13 @@ Hunarparmaan/
 │   │   ├── src/components/    # Wire code components
 │   │   ├── src/lib/           # API client, session, i18n (en.ts, hi.ts), flag and blocker wording
 │   │   └── e2e/               # Playwright tests
-│   └── mobile/                # planned: React Native worker and assessor app, works offline
+│   └── mobile/                # Expo dev build for Android: the voice interview, works offline (Sprint 0 spike)
+│       ├── src/core/          # pure TypeScript: sync loop, back-off, ids, questions, voice form
+│       ├── src/db/            # Drizzle schema on SQLCipher, the sealed outbox, local read models
+│       ├── src/platform/      # Expo and native: database key, API, Vosk, read-aloud, sync service
+│       ├── src/screens/       # sign-in (temporary), home, new worker, consent, interview, done
+│       ├── drizzle/           # local migrations, including insert-only triggers
+│       └── scripts/           # download-model.mjs: the Vosk Hindi model, checked by SHA-256
 ├── services/
 │   ├── api/                   # Node.js + Express: auth, sync, evidence; the only database writer
 │   │   ├── src/routes/        # HTTP only
@@ -276,6 +282,7 @@ Hunarparmaan/
 │   ├── scoring/               # pure TypeScript: coverage, routing, results (same code on phone and server)
 │   ├── audit/                 # hash chain: canonical JSON (RFC 8785), SHA-256, verify
 │   ├── trade-packs/           # QP data per trade: NOS, criteria, marks, rubrics, glossary
+│   ├── mapping/               # pure TypeScript: the phone's offline keyword match of a declaration to QPs
 │   └── voice/                 # pure TypeScript: spoken numbers, yes or no and commands for voice sign-in
 ├── evaluation/                # planned: rater study and mapping test
 ├── infra/
@@ -303,8 +310,8 @@ Everything runs on your own computer, on Windows, macOS or Linux. You only need 
 | pnpm | 10, the version pinned in `package.json` | Workspaces |
 | Docker Desktop, or Docker Engine with Compose v2 | Latest stable | Optional: PostgreSQL, Redis and the S3 store, as in production |
 | Python + [uv](https://docs.astral.sh/uv/) | 3.12 | AI service (*planned*) |
-| Android Studio + JDK 17 | Latest stable | The Android dev build (*planned*) |
-| An Android phone | Android 9+, 3 GB RAM | The target device (*planned*): test on it, not only on the emulator |
+| Android Studio + JDK 17 | Latest stable | The Android dev build ([`apps/mobile/README.md`](apps/mobile/README.md)) |
+| An Android phone | Android 9+, 3 GB RAM | The target device: test on it, not only on the emulator |
 
 ### 1. Install Node.js and pnpm (once per computer)
 
@@ -359,6 +366,15 @@ pnpm check        # lint, typecheck and test, the same checks as CI
 ```
 
 Run it before every push. The first run takes about a minute, because the API tests build a migrated database once and cache it in `node_modules/.cache`. CI runs them on Linux (Node 22 and 24) and Windows (Node 24), and also runs `pnpm build`, the API tests on PostgreSQL, the browser tests, a secret scan (gitleaks) and `pnpm audit --audit-level high`; the sections below show how to run those locally. In VS Code, accept the recommended extensions (ESLint, Prettier, EditorConfig, Tailwind, Vitest, Playwright) so problems show while you type.
+
+### The phone app
+
+The Android app is an Expo development build: it needs Android Studio, JDK 17 and a phone on the same Wi-Fi as your laptop. [`apps/mobile/README.md`](apps/mobile/README.md) has every step, what has been checked so far and the spike risks. In short:
+
+```bash
+pnpm --filter @hunarpramaan/mobile model:download   # the Vosk Hindi model, about 44 MB, checked by SHA-256
+pnpm --filter @hunarpramaan/mobile android          # needs apps/mobile/.env with EXPO_PUBLIC_API_URL
+```
 
 ### End-to-end tests in a browser
 
@@ -447,7 +463,7 @@ A setting typed in the shell, such as `PORT=4001 pnpm dev`, reaches the apps too
 | `AI_SERVICE_URL` | `http://localhost:8000` | api worker (*planned*) |
 | `LLM_BASE_URL` · `LLM_API_KEY` · `LLM_MODEL` | Any OpenAI-compatible endpoint, preferably hosted in India | ai (*planned*) |
 | `BHASHINI_USER_ID` · `BHASHINI_API_KEY` · `SARVAM_API_KEY` | From the Bhashini portal; Sarvam is the backup | ai (*planned*) |
-| `EXPO_PUBLIC_API_URL` | `http://192.168.1.20:4000` | mobile (*planned*) |
+| `EXPO_PUBLIC_API_URL` | `http://192.168.1.20:4000`: the laptop's LAN address, in `apps/mobile/.env`; read when the app is bundled | mobile |
 
 To make a `JWT_SECRET` on any OS: `node -e "console.log(require('node:crypto').randomBytes(48).toString('base64'))"`.
 
@@ -471,6 +487,10 @@ Run them from the repo root.
 | `pnpm pack:build electrician` | Validate and package a trade pack for phones | ✅ |
 | `pnpm e2e:install` · `pnpm e2e:web` | Download Chromium once · run the Playwright flows (needs `pnpm dev` and fresh demo data) | ✅ |
 | `pnpm --filter @hunarpramaan/<pkg> test` | Tests for one workspace only | ✅ |
+| `pnpm --filter @hunarpramaan/mobile model:download` | Download the Vosk Hindi model into `apps/mobile/assets/model-hi` and check its SHA-256 | ✅ |
+| `pnpm --filter @hunarpramaan/mobile android` | Build the Android dev build, install it on the phone and start Metro (needs Android Studio and JDK 17) | ✅ not yet run on the phone |
+| `pnpm --filter @hunarpramaan/mobile start` | Metro only, for a dev build already installed | ✅ |
+| `pnpm --filter @hunarpramaan/mobile db:generate` | A new local migration from `apps/mobile/src/db/schema.ts` | ✅ |
 | `pnpm e2e:mobile` | Maestro end-to-end flows on the phone | planned |
 | `pnpm eval:study` · `pnpm eval:mapping` | Rater-study and mapping-test analysis | planned |
 

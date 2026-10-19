@@ -8,3 +8,12 @@ packages:
 ignoredBuiltDependencies:
   - esbuild
   - msgpackr-extract
+
+# `pnpm audit` (CI) skips these two advisories only. Both come with Expo's build tools and
+# neither has a patched release; neither is in the app bundle that reaches phones:
+# node-forge in @expo/cli (dev-server certificates) and braces in Metro's file watcher.
+# Remove each line when a fixed version is out.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-86w9-cpqp-85rv
+    - GHSA-vfj7-8cjw-p6xm

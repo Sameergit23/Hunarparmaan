@@ -19,14 +19,17 @@ export function HomeScreen({
 }) {
   const { m } = useI18n();
   const { db, session, sync, signOut } = useServices();
-  const { pending } = useSync();
+  const { pending, state } = useSync();
   const [blocked, setBlocked] = useState(false);
   // useSync re-renders this screen after every write and ack, so the list stays current.
   const workers = workersOnPhone(db);
+  // An expired sign-in can't sync, so it may sign out to sign in again: the outbox stays on
+  // the phone, and the same account sends it after the next sign-in.
+  const expired = state.kind === 'signed_out';
 
   const trySignOut = () => {
     // Workflows 4.4: signing out with unsynced work is blocked.
-    if (pending > 0) {
+    if (pending > 0 && !expired) {
       setBlocked(true);
       sync.nudge();
       return;
@@ -37,7 +40,12 @@ export function HomeScreen({
   return (
     <Screen
       footer={
-        <Button label={m.home.signOut} icon={LogOut} variant="secondary" onPress={trySignOut} />
+        <Button
+          label={expired ? m.home.signInAgain : m.home.signOut}
+          icon={LogOut}
+          variant={expired ? 'primary' : 'secondary'}
+          onPress={trySignOut}
+        />
       }
     >
       <Header title={m.brand} right={<LanguageToggle />} />
