@@ -201,6 +201,19 @@ importers:
         specifier: ^14.0.3
         version: 14.0.3
 
+  packages/mapping:
+    dependencies:
+      '@hunarpramaan/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@hunarpramaan/scoring':
+        specifier: workspace:*
+        version: link:../scoring
+    devDependencies:
+      '@hunarpramaan/trade-packs':
+        specifier: workspace:*
+        version: link:../trade-packs
+
   packages/scoring:
     dependencies:
       '@hunarpramaan/contracts':

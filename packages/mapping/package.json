@@ -1,0 +1,21 @@
+{
+  "name": "@hunarpramaan/mapping",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline keyword match of a declaration to QP criteria: the provisional result the phone shows before the server's full mapping. Pure TypeScript",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@hunarpramaan/contracts": "workspace:*",
+    "@hunarpramaan/scoring": "workspace:*"
+  },
+  "devDependencies": {
+    "@hunarpramaan/trade-packs": "workspace:*"
+  }
+}
